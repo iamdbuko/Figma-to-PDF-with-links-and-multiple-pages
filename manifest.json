@@ -1,0 +1,19 @@
+{
+  "name": "PDF Export with Links",
+  "id": "1535371360850075397",
+  "documentAccess": "dynamic-page",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://cdnjs.cloudflare.com",
+      "https://unpkg.com"
+    ]
+  }
+}

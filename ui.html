@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PDF Export with Links</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .header p {
+      margin: 0;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section h2 {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .instructions {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .instructions p {
+      margin: 0;
+    }
+
+    .controls-top {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .controls-top .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .frame-list {
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .frame-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: move;
+      user-select: none;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .frame-item:last-child {
+      border-bottom: none;
+    }
+
+    .frame-item:hover {
+      background: #f8f8f8;
+    }
+
+    .frame-item.dragging {
+      opacity: 0.5;
+      background: #e3f2fd;
+    }
+
+    .frame-item.drag-over {
+      background: #e8f5e8;
+      border-top: 2px solid #4caf50;
+    }
+
+    .frame-item.just-added {
+      animation: highlight 2s ease-out;
+    }
+
+    @keyframes highlight {
+      0% { background: #e8f5e8; border-left: 3px solid #4caf50; }
+      100% { background: transparent; border-left: none; }
+    }
+
+    .frame-item.selected-in-figma {
+      background: #e3f2fd;
+      border-left: 3px solid #1976d2;
+    }
+
+    .frame-checkbox {
+      margin-right: 12px;
+    }
+
+    .frame-info {
+      flex: 1;
+    }
+
+    .frame-name {
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .frame-meta {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .connections-count {
+      font-size: 11px;
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .no-links {
+      font-size: 11px;
+      background: #f5f5f5;
+      color: #666;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .drag-handle {
+      color: #999;
+      margin-left: 8px;
+      cursor: move;
+    }
+
+    .frame-item .remove-btn {
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .frame-item:hover .remove-btn {
+      opacity: 1;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #1976d2;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #1565c0;
+    }
+
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+      background: #eeeeee;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .status.success {
+      background: #e8f5e8;
+      color: #2e7d2e;
+      border: 1px solid #a5d6a5;
+    }
+
+    .status.error {
+      background: #ffe6e6;
+      color: #d32f2f;
+      border: 1px solid #ffb3b3;
+    }
+
+    .status.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border: 1px solid #90caf9;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .selection-info {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #1976d2;
+    }
+
+    .loading {
+      display: none !important;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e0e0e0;
+      border-top: 2px solid #1976d2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PDF Export with Links</h1>
+    <p>Export multiple frames as a single PDF with internal links</p>
+  </div>
+
+  <div class="section">
+    <h2>Frame List</h2>
+    <div class="instructions">
+      <p>🎯 Select frames in Figma to automatically add them to your PDF export list</p>
+    </div>
+    <div class="controls-top">
+      <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
+    </div>
+
+    <div id="frame-list" class="frame-list" style="display: none;"></div>
+
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>No frames in export list</h3>
+      <p>Select frames in Figma and they will automatically appear here for PDF export.</p>
+    </div>
+
+    <div id="selection-info" class="selection-info" style="display: none;"></div>
+  </div>
+
+  <div class="controls">
+    <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
+    <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <!-- Include PDF generation libraries -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    // Global variables
+    let allFrames = [];
+    let connections = [];
+    let frameOrder = [];
+    let draggedElement = null;
+
+    // All functions defined at top level
+    function handleFramesUpdated(frames, frameConnections, justAdded) {
+      console.log('handleFramesUpdated called:', {
+        totalFrames: frames.length,
+        newFrames: justAdded.length,
+        frameNames: frames.map(f => f.name)
+      });
+
+      allFrames = frames;
+      connections = frameConnections;
+      frameOrder = frames.map(f => f.id);
+
+      if (frames.length === 0) {
+        document.getElementById('frame-list').style.display = 'none';
+        document.getElementById('empty-state').style.display = 'block';
+        updateExportButton();
+        return;
+      }
+
+      document.getElementById('empty-state').style.display = 'none';
+      renderFrameList(justAdded);
+      document.getElementById('frame-list').style.display = 'block';
+      updateExportButton();
+
+      // Show summary
+      const internalLinks = frameConnections.filter(c => c.type === 'internal').length;
+      const externalLinks = frameConnections.filter(c => c.type === 'external').length;
+      const linkedFrames = frames.filter(f => frameConnections.some(c => c.fromFrameId === f.id)).length;
+
+      if (justAdded.length > 0) {
+        const summary = [];
+        if (internalLinks > 0) summary.push(`${internalLinks} page links`);
+        if (externalLinks > 0) summary.push(`${externalLinks} web links`);
+        const linkSummary = summary.length > 0 ? ` (${summary.join(', ')})` : '';
+        showStatus(`Added ${justAdded.length} frame${justAdded.length !== 1 ? 's' : ''}. Total: ${frames.length}${linkSummary}`, 'success');
+      } else {
+        const summary = [];
+        if (internalLinks > 0) summary.push(`${internalLinks} page`);
+        if (externalLinks > 0) summary.push(`${externalLinks} web`);
+        const linkSummary = summary.length > 0 ? ` (${summary.join(' + ')} links)` : '';
+        showStatus(`${frames.length} frame${frames.length !== 1 ? 's' : ''} in export list${linkSummary}`, 'info');
+      }
+    }
+
+    function renderFrameList(justAdded = []) {
+      const container = document.getElementById('frame-list');
+      container.innerHTML = '';
+
+      frameOrder.forEach(frameId => {
+        const frame = allFrames.find(f => f.id === frameId);
+        if (!frame) return;
+
+        const frameConnections = connections.filter(c => c.fromFrameId === frameId);
+        const internalLinks = frameConnections.filter(c => c.type === 'internal').length;
+        const externalLinks = frameConnections.filter(c => c.type === 'external').length;
+        const hasLinks = frameConnections.length > 0;
+        const isJustAdded = justAdded.includes(frameId);
+
+        const item = document.createElement('div');
+        item.className = `frame-item ${isJustAdded ? 'just-added' : ''}`;
+        item.draggable = true;
+        item.dataset.frameId = frameId;
+
+        // Create link indicator showing both internal and external links
+        let linkIndicator;
+        if (hasLinks) {
+          const linkParts = [];
+          if (internalLinks > 0) {
+            linkParts.push(`${internalLinks} page link${internalLinks !== 1 ? 's' : ''}`);
+          }
+          if (externalLinks > 0) {
+            linkParts.push(`${externalLinks} web link${externalLinks !== 1 ? 's' : ''}`);
+          }
+          linkIndicator = `<span class="connections-count">${linkParts.join(', ')}</span>`;
+        } else {
+          linkIndicator = `<span class="no-links">No links</span>`;
+        }
+
+        item.innerHTML = `
+          <input type="checkbox" class="frame-checkbox" checked>
+          <div class="frame-info">
+            <div class="frame-name">${frame.name}</div>
+            <div class="frame-meta">${Math.round(frame.width)}×${Math.round(frame.height)}px • ${frame.parent}</div>
+          </div>
+          ${linkIndicator}
+          <span class="drag-handle">⋮⋮</span>
+          <button class="remove-btn" title="Remove from list">×</button>
+        `;
+
+        // Add event listeners
+        const checkbox = item.querySelector('.frame-checkbox');
+        checkbox.addEventListener('change', updateExportButton);
+
+        const removeBtn = item.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeFrameFromList(frameId);
+        });
+
+        // Drag and drop events
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragend', handleDragEnd);
+
+        container.appendChild(item);
+      });
+    }
+
+    function handleSelectionChanged(selectedFrameIds, selectedFrameNames) {
+      console.log('Selection changed:', selectedFrameIds, selectedFrameNames);
+
+      const selectionInfo = document.getElementById('selection-info');
+
+      if (selectedFrameIds && selectedFrameIds.length > 0) {
+        if (selectedFrameNames) {
+          selectionInfo.innerHTML = `📌 Currently selected: ${selectedFrameNames.join(', ')}`;
+          selectionInfo.style.display = 'block';
+        }
+      } else {
+        selectionInfo.style.display = 'none';
+      }
+
+      // Highlight frames that are currently selected in Figma
+      document.querySelectorAll('.frame-item').forEach(item => {
+        const frameId = item.dataset.frameId;
+        if (selectedFrameIds && selectedFrameIds.includes(frameId)) {
+          item.classList.add('selected-in-figma');
+        } else {
+          item.classList.remove('selected-in-figma');
+        }
+      });
+    }
+
+    function updateExportButton() {
+      const selectedFrames = getSelectedFrames();
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.disabled = selectedFrames.length === 0;
+      exportBtn.textContent = selectedFrames.length > 0
+        ? `Export ${selectedFrames.length} Frame${selectedFrames.length !== 1 ? 's' : ''}`
+        : 'Export PDF';
+    }
+
+    function getSelectedFrames() {
+      const checkboxes = document.querySelectorAll('.frame-checkbox:checked');
+      return Array.from(checkboxes).map(cb => cb.closest('.frame-item').dataset.frameId);
+    }
+
+    function removeFrameFromList(frameId) {
+      // Remove from local arrays
+      allFrames = allFrames.filter(f => f.id !== frameId);
+      connections = connections.filter(c => c.fromFrameId !== frameId && c.toFrameId !== frameId);
+      frameOrder = frameOrder.filter(id => id !== frameId);
+
+      // Re-render
+      handleFramesUpdated(allFrames, connections, []);
+    }
+
+    function clearFrameList() {
+      parent.postMessage({
+        pluginMessage: { type: 'clear-list' }
+      }, '*');
+    }
+
+    function exportImages() {
+      const selectedFrames = getSelectedFrames();
+      if (selectedFrames.length === 0) return;
+
+      showStatus('Preparing frames for export...', 'info');
+      document.getElementById('export-btn').disabled = true;
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'export-pdf',
+          frameOrder: frameOrder,
+          selectedFrames: selectedFrames
+        }
+      }, '*');
+    }
+
+    function cancel() {
+      parent.postMessage({
+        pluginMessage: { type: 'cancel' }
+      }, '*');
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = `status ${type}`;
+      status.style.display = 'block';
+    }
+
+    function hideStatus() {
+      document.getElementById('status').style.display = 'none';
+    }
+
+    // Drag and drop functions
+    function handleDragStart(e) {
+      draggedElement = e.target;
+      e.target.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      const dragOverElement = e.target.closest('.frame-item');
+      if (dragOverElement && dragOverElement !== draggedElement) {
+        document.querySelectorAll('.frame-item').forEach(item => item.classList.remove('drag-over'));
+        dragOverElement.classList.add('drag-over');
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      const dropTarget = e.target.closest('.frame-item');
+
+      if (dropTarget && dropTarget !== draggedElement && draggedElement) {
+        const draggedId = draggedElement.dataset.frameId;
+        const targetId = dropTarget.dataset.frameId;
+
+        // Reorder frameOrder array
+        const draggedIndex = frameOrder.indexOf(draggedId);
+        const targetIndex = frameOrder.indexOf(targetId);
+
+        frameOrder.splice(draggedIndex, 1);
+        frameOrder.splice(targetIndex, 0, draggedId);
+
+        renderFrameList();
+      }
+
+      document.querySelectorAll('.frame-item').forEach(item => item.classList.remove('drag-over'));
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      document.querySelectorAll('.frame-item').forEach(item => item.classList.remove('drag-over'));
+      draggedElement = null;
+    }
+
+    async function downloadImages(frames, frameConnections, order) {
+      try {
+        showStatus('Generating PDF with internal links...', 'info');
+
+        // Try jsPDF with improved link handling first
+        await generatePDFWithJsPDFImproved(frames, frameConnections);
+
+      } catch (error) {
+        console.error('PDF generation error:', error);
+        showStatus('Failed to generate PDF: ' + error.message, 'error');
+
+        // Fallback to image export
+        exportImagesAsFallback(frames, frameConnections);
+      } finally {
+        document.getElementById('export-btn').disabled = false;
+      }
+    }
+
+    async function generatePDFWithJsPDFImproved(frames, frameConnections) {
+      const { jsPDF } = window.jspdf;
+
+      // Create PDF with first frame size as default
+      const firstFrame = frames[0];
+      const pdf = new jsPDF({
+        unit: 'pt',
+        format: [firstFrame.width, firstFrame.height]
+      });
+
+      // Remove the default first page
+      pdf.deletePage(1);
+
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        const pageIndex = i + 1;
+
+        console.log(`Creating page ${pageIndex} for frame "${frame.name}" (${frame.width}x${frame.height})`);
+
+        // Add new page with exact frame dimensions
+        pdf.addPage([frame.width, frame.height], 'portrait');
+        pdf.setPage(pageIndex);
+
+        // Convert image data to blob URL
+        const imageData = new Uint8Array(frame.imageData);
+        const blob = new Blob([imageData], { type: 'image/png' });
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Add image to PDF
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = function() {
+            pdf.addImage(img, 'PNG', 0, 0, frame.width, frame.height);
+            URL.revokeObjectURL(imageUrl);
+            resolve();
+          };
+          img.onerror = function() {
+            console.error('Failed to load image for frame:', frame.name);
+            URL.revokeObjectURL(imageUrl);
+            resolve();
+          };
+          img.src = imageUrl;
+        });
+      }
+
+      // Second pass: Add all links after all pages are created
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        const pageIndex = i + 1;
+
+        // Add links for this frame
+        const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
+        console.log(`Adding ${frameLinks.length} links to page ${pageIndex} ("${frame.name}")`);
+
+        if (frameLinks.length > 0) {
+          pdf.setPage(pageIndex);
+
+          frameLinks.forEach(link => {
+            // Ensure coordinates are valid
+            const linkX = Math.max(0, Math.min(link.elementBounds.x, frame.width - 1));
+            const linkY = Math.max(0, Math.min(link.elementBounds.y, frame.height - 1));
+            const linkWidth = Math.max(1, Math.min(link.elementBounds.width, frame.width - linkX));
+            const linkHeight = Math.max(1, Math.min(link.elementBounds.height, frame.height - linkY));
+
+            if (link.type === 'internal') {
+              // Internal frame-to-frame link
+              const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
+              if (targetFrameIndex >= 0) {
+                const targetPageNumber = targetFrameIndex + 1;
+
+                console.log(`Creating internal link: "${link.elementName}" from page ${pageIndex} -> page ${targetPageNumber}`, {
+                  coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight }
+                });
+
+                try {
+                  pdf.link(linkX, linkY, linkWidth, linkHeight, {
+                    pageNumber: targetPageNumber
+                  });
+                  console.log(`✅ Internal link added successfully`);
+                } catch (linkError) {
+                  console.error(`❌ Failed to add internal link:`, linkError);
+                }
+              } else {
+                console.error(`❌ Target frame not found for internal link from "${link.elementName}"`);
+              }
+            } else if (link.type === 'external') {
+              // External URL link
+              console.log(`Creating external link: "${link.elementName}" from page ${pageIndex} -> ${link.toUrl}`, {
+                coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight }
+              });
+
+              try {
+                pdf.link(linkX, linkY, linkWidth, linkHeight, {
+                  url: link.toUrl
+                });
+                console.log(`✅ External link added successfully`);
+              } catch (linkError) {
+                console.error(`❌ Failed to add external link:`, linkError);
+              }
+            }
+          });
+        }
+      }
+
+      // Save the PDF
+      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
+      pdf.save(filename);
+
+      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
+      console.log(`✅ PDF export completed: ${filename}`);
+    }
+
+    async function generatePDFWithPDFLib(frames, frameConnections) {
+      const { PDFDocument, rgb } = PDFLib;
+
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+
+        // Convert image data to PNG
+        const imageData = new Uint8Array(frame.imageData);
+        const image = await pdfDoc.embedPng(imageData);
+
+        // Create page with exact frame dimensions (convert to points)
+        const page = pdfDoc.addPage([frame.width, frame.height]);
+
+        // Draw the image
+        page.drawImage(image, {
+          x: 0,
+          y: 0,
+          width: frame.width,
+          height: frame.height,
+        });
+
+        // Add links for this frame
+        const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
+        console.log(`Adding ${frameLinks.length} links to page ${i + 1} (${frame.name})`);
+
+        for (const link of frameLinks) {
+          const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
+          if (targetFrameIndex >= 0) {
+            // PDFLib uses bottom-left coordinate system
+            const linkX = link.elementBounds.x;
+            const linkY = frame.height - link.elementBounds.y - link.elementBounds.height;
+
+            console.log(`Creating link: "${link.elementName}" -> Page ${targetFrameIndex + 1}`, {
+              x: linkX,
+              y: linkY,
+              width: link.elementBounds.width,
+              height: link.elementBounds.height
+            });
+
+            // Create link annotation
+            page.addAnnotation(
+              PDFDocument.createLinkAnnotation({
+                rect: {
+                  x: linkX,
+                  y: linkY,
+                  width: link.elementBounds.width,
+                  height: link.elementBounds.height,
+                },
+                destination: pdfDoc.getPage(targetFrameIndex),
+              })
+            );
+          }
+        }
+      }
+
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
+    }
+
+    async function generatePDFWithJsPDF(frames, frameConnections) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+
+      // Remove the first empty page
+      pdf.deletePage(1);
+
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+        const pageIndex = i + 1;
+
+        // Calculate page size
+        const pageWidth = frame.width;
+        const pageHeight = frame.height;
+
+        // Add new page with frame dimensions
+        pdf.addPage([pageWidth, pageHeight], 'portrait');
+        pdf.setPage(pageIndex);
+
+        // Convert image data to blob URL
+        const imageData = new Uint8Array(frame.imageData);
+        const blob = new Blob([imageData], { type: 'image/png' });
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Add image to PDF
+        await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = function() {
+            pdf.addImage(img, 'PNG', 0, 0, pageWidth, pageHeight);
+            URL.revokeObjectURL(imageUrl);
+            resolve();
+          };
+          img.src = imageUrl;
+        });
+
+        // Add internal links for this frame
+        const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
+        console.log(`Processing ${frameLinks.length} links for frame "${frame.name}" (page ${pageIndex})`);
+
+        frameLinks.forEach(link => {
+          const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
+          if (targetFrameIndex >= 0) {
+            // jsPDF uses bottom-left coordinate system, but let's try top-left first
+            // Also ensure coordinates are positive and within bounds
+            const linkX = Math.max(0, link.elementBounds.x);
+            const linkY = Math.max(0, link.elementBounds.y);
+            const linkWidth = Math.max(1, link.elementBounds.width);
+            const linkHeight = Math.max(1, link.elementBounds.height);
+
+            console.log(`Adding link on page ${pageIndex}:`, {
+              element: link.elementName,
+              fromPage: pageIndex,
+              toPage: targetFrameIndex + 1,
+              coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight },
+              frameSize: { w: pageWidth, h: pageHeight }
+            });
+
+            try {
+              // Try different jsPDF link methods
+
+              // Method 1: Internal link with pageNumber
+              pdf.link(linkX, linkY, linkWidth, linkHeight, {
+                pageNumber: targetFrameIndex + 1
+              });
+
+              // Method 2: Alternative syntax - add destination first
+              const destName = `page_${targetFrameIndex + 1}`;
+              pdf.setDestination(destName, targetFrameIndex + 1, 0, 0);
+
+              // Method 3: Create annotation directly
+              pdf.internal.addAnnotation({
+                type: 'link',
+                bounds: {
+                  x: linkX,
+                  y: linkY,
+                  w: linkWidth,
+                  h: linkHeight
+                },
+                pageNumber: targetFrameIndex + 1
+              });
+
+              console.log(`✅ Link added successfully`);
+
+            } catch (linkError) {
+              console.error(`❌ Failed to add link:`, linkError);
+            }
+          }
+        });
+      }
+
+      // Save the PDF
+      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
+      pdf.save(filename);
+
+      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
+    }
+
+    function exportImagesAsFallback(frames, frameConnections) {
+      try {
+        showStatus('PDF generation failed, exporting as images...', 'info');
+
+        // Create a simple text file with connection information
+        let connectionInfo = "PDF Link Mapping:\n\n";
+
+        frames.forEach((frame, index) => {
+          connectionInfo += `Page ${index + 1}: ${frame.name}\n`;
+          const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
+
+          frameLinks.forEach(link => {
+            const targetFrame = frames.find(f => f.id === link.toFrameId);
+            const targetIndex = frames.findIndex(f => f.id === link.toFrameId);
+            if (targetFrame && targetIndex >= 0) {
+              connectionInfo += `  - Link from "${link.elementName}" to Page ${targetIndex + 1} (${targetFrame.name})\n`;
+              connectionInfo += `    Position: x=${Math.round(link.elementBounds.x)}, y=${Math.round(link.elementBounds.y)}\n`;
+              connectionInfo += `    Size: ${Math.round(link.elementBounds.width)}×${Math.round(link.elementBounds.height)}px\n`;
+            }
+          });
+          connectionInfo += "\n";
+        });
+
+        // Download connection info as text file
+        const blob = new Blob([connectionInfo], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `figma-links-${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Download each frame as individual image
+        frames.forEach((frame, index) => {
+          const imageData = new Uint8Array(frame.imageData);
+          const blob = new Blob([imageData], { type: 'image/png' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `page-${index + 1}-${frame.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+
+        showStatus(`Exported ${frames.length} images and connection info as fallback`, 'success');
+
+      } catch (error) {
+        showStatus('Failed to export: ' + error.message, 'error');
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('export-btn').addEventListener('click', exportImages);
+      document.getElementById('clear-list-btn').addEventListener('click', clearFrameList);
+      document.getElementById('cancel-btn').addEventListener('click', cancel);
+
+      // Start with proper initial state
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('frame-list').style.display = 'none';
+    });
+
+    // Listen for messages from plugin code
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      console.log('Received message:', msg);
+
+      if (msg.type === 'plugin-ready') {
+        showStatus(msg.message, 'info');
+      } else if (msg.type === 'frames-updated') {
+        handleFramesUpdated(msg.frames, msg.connections, msg.justAdded);
+      } else if (msg.type === 'generate-pdf') {
+        downloadImages(msg.frames, msg.connections, msg.frameOrder);
+      } else if (msg.type === 'selection-changed') {
+        handleSelectionChanged(msg.selectedFrameIds, msg.selectedFrameNames);
+      } else if (msg.type === 'error') {
+        showStatus(msg.message, 'error');
+      }
+    };
+  </script>
+</body>
+</html>
