@@ -4,62 +4,119 @@
   <meta charset="utf-8">
   <title>PDF Export with Links</title>
   <style>
+    /* Light mode variables (default) */
+    :root {
+      --bg-primary: #fff;
+      --bg-secondary: #f8f9fa;
+      --bg-hover: #f8f8f8;
+      --bg-empty: #fff;
+
+      --text-primary: #333;
+      --text-secondary: #666;
+      --text-tertiary: #999;
+
+      --border-primary: #e0e0e0;
+      --border-secondary: #ddd;
+      --border-light: #f0f0f0;
+      --border-section: #e9ecef;
+
+      --accent-blue: #1976d2;
+      --accent-blue-hover: #1565c0;
+      --accent-blue-bg: #e3f2fd;
+      --accent-blue-border: #90caf9;
+
+      --accent-green-bg: #e8f5e8;
+      --accent-green-text: #2e7d2e;
+      --accent-green-border: #a5d6a5;
+      --accent-green: #4caf50;
+
+      --accent-red-bg: #ffe6e6;
+      --accent-red-text: #d32f2f;
+      --accent-red-border: #ffb3b3;
+      --accent-red: #ff4444;
+
+      --accent-purple-bg: #f3e5f5;
+      --accent-purple-text: #7b1fa2;
+      --accent-purple-border: #ce93d8;
+
+      --accent-orange-bg: #fff3e0;
+      --accent-orange-text: #e65100;
+      --accent-orange-border: #ffcc80;
+
+      --button-disabled: #ccc;
+      --button-secondary-bg: #f5f5f5;
+      --button-secondary-hover: #eeeeee;
+
+      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode variables */
+    [data-theme="dark"] {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #2a2a2a;
+      --bg-hover: #333;
+      --bg-empty: #252525;
+
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #707070;
+
+      --border-primary: #404040;
+      --border-secondary: #505050;
+      --border-light: #353535;
+      --border-section: #3a3a3a;
+
+      --accent-blue: #2196f3;
+      --accent-blue-hover: #1976d2;
+      --accent-blue-bg: #1e3a5f;
+      --accent-blue-border: #2c5282;
+
+      --accent-green-bg: #1b3a1b;
+      --accent-green-text: #66bb6a;
+      --accent-green-border: #2e7d32;
+      --accent-green: #4caf50;
+
+      --accent-red-bg: #3a1b1b;
+      --accent-red-text: #ef5350;
+      --accent-red-border: #7d2e2e;
+      --accent-red: #f44336;
+
+      --accent-purple-bg: #2e1a33;
+      --accent-purple-text: #ba68c8;
+      --accent-purple-border: #7b1fa2;
+
+      --accent-orange-bg: #3a2a1a;
+      --accent-orange-text: #ffb74d;
+      --accent-orange-border: #e65100;
+
+      --button-disabled: #555;
+      --button-secondary-bg: #333;
+      --button-secondary-hover: #404040;
+
+      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
     body {
       margin: 0;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
-      background: #fff;
-    }
-
-    .header {
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .header h1 {
-      margin: 0 0 8px 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .header p {
-      margin: 0;
-      color: #666;
-      font-size: 12px;
-    }
-
-    .section {
-      margin-bottom: 24px;
-    }
-
-    .section h2 {
-      margin: 0 0 12px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .instructions {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 4px;
-      padding: 12px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .instructions p {
-      margin: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
     }
 
     .controls-top {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: 8px;
       margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-primary);
     }
 
     .controls-top .btn {
@@ -67,18 +124,86 @@
       font-size: 12px;
     }
 
+    /* Theme toggle switch */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-icon {
+      font-size: 14px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border-secondary);
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--bg-primary);
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-blue);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
     .frame-list {
-      border: 1px solid #e0e0e0;
+      border: 1px solid var(--border-primary);
       border-radius: 4px;
-      max-height: 300px;
+      max-height: 360px;
       overflow-y: auto;
+      background: var(--bg-primary);
+      margin-bottom: 16px;
     }
 
     .frame-item {
       display: flex;
       align-items: center;
       padding: 12px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border-light);
       cursor: move;
       user-select: none;
       transition: background 0.2s;
@@ -90,17 +215,17 @@
     }
 
     .frame-item:hover {
-      background: #f8f8f8;
+      background: var(--bg-hover);
     }
 
     .frame-item.dragging {
       opacity: 0.5;
-      background: #e3f2fd;
+      background: var(--accent-blue-bg);
     }
 
     .frame-item.drag-over {
-      background: #e8f5e8;
-      border-top: 2px solid #4caf50;
+      background: var(--accent-green-bg);
+      border-top: 2px solid var(--accent-green);
     }
 
     .frame-item.just-added {
@@ -108,17 +233,24 @@
     }
 
     @keyframes highlight {
-      0% { background: #e8f5e8; border-left: 3px solid #4caf50; }
-      100% { background: transparent; border-left: none; }
+      0% {
+        background: var(--accent-green-bg);
+        border-left: 3px solid var(--accent-green);
+      }
+      100% {
+        background: transparent;
+        border-left: none;
+      }
     }
 
     .frame-item.selected-in-figma {
-      background: #e3f2fd;
-      border-left: 3px solid #1976d2;
+      background: var(--accent-blue-bg);
+      border-left: 3px solid var(--accent-blue);
     }
 
     .frame-checkbox {
       margin-right: 12px;
+      accent-color: var(--accent-blue);
     }
 
     .frame-info {
@@ -127,19 +259,19 @@
 
     .frame-name {
       font-weight: 500;
-      color: #333;
+      color: var(--text-primary);
       margin-bottom: 2px;
     }
 
     .frame-meta {
       font-size: 11px;
-      color: #666;
+      color: var(--text-secondary);
     }
 
     .connections-count {
       font-size: 11px;
-      background: #e3f2fd;
-      color: #1976d2;
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue);
       padding: 2px 6px;
       border-radius: 10px;
       margin-left: 8px;
@@ -147,21 +279,21 @@
 
     .no-links {
       font-size: 11px;
-      background: #f5f5f5;
-      color: #666;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
       padding: 2px 6px;
       border-radius: 10px;
       margin-left: 8px;
     }
 
     .drag-handle {
-      color: #999;
+      color: var(--text-tertiary);
       margin-left: 8px;
       cursor: move;
     }
 
     .frame-item .remove-btn {
-      background: #ff4444;
+      background: var(--accent-red);
       color: white;
       border: none;
       border-radius: 50%;
@@ -180,8 +312,10 @@
 
     .controls {
       display: flex;
+      justify-content: space-between;
       gap: 8px;
-      margin-top: 20px;
+      margin-top: 0;
+      align-items: center;
     }
 
     .btn {
@@ -195,70 +329,219 @@
     }
 
     .btn-primary {
-      background: #1976d2;
+      background: var(--accent-blue);
       color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: #1565c0;
+      background: var(--accent-blue-hover);
     }
 
     .btn-primary:disabled {
-      background: #ccc;
+      background: var(--button-disabled);
       cursor: not-allowed;
+      opacity: 0.6;
     }
 
     .btn-secondary {
-      background: #f5f5f5;
-      color: #333;
-      border: 1px solid #ddd;
+      background: var(--button-secondary-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border-secondary);
     }
 
     .btn-secondary:hover {
-      background: #eeeeee;
+      background: var(--button-secondary-hover);
+    }
+
+    /* Export panel */
+    .export-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      border: 1px solid var(--border-primary);
+    }
+
+    .export-type-selector {
+      display: flex;
+      align-items: center;
+    }
+
+    .export-type-options {
+      display: inline-flex;
+      border: 1px solid var(--border-primary);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .export-type-option {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .export-type-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .export-type-option label {
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-primary);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .export-type-option:last-child label {
+      border-right: none;
+    }
+
+    .export-type-option input[type="radio"]:checked + label {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Quality selector styles */
+    .quality-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quality-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .quality-select {
+      padding: 8px 12px;
+      padding-right: 28px;
+      border: 1px solid var(--border-secondary);
+      border-radius: 4px;
+      font-size: 13px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      min-width: 180px;
+    }
+
+    .quality-select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: var(--bg-secondary);
+    }
+
+    .quality-select optgroup {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    .quality-select option {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    [data-theme="dark"] .quality-select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+    }
+
+    .quality-select:hover:not(:disabled) {
+      border-color: var(--text-tertiary);
+    }
+
+    .quality-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px var(--accent-blue-bg);
     }
 
     .status {
-      margin-top: 12px;
+      margin-top: 0;
       padding: 12px;
       border-radius: 4px;
       font-size: 12px;
       display: none;
     }
 
+    .status-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .status-log {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 140px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .status-line {
+      font-size: 12px;
+      color: inherit;
+      opacity: 0.9;
+    }
+
     .status.success {
-      background: #e8f5e8;
-      color: #2e7d2e;
-      border: 1px solid #a5d6a5;
+      background: var(--accent-green-bg);
+      color: var(--accent-green-text);
+      border: 1px solid var(--accent-green-border);
     }
 
     .status.error {
-      background: #ffe6e6;
-      color: #d32f2f;
-      border: 1px solid #ffb3b3;
+      background: var(--accent-red-bg);
+      color: var(--accent-red-text);
+      border: 1px solid var(--accent-red-border);
     }
 
     .status.info {
-      background: #e3f2fd;
-      color: #1976d2;
-      border: 1px solid #90caf9;
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue-border);
+    }
+
+    .status.warning {
+      background: var(--accent-orange-bg);
+      color: var(--accent-orange-text);
+      border: 1px solid var(--accent-orange-border);
     }
 
     .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: #666;
+      color: var(--text-secondary);
+      background: var(--bg-empty);
+      border-radius: 4px;
+      margin-bottom: 16px;
     }
 
     .empty-icon {
       font-size: 48px;
       margin-bottom: 16px;
+      opacity: 0.5;
     }
 
     .empty-state h3 {
       margin: 0 0 8px 0;
       font-size: 16px;
-      color: #333;
+      color: var(--text-primary);
     }
 
     .empty-state p {
@@ -268,80 +551,325 @@
     }
 
     .selection-info {
-      background: #e3f2fd;
-      border: 1px solid #90caf9;
+      background: var(--accent-blue-bg);
+      border: 1px solid var(--accent-blue-border);
       border-radius: 4px;
       padding: 12px;
-      margin-top: 12px;
+      margin-bottom: 16px;
       font-size: 12px;
-      color: #1976d2;
+      color: var(--accent-blue);
     }
 
-    .loading {
-      display: none !important;
+    /* Scrollbar styles for dark mode */
+    [data-theme="dark"] ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
     }
 
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #e0e0e0;
-      border-top: 2px solid #1976d2;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 12px;
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+      background: var(--border-secondary);
+      border-radius: 4px;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary);
+    }
+
+    /* Batch warning modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-primary);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-icon {
+      font-size: 24px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .modal-content {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-content strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .batch-list {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      padding: 12px;
+      margin: 12px 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .batch-item {
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-actions .btn {
+      padding: 8px 16px;
+      font-size: 13px;
     }
   </style>
 </head>
-<body>
-  <div class="header">
-    <h1>PDF Export with Links</h1>
-    <p>Export multiple frames as a single PDF with internal links</p>
+<body data-theme="dark">
+  <div class="controls-top">
+    <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
+    <div class="theme-toggle">
+      <label class="theme-toggle-label">
+        <span class="theme-icon">🌙</span>
+        <span id="theme-label">Dark</span>
+      </label>
+      <label class="switch">
+        <input type="checkbox" id="theme-switch" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>Frame List</h2>
-    <div class="instructions">
-      <p>🎯 Select frames in Figma to automatically add them to your PDF export list</p>
-    </div>
-    <div class="controls-top">
-      <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
-    </div>
+  <div id="frame-list" class="frame-list" style="display: none;"></div>
 
-    <div id="frame-list" class="frame-list" style="display: none;"></div>
-
-    <div id="empty-state" class="empty-state">
-      <div class="empty-icon">📋</div>
-      <h3>No frames in export list</h3>
-      <p>Select frames in Figma and they will automatically appear here for PDF export.</p>
-    </div>
-
-    <div id="selection-info" class="selection-info" style="display: none;"></div>
+  <div id="empty-state" class="empty-state">
+    <h3>Select frames in Figma</h3>
   </div>
 
-  <div class="controls">
-    <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
-    <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+  <div id="selection-info" class="selection-info" style="display: none;"></div>
+
+  <div class="export-panel">
+    <div class="export-type-selector">
+      <div class="export-type-options">
+        <div class="export-type-option">
+          <input type="radio" id="export-vector" name="export-type" value="vector" checked>
+          <label for="export-vector">Vector</label>
+        </div>
+        <div class="export-type-option">
+          <input type="radio" id="export-raster" name="export-type" value="raster">
+          <label for="export-raster">Rasterized</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="quality-selector">
+        <label class="quality-label" for="quality-select" id="quality-label">Quality:</label>
+        <select id="quality-select" class="quality-select">
+          <optgroup label="Screen">
+            <option value="screen-low">Low (0.5x, 36 DPI)</option>
+            <option value="screen-medium" selected>Medium (1x, 72 DPI)</option>
+            <option value="screen-high">High (1.5x, 108 DPI)</option>
+          </optgroup>
+          <optgroup label="Print">
+            <option value="print-low">Low (2x, 144 DPI)</option>
+            <option value="print-medium">Medium (3x, 216 DPI)</option>
+            <option value="print-high">High (4x, 288 DPI)</option>
+            <option value="print-highest">Highest (4.17x, 300 DPI)</option>
+          </optgroup>
+        </select>
+      </div>
+      <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
+    </div>
+
+    <div id="status" class="status">
+      <div id="status-title" class="status-title"></div>
+      <div id="status-log" class="status-log"></div>
+    </div>
   </div>
 
-  <div id="status" class="status"></div>
+  <!-- Batch Warning Modal -->
+  <div id="batch-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title">High Memory Usage Detected</h3>
+      </div>
+      <div class="modal-content">
+        <p id="batch-warning-text"></p>
+        <div class="batch-list" id="batch-list"></div>
+        <p><strong>Each batch will create a separate PDF file.</strong></p>
+        <p style="font-size: 12px; margin-top: 12px;">💡 Tip: You can reduce quality or export fewer frames to create a single PDF.</p>
+      </div>
+      <div class="modal-actions">
+        <button id="batch-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="batch-export-btn" class="btn btn-primary">Export in Batches</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Include PDF generation libraries -->
-  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- MuPDF.js for vector PDF merging -->
+    <script>
+      // Load MuPDF from unpkg (which is already in allowedDomains)
+      window.mupdfReady = false;
+      window.mupdfLoadError = null;
+
+      window.mupdfLoadPromise = new Promise((resolve, reject) => {
+        console.log('🔄 Loading MuPDF.js from unpkg...');
+
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = `
+          try {
+            const mupdfModule = await import('https://unpkg.com/mupdf@1.27.0/dist/mupdf.js');
+            window.mupdf = mupdfModule;
+            window.mupdfReady = true;
+            console.log('✓ MuPDF.js loaded successfully');
+            window.dispatchEvent(new CustomEvent('mupdf-loaded', { detail: mupdfModule }));
+          } catch (error) {
+            console.error('✗ Failed to load MuPDF.js:', error);
+            window.mupdfLoadError = error;
+            window.dispatchEvent(new CustomEvent('mupdf-error', { detail: error }));
+          }
+        `;
+
+        window.addEventListener('mupdf-loaded', (e) => {
+          resolve(e.detail);
+        }, { once: true });
+
+        window.addEventListener('mupdf-error', (e) => {
+          reject(e.detail);
+        }, { once: true });
+
+        document.head.appendChild(script);
+      });
+    </script>
 
   <script>
-    // Global variables
+  // Global variables
     let allFrames = [];
     let connections = [];
     let frameOrder = [];
     let draggedElement = null;
+    let pendingVectorMerge = null;
 
-    // All functions defined at top level
+    // Quality settings mapping
+    const QUALITY_SETTINGS = {
+      'screen-low': { scale: 0.5, dpi: 36, label: 'Low (0.5x, 36 DPI)', group: 'screen', compression: 0.5 },
+      'screen-medium': { scale: 1.0, dpi: 72, label: 'Medium (1x, 72 DPI)', group: 'screen', compression: 0.7 },
+      'screen-high': { scale: 1.5, dpi: 108, label: 'High (1.5x, 108 DPI)', group: 'screen', compression: 0.85 },
+      'print-low': { scale: 2.0, dpi: 144, label: 'Low (2x, 144 DPI)', group: 'print', compression: 0.85 },
+      'print-medium': { scale: 3.0, dpi: 216, label: 'Medium (3x, 216 DPI)', group: 'print', compression: 0.9 },
+      'print-high': { scale: 4.0, dpi: 288, label: 'High (4x, 288 DPI)', group: 'print', compression: 0.9 },
+      'print-highest': { scale: 4.17, dpi: 300, label: 'Highest (4.17x, 300 DPI)', group: 'print', compression: 0.95 }
+    };
+
+    // Theme management
+    let currentTheme = 'dark';
+
+    function initTheme() {
+      document.body.setAttribute('data-theme', currentTheme);
+      updateThemeUI(currentTheme);
+    }
+
+    function updateThemeUI(theme) {
+      const themeSwitch = document.getElementById('theme-switch');
+      const themeLabel = document.getElementById('theme-label');
+      const themeIcon = document.querySelector('.theme-icon');
+
+      if (theme === 'dark') {
+        themeSwitch.checked = true;
+        themeLabel.textContent = 'Dark';
+        themeIcon.textContent = '🌙';
+      } else {
+        themeSwitch.checked = false;
+        themeLabel.textContent = 'Light';
+        themeIcon.textContent = '☀️';
+      }
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', currentTheme);
+      updateThemeUI(currentTheme);
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'save-theme',
+          theme: currentTheme
+        }
+      }, '*');
+    }
+
+    // Export type management
+    function updateExportTypeInfo() {
+      const exportType = document.querySelector('input[name="export-type"]:checked').value;
+      const qualitySelect = document.getElementById('quality-select');
+
+      // Add this label element in HTML: <label class="quality-label" for="quality-select" id="quality-label">Quality:</label>
+      const qualityLabel = document.getElementById('quality-label');
+
+      if (exportType === 'vector') {
+        qualitySelect.disabled = false;
+
+        // Update label to show it's for PNG fallbacks
+        if (qualityLabel) {
+          qualityLabel.textContent = 'Quality of embedded elements:';
+          qualityLabel.title = 'Quality for frames/layers that need rasterization';
+        }
+      } else {
+        qualitySelect.disabled = false;
+
+        if (qualityLabel) {
+          qualityLabel.textContent = 'Quality:';
+          qualityLabel.title = '';
+        }
+      }
+    }
+
     function handleFramesUpdated(frames, frameConnections, justAdded) {
       console.log('handleFramesUpdated called:', {
         totalFrames: frames.length,
@@ -365,10 +893,8 @@
       document.getElementById('frame-list').style.display = 'block';
       updateExportButton();
 
-      // Show summary
       const internalLinks = frameConnections.filter(c => c.type === 'internal').length;
       const externalLinks = frameConnections.filter(c => c.type === 'external').length;
-      const linkedFrames = frames.filter(f => frameConnections.some(c => c.fromFrameId === f.id)).length;
 
       if (justAdded.length > 0) {
         const summary = [];
@@ -404,7 +930,6 @@
         item.draggable = true;
         item.dataset.frameId = frameId;
 
-        // Create link indicator showing both internal and external links
         let linkIndicator;
         if (hasLinks) {
           const linkParts = [];
@@ -430,7 +955,6 @@
           <button class="remove-btn" title="Remove from list">×</button>
         `;
 
-        // Add event listeners
         const checkbox = item.querySelector('.frame-checkbox');
         checkbox.addEventListener('change', updateExportButton);
 
@@ -440,7 +964,6 @@
           removeFrameFromList(frameId);
         });
 
-        // Drag and drop events
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragover', handleDragOver);
         item.addEventListener('drop', handleDrop);
@@ -451,8 +974,6 @@
     }
 
     function handleSelectionChanged(selectedFrameIds, selectedFrameNames) {
-      console.log('Selection changed:', selectedFrameIds, selectedFrameNames);
-
       const selectionInfo = document.getElementById('selection-info');
 
       if (selectedFrameIds && selectedFrameIds.length > 0) {
@@ -464,7 +985,6 @@
         selectionInfo.style.display = 'none';
       }
 
-      // Highlight frames that are currently selected in Figma
       document.querySelectorAll('.frame-item').forEach(item => {
         const frameId = item.dataset.frameId;
         if (selectedFrameIds && selectedFrameIds.includes(frameId)) {
@@ -490,12 +1010,9 @@
     }
 
     function removeFrameFromList(frameId) {
-      // Remove from local arrays
       allFrames = allFrames.filter(f => f.id !== frameId);
       connections = connections.filter(c => c.fromFrameId !== frameId && c.toFrameId !== frameId);
       frameOrder = frameOrder.filter(id => id !== frameId);
-
-      // Re-render
       handleFramesUpdated(allFrames, connections, []);
     }
 
@@ -505,33 +1022,221 @@
       }, '*');
     }
 
+    // URL validation and normalization helper
+    function normalizeUrl(url) {
+      if (!url || typeof url !== 'string') {
+        console.warn('Invalid URL provided:', url);
+        return null;
+      }
+
+      const trimmed = url.trim();
+
+      if (/^https?:\/\//i.test(trimmed)) {
+        return trimmed;
+      }
+
+      if (trimmed.startsWith('//')) {
+        return 'https:' + trimmed;
+      }
+
+      if (trimmed.length > 0) {
+        console.warn(`URL missing protocol, adding https://: ${trimmed}`);
+        return 'https://' + trimmed;
+      }
+
+      return null;
+    }
+
+    // Improved link bounds calculator with minimum clickable area
+    function calculateLinkBounds(elementBounds, frameWidth, frameHeight) {
+      const MIN_CLICKABLE_SIZE = 10;
+
+      let linkX = Math.max(0, Math.min(elementBounds.x, frameWidth - MIN_CLICKABLE_SIZE));
+      let linkY = Math.max(0, Math.min(elementBounds.y, frameHeight - MIN_CLICKABLE_SIZE));
+
+      let linkWidth = Math.max(MIN_CLICKABLE_SIZE, Math.min(elementBounds.width, frameWidth - linkX));
+      let linkHeight = Math.max(MIN_CLICKABLE_SIZE, Math.min(elementBounds.height, frameHeight - linkY));
+
+      if (linkX + linkWidth > frameWidth) {
+        linkWidth = frameWidth - linkX;
+        if (linkWidth < MIN_CLICKABLE_SIZE) {
+          linkX = frameWidth - MIN_CLICKABLE_SIZE;
+          linkWidth = MIN_CLICKABLE_SIZE;
+        }
+      }
+
+      if (linkY + linkHeight > frameHeight) {
+        linkHeight = frameHeight - linkY;
+        if (linkHeight < MIN_CLICKABLE_SIZE) {
+          linkY = frameHeight - MIN_CLICKABLE_SIZE;
+          linkHeight = MIN_CLICKABLE_SIZE;
+        }
+      }
+
+      return { x: linkX, y: linkY, width: linkWidth, height: linkHeight };
+    }
+
+    // Batch handling functions
+    let pendingBatchExport = null;
+
+    function showBatchWarning(data) {
+      pendingBatchExport = data;
+
+      const modal = document.getElementById('batch-modal');
+      const warningText = document.getElementById('batch-warning-text');
+      const batchList = document.getElementById('batch-list');
+
+      warningText.innerHTML = `
+        Your selection requires <strong>${data.totalMemoryMB} MB</strong> of memory
+        (limit: ${data.limitMB} MB).<br><br>
+        The export will be split into <strong>${data.batchCount} batches</strong> to prevent crashes:
+      `;
+
+      batchList.innerHTML = data.batches.map(batch => `
+        <div class="batch-item">
+          <strong>Batch ${batch.batchNumber}:</strong> ${batch.frameCount} frames
+          (${batch.frameNames.slice(0, 3).join(', ')}${batch.frameCount > 3 ? '...' : ''})
+        </div>
+      `).join('');
+
+      modal.classList.add('show');
+    }
+
+    function hideBatchWarning() {
+      document.getElementById('batch-modal').classList.remove('show');
+      pendingBatchExport = null;
+    }
+
+    async function executeBatchExport() {
+      if (!pendingBatchExport) return;
+
+      const data = pendingBatchExport.exportData;
+      const batches = pendingBatchExport.batches;
+
+      hideBatchWarning();
+
+      showStatus(`Starting batch export (${batches.length} batches)...`, 'info');
+
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+
+        showStatus(`Exporting batch ${i + 1} of ${batches.length}...`, 'info');
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'export-batch',
+            batch: {
+              frameIds: batch.frameNames.map(name => {
+                const frame = allFrames.find(f => f.name === name);
+                return frame ? frame.id : null;
+              }).filter(Boolean)
+            },
+            batchNumber: i + 1,
+            totalBatches: batches.length,
+            quality: data.qualityString,
+            qualityScale: data.qualityScale,
+            exportType: 'raster'
+          }
+        }, '*');
+
+        await new Promise(resolve => {
+          const handler = (event) => {
+            const msg = event.data.pluginMessage;
+            if (msg.type === 'generate-pdf' && msg.batchInfo && msg.batchInfo.current === i + 1) {
+              window.removeEventListener('message', handler);
+              resolve();
+            }
+          };
+          window.addEventListener('message', handler);
+        });
+      }
+
+      showStatus(`All ${batches.length} batches exported successfully!`, 'success');
+      document.getElementById('export-btn').disabled = false;
+    }
+
+    // Export function
     function exportImages() {
       const selectedFrames = getSelectedFrames();
       if (selectedFrames.length === 0) return;
 
-      showStatus('Preparing frames for export...', 'info');
+      const exportType = document.querySelector('input[name="export-type"]:checked').value;
+      const qualitySelect = document.getElementById('quality-select');
+      const selectedQuality = qualitySelect.value;
+      const qualityScale = QUALITY_SETTINGS[selectedQuality].scale;
+
+      console.log('Exporting with type:', exportType, 'quality:', selectedQuality, 'scale:', qualityScale);
+
+      const exportTypeLabel = exportType === 'vector' ? 'smart hybrid' : selectedQuality + ' quality';
+      showStatus(`Preparing frames for export (${exportTypeLabel})...`, 'info');
       document.getElementById('export-btn').disabled = true;
 
       parent.postMessage({
         pluginMessage: {
           type: 'export-pdf',
           frameOrder: frameOrder,
-          selectedFrames: selectedFrames
+          selectedFrames: selectedFrames,
+          quality: selectedQuality,
+          qualityScale: qualityScale,
+          exportType: exportType
         }
       }, '*');
     }
 
-    function cancel() {
-      parent.postMessage({
-        pluginMessage: { type: 'cancel' }
-      }, '*');
+    function ensureStatusStructure() {
+      const status = document.getElementById('status');
+      if (!status) return null;
+
+      let title = document.getElementById('status-title');
+      let log = document.getElementById('status-log');
+
+      if (!title) {
+        title = document.createElement('div');
+        title.id = 'status-title';
+        title.className = 'status-title';
+        status.appendChild(title);
+      }
+
+      if (!log) {
+        log = document.createElement('div');
+        log.id = 'status-log';
+        log.className = 'status-log';
+        status.appendChild(log);
+      }
+
+      return { status, title, log };
     }
 
-    function showStatus(message, type) {
-      const status = document.getElementById('status');
-      status.textContent = message;
-      status.className = `status ${type}`;
-      status.style.display = 'block';
+    function clearStatusLog() {
+      const log = document.getElementById('status-log');
+      if (log) {
+        log.innerHTML = '';
+      }
+    }
+
+    function addStatusLine(message) {
+      const log = document.getElementById('status-log');
+      if (!log) return;
+
+      const line = document.createElement('div');
+      line.className = 'status-line';
+      line.textContent = message;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showStatus(message, type, options = {}) {
+      const { keepLog = false } = options;
+      const parts = ensureStatusStructure();
+      if (!parts) return;
+
+      parts.title.textContent = message;
+      parts.status.className = `status ${type}`;
+      parts.status.style.display = 'block';
+
+      if (!keepLog) {
+        clearStatusLog();
+      }
     }
 
     function hideStatus() {
@@ -561,7 +1266,6 @@
         const draggedId = draggedElement.dataset.frameId;
         const targetId = dropTarget.dataset.frameId;
 
-        // Reorder frameOrder array
         const draggedIndex = frameOrder.indexOf(draggedId);
         const targetIndex = frameOrder.indexOf(targetId);
 
@@ -580,313 +1284,1094 @@
       draggedElement = null;
     }
 
-    async function downloadImages(frames, frameConnections, order) {
-      try {
-        showStatus('Generating PDF with internal links...', 'info');
+    // ============================================================================
+    // PNG FALLBACK REQUEST HANDLING
+    // ============================================================================
 
-        // Try jsPDF with improved link handling first
-        await generatePDFWithJsPDFImproved(frames, frameConnections);
+    // Store pending PNG fallback callbacks
+    let pngFallbackCallbacks = {};
+
+    // Request PNG fallbacks from plugin for frames that failed PDF validation
+    async function requestPngFallbacks(failedFrames) {
+      return new Promise((resolve) => {
+        const results = [];
+        let pending = failedFrames.length;
+
+        if (pending === 0) {
+          resolve(results);
+          return;
+        }
+
+        // Set up timeout
+        const timeout = setTimeout(() => {
+          console.warn('PNG fallback request timed out');
+          // Resolve with whatever we have
+          while (results.length < failedFrames.length) {
+            results.push({ success: false, error: 'Timeout' });
+          }
+          resolve(results);
+        }, 30000); // 30 second timeout
+
+        // Request each PNG
+        failedFrames.forEach((frame, idx) => {
+          const callbackId = `png-fallback-${frame.id}-${Date.now()}`;
+
+          pngFallbackCallbacks[callbackId] = (result) => {
+            results.push({
+              success: result.success,
+              pngData: result.pngData,
+              width: result.width,
+              height: result.height,
+              name: result.name,
+              error: result.error,
+              index: frame.index,
+              id: frame.id,
+              frameName: frame.name
+            });
+            pending--;
+            delete pngFallbackCallbacks[callbackId];
+
+            if (pending === 0) {
+              clearTimeout(timeout);
+              resolve(results);
+            }
+          };
+
+          // Request PNG from plugin with quality scale
+                    parent.postMessage({
+                      pluginMessage: {
+                        type: 'request-png-fallback',
+                        frameId: frame.id,
+                        frameIndex: frame.index,
+                        callbackId: callbackId,
+                        qualityScale: pngFallbackScale
+                      }
+                    }, '*');
+                  });
+                });
+              }
+
+              // ============================================================================
+              // IMPROVED VECTOR PDF MERGING WITH HYBRID SUPPORT
+              // ============================================================================
+
+              // ============================================================================
+          // VECTOR PDF MERGING WITH MUPDF.JS
+          // ============================================================================
+
+          async function mergeVectorPDFsWithPdfLib(pdfBuffers, frameConnections, pngFallbackScale, summary) {
+            const { PDFDocument, PDFName, PDFString, StandardFonts } = PDFLib;
+            const pdfDoc = await PDFDocument.create();
+            const pages = [];
+            const pageIndexByFrameId = new Map();
+            let vectorCount = 0;
+            let pngCount = 0;
+
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+            for (const buffer of pdfBuffers) {
+              const startIndex = pages.length;
+
+              try {
+                if (buffer.isPng && buffer.pngData) {
+                  const pngBytes = toUint8Array(buffer.pngData);
+                  const pngImage = await pdfDoc.embedPng(pngBytes);
+                  const page = pdfDoc.addPage([buffer.width, buffer.height]);
+                  page.drawImage(pngImage, {
+                    x: 0,
+                    y: 0,
+                    width: buffer.width,
+                    height: buffer.height
+                  });
+                  pages.push(page);
+                  pngCount++;
+                } else if (buffer.pdfData) {
+                  const srcBytes = toUint8Array(buffer.pdfData);
+                  const srcDoc = await PDFDocument.load(srcBytes);
+                  const srcPages = await pdfDoc.copyPages(srcDoc, srcDoc.getPageIndices());
+                  srcPages.forEach((page) => {
+                    pdfDoc.addPage(page);
+                    pages.push(page);
+                  });
+                  vectorCount++;
+                } else {
+                  const page = pdfDoc.addPage([buffer.width || 800, buffer.height || 600]);
+                  page.drawText(`Export failed: ${buffer.name || 'Unknown frame'}`, {
+                    x: 40,
+                    y: (buffer.height || 600) - 80,
+                    size: 14,
+                    font: font
+                  });
+                  page.drawText('Use Rasterized mode', {
+                    x: 40,
+                    y: (buffer.height || 600) - 110,
+                    size: 12,
+                    font: font
+                  });
+                  pages.push(page);
+                }
+              } catch (pageError) {
+                console.error(`pdf-lib merge error for ${buffer.name || 'frame'}:`, pageError);
+                const page = pdfDoc.addPage([buffer.width || 800, buffer.height || 600]);
+                page.drawText(`Export failed: ${buffer.name || 'Unknown frame'}`, {
+                  x: 40,
+                  y: (buffer.height || 600) - 80,
+                  size: 14,
+                  font: font
+                });
+                pages.push(page);
+              }
+
+              pageIndexByFrameId.set(buffer.id, startIndex);
+            }
+
+            let totalLinks = 0;
+            for (const buffer of pdfBuffers) {
+              const pageIndex = pageIndexByFrameId.get(buffer.id);
+              const page = pages[pageIndex];
+
+              if (!page) continue;
+
+              const frameLinks = frameConnections.filter(conn => conn.fromFrameId === buffer.id);
+              if (frameLinks.length === 0) continue;
+
+              for (const link of frameLinks) {
+                try {
+                  const bounds = calculateLinkBounds(link.elementBounds, buffer.width, buffer.height);
+                  const yFlipped = buffer.height - bounds.y - bounds.height;
+
+                  if (link.type === 'internal') {
+                    const targetIndex = pageIndexByFrameId.get(link.toFrameId);
+                    if (typeof targetIndex === 'number' && pages[targetIndex]) {
+                      const linkAnnotation = pdfDoc.context.obj({
+                        Type: 'Annot',
+                        Subtype: 'Link',
+                        Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                        Border: [0, 0, 0],
+                        Dest: [pages[targetIndex].ref, PDFName.of('Fit')]
+                      });
+
+                      const annotations = page.node.lookup(PDFName.of('Annots'));
+                      if (annotations) {
+                        annotations.push(linkAnnotation);
+                      } else {
+                        page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                      }
+                      totalLinks++;
+                    }
+                  } else if (link.type === 'external') {
+                    const normalizedUrl = normalizeUrl(link.toUrl);
+                    if (normalizedUrl) {
+                      const linkAnnotation = pdfDoc.context.obj({
+                        Type: 'Annot',
+                        Subtype: 'Link',
+                        Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                        Border: [0, 0, 0],
+                        A: {
+                          Type: 'Action',
+                          S: 'URI',
+                          URI: PDFString.of(normalizedUrl)
+                        }
+                      });
+
+                      const annotations = page.node.lookup(PDFName.of('Annots'));
+                      if (annotations) {
+                        annotations.push(linkAnnotation);
+                      } else {
+                        page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                      }
+                      totalLinks++;
+                    }
+                  }
+                } catch (linkError) {
+                  console.error(`Failed to add link for ${buffer.name || 'frame'}:`, linkError);
+                }
+              }
+            }
+
+            let pdfBytes;
+            try {
+              pdfBytes = await pdfDoc.save();
+            } catch (saveError) {
+              console.error('pdf-lib save failed, retrying without object streams:', saveError);
+              pdfBytes = await pdfDoc.save({ useObjectStreams: false });
+            }
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const typeLabel = (vectorCount > 0 && pngCount > 0) ? 'hybrid' :
+                              (vectorCount > 0) ? 'vector' : 'png';
+            a.download = `figma-export-${typeLabel}-${dateStr}.pdf`;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            let statusMsg = `PDF exported: ${pages.length} pages`;
+            if (vectorCount > 0 && pngCount > 0) {
+              statusMsg += ` (${vectorCount} vector, ${pngCount} PNG @ ${pngFallbackScale}x)`;
+            } else if (vectorCount > 0) {
+              statusMsg += ' (100% vector!)';
+            } else {
+              statusMsg += ` (PNG @ ${pngFallbackScale}x)`;
+            }
+
+            if (totalLinks > 0) {
+              statusMsg += ` with ${totalLinks} links`;
+            }
+
+            if (summary && summary.vectorLayers) {
+              statusMsg += `. ${summary.vectorLayers} layers kept as vector, ${summary.rasterLayers} rasterized`;
+            }
+
+            showStatus(statusMsg, 'success');
+          }
+
+          function toUint8Array(data) {
+            return data instanceof Uint8Array ? data : new Uint8Array(data);
+          }
+
+          async function mergeVectorSegmentsWithPdfLib(pdfBuffers, frameConnections, pngFallbackScale, summary) {
+            const { PDFDocument, PDFName, PDFString, StandardFonts } = PDFLib;
+            const pdfDoc = await PDFDocument.create();
+            const pages = [];
+            const pageIndexByFrameId = new Map();
+            let vectorCount = 0;
+            let pngCount = 0;
+            let vectorSegments = 0;
+            let pngSegments = 0;
+
+            const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+            for (const buffer of pdfBuffers) {
+              const page = pdfDoc.addPage([buffer.width || 800, buffer.height || 600]);
+              pages.push(page);
+              pageIndexByFrameId.set(buffer.id, pages.length - 1);
+
+              let pageHasVector = false;
+              let pageHasPng = false;
+
+              try {
+                if (buffer.segments && buffer.segments.length > 0) {
+                  for (const segment of buffer.segments) {
+                    if (segment.type === 'vector' && segment.pdfData) {
+                      const segmentBytes = toUint8Array(segment.pdfData);
+                      const [embeddedPage] = await pdfDoc.embedPdf(segmentBytes, [0]);
+                      page.drawPage(embeddedPage, {
+                        x: 0,
+                        y: 0,
+                        width: buffer.width,
+                        height: buffer.height
+                      });
+                      vectorSegments++;
+                      pageHasVector = true;
+                    } else if (segment.type === 'png' && segment.pngData) {
+                      const pngBytes = toUint8Array(segment.pngData);
+                      const pngImage = await pdfDoc.embedPng(pngBytes);
+                      page.drawImage(pngImage, {
+                        x: 0,
+                        y: 0,
+                        width: buffer.width,
+                        height: buffer.height
+                      });
+                      pngSegments++;
+                      pageHasPng = true;
+                    }
+                  }
+                } else if (buffer.isPng && buffer.pngData) {
+                  const pngBytes = toUint8Array(buffer.pngData);
+                  const pngImage = await pdfDoc.embedPng(pngBytes);
+                  page.drawImage(pngImage, {
+                    x: 0,
+                    y: 0,
+                    width: buffer.width,
+                    height: buffer.height
+                  });
+                  pngSegments++;
+                  pageHasPng = true;
+                } else if (buffer.pdfData) {
+                  const srcBytes = toUint8Array(buffer.pdfData);
+                  const [embeddedPage] = await pdfDoc.embedPdf(srcBytes, [0]);
+                  page.drawPage(embeddedPage, {
+                    x: 0,
+                    y: 0,
+                    width: buffer.width,
+                    height: buffer.height
+                  });
+                  vectorSegments++;
+                  pageHasVector = true;
+                }
+              } catch (pageError) {
+                console.error(`pdf-lib layered merge error for ${buffer.name || 'frame'}:`, pageError);
+                page.drawText(`Export failed: ${buffer.name || 'Unknown frame'}`, {
+                  x: 40,
+                  y: (buffer.height || 600) - 80,
+                  size: 14,
+                  font: font
+                });
+              }
+
+              if (pageHasVector) vectorCount++;
+              if (pageHasPng) pngCount++;
+            }
+
+            let totalLinks = 0;
+            for (const buffer of pdfBuffers) {
+              const pageIndex = pageIndexByFrameId.get(buffer.id);
+              const page = pages[pageIndex];
+
+              if (!page) continue;
+
+              const frameLinks = frameConnections.filter(conn => conn.fromFrameId === buffer.id);
+              if (frameLinks.length === 0) continue;
+
+              for (const link of frameLinks) {
+                try {
+                  const bounds = calculateLinkBounds(link.elementBounds, buffer.width, buffer.height);
+                  const yFlipped = buffer.height - bounds.y - bounds.height;
+
+                  if (link.type === 'internal') {
+                    const targetIndex = pageIndexByFrameId.get(link.toFrameId);
+                    if (typeof targetIndex === 'number' && pages[targetIndex]) {
+                      const linkAnnotation = pdfDoc.context.obj({
+                        Type: 'Annot',
+                        Subtype: 'Link',
+                        Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                        Border: [0, 0, 0],
+                        Dest: [pages[targetIndex].ref, PDFName.of('Fit')]
+                      });
+
+                      const annotations = page.node.lookup(PDFName.of('Annots'));
+                      if (annotations) {
+                        annotations.push(linkAnnotation);
+                      } else {
+                        page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                      }
+                      totalLinks++;
+                    }
+                  } else if (link.type === 'external') {
+                    const normalizedUrl = normalizeUrl(link.toUrl);
+                    if (normalizedUrl) {
+                      const linkAnnotation = pdfDoc.context.obj({
+                        Type: 'Annot',
+                        Subtype: 'Link',
+                        Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                        Border: [0, 0, 0],
+                        A: {
+                          Type: 'Action',
+                          S: 'URI',
+                          URI: PDFString.of(normalizedUrl)
+                        }
+                      });
+
+                      const annotations = page.node.lookup(PDFName.of('Annots'));
+                      if (annotations) {
+                        annotations.push(linkAnnotation);
+                      } else {
+                        page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                      }
+                      totalLinks++;
+                    }
+                  }
+                } catch (linkError) {
+                  console.error(`Failed to add link for ${buffer.name || 'frame'}:`, linkError);
+                }
+              }
+            }
+
+            let pdfBytes;
+            try {
+              pdfBytes = await pdfDoc.save();
+            } catch (saveError) {
+              console.error('pdf-lib save failed, retrying without object streams:', saveError);
+              pdfBytes = await pdfDoc.save({ useObjectStreams: false });
+            }
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const typeLabel = (vectorCount > 0 && pngCount > 0) ? 'hybrid' :
+                              (vectorCount > 0) ? 'vector' : 'png';
+            a.download = `figma-export-${typeLabel}-${dateStr}.pdf`;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            let statusMsg = `PDF exported: ${pages.length} pages`;
+            if (vectorCount > 0 && pngCount > 0) {
+              statusMsg += ` (${vectorCount} pages vector, ${pngCount} pages raster)`;
+            } else if (vectorCount > 0) {
+              statusMsg += ' (100% vector!)';
+            } else {
+              statusMsg += ` (PNG @ ${pngFallbackScale}x)`;
+            }
+
+            if (vectorSegments > 0 || pngSegments > 0) {
+              statusMsg += `, segments: ${vectorSegments} vector + ${pngSegments} raster`;
+            }
+
+            if (totalLinks > 0) {
+              statusMsg += ` with ${totalLinks} links`;
+            }
+
+            if (summary && summary.vectorLayers) {
+              statusMsg += `. ${summary.vectorLayers} layers kept as vector, ${summary.rasterLayers} rasterized`;
+            }
+
+            showStatus(statusMsg, 'success');
+          }
+
+          async function mergeVectorPDFs(pdfBuffers, frameConnections, order, failedFrames, summary) {
+            failedFrames = failedFrames || [];
+            summary = summary || null;
+
+            const pngFallbackScale = summary && summary.quality ? summary.quality : 1.5;
+
+            const hasSegments = pdfBuffers.some(buffer => buffer.segments && buffer.segments.length > 0);
+            if (hasSegments) {
+              showStatus('Compositing layered vector/raster segments...', 'info');
+              try {
+                await mergeVectorSegmentsWithPdfLib(pdfBuffers, frameConnections, pngFallbackScale, summary);
+              } catch (error) {
+                console.error('Layered pdf-lib merge error:', error);
+                showStatus('Failed: ' + error.message + '. Try Rasterized export.', 'error');
+              } finally {
+                document.getElementById('export-btn').disabled = false;
+              }
+              return;
+            }
+
+            try {
+              // Wait for MuPDF to finish loading
+              if (!window.mupdfReady) {
+                console.log('⏳ Waiting for MuPDF.js to load...');
+                showStatus('Loading MuPDF.js library...', 'info');
+
+                try {
+                  await window.mupdfLoadPromise;
+                } catch (loadError) {
+                  throw new Error('Failed to load MuPDF.js: ' + loadError.message + '. Try refreshing the page or use Rasterized mode.');
+                }
+              }
+
+              // Check if load was successful
+              if (!window.mupdf || window.mupdfLoadError) {
+                throw new Error('MuPDF.js failed to load. Try refreshing the page or use Rasterized mode.');
+              }
+
+              const mupdf = window.mupdf.default || window.mupdf;
+
+              function toArrayBuffer(bytes) {
+                const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+                return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+              }
+
+              function ensurePdfDoc(doc, label) {
+                if (!doc || typeof doc.countPages !== 'function') {
+                  throw new Error(`MuPDF ${label} doc missing countPages`);
+                }
+                return doc;
+              }
+
+              function ensureMergedDoc(doc, label) {
+                if (!doc || typeof doc.newPage !== 'function' || typeof doc.graftPage !== 'function') {
+                  const methods = doc ? Object.keys(Object.getPrototypeOf(doc) || {}) : [];
+                  throw new Error(`MuPDF ${label} doc missing newPage/graftPage. Methods: ${methods.join(', ')}`);
+                }
+                return doc;
+              }
+
+              function createPdfDocument() {
+                const candidates = [];
+                if (mupdf.PDFDocument && typeof mupdf.PDFDocument.create === 'function') {
+                  candidates.push(() => mupdf.PDFDocument.create());
+                }
+                if (typeof mupdf.PDFDocument === 'function') {
+                  candidates.push(() => new mupdf.PDFDocument());
+                }
+                if (mupdf.Document && typeof mupdf.Document.createDocument === 'function') {
+                  candidates.push(() => mupdf.Document.createDocument('application/pdf'));
+                }
+
+                for (const create of candidates) {
+                  try {
+                    return ensureMergedDoc(create(), 'create');
+                  } catch (error) {
+                    console.warn('MuPDF create candidate failed:', error.message);
+                  }
+                }
+
+                throw new Error('MuPDF PDF document creation API not found');
+              }
+
+              function openPdfDocument(pdfBytes) {
+                const bytes = toUint8Array(pdfBytes);
+                const buffer = toArrayBuffer(bytes);
+
+                const candidates = [];
+                if (mupdf.PDFDocument && typeof mupdf.PDFDocument.openDocument === 'function') {
+                  candidates.push(() => mupdf.PDFDocument.openDocument(buffer));
+                  candidates.push(() => mupdf.PDFDocument.openDocument(bytes));
+                }
+                if (mupdf.Document && typeof mupdf.Document.openDocument === 'function') {
+                  candidates.push(() => mupdf.Document.openDocument(buffer, 'application/pdf'));
+                  candidates.push(() => mupdf.Document.openDocument(bytes, 'application/pdf'));
+                }
+                if (typeof mupdf.Document === 'function') {
+                  candidates.push(() => new mupdf.Document(buffer, 'application/pdf'));
+                  candidates.push(() => new mupdf.Document(bytes, 'application/pdf'));
+                }
+
+                for (const open of candidates) {
+                  try {
+                    return ensurePdfDoc(open(), 'open');
+                  } catch (error) {
+                    console.warn('MuPDF open candidate failed:', error.message);
+                  }
+                }
+
+                throw new Error('MuPDF open PDF API not found');
+              }
+
+              function createPngImage(pngBytes) {
+                const bytes = toUint8Array(pngBytes);
+                const buffer = toArrayBuffer(bytes);
+                const candidates = [];
+                if (mupdf.Image && typeof mupdf.Image.fromPNG === 'function') {
+                  candidates.push(() => mupdf.Image.fromPNG(buffer));
+                  candidates.push(() => mupdf.Image.fromPNG(bytes));
+                }
+                if (typeof mupdf.Image === 'function') {
+                  candidates.push(() => new mupdf.Image(buffer));
+                  candidates.push(() => new mupdf.Image(bytes));
+                }
+                for (const create of candidates) {
+                  try {
+                    return create();
+                  } catch (error) {
+                    console.warn('MuPDF image candidate failed:', error.message);
+                  }
+                }
+                throw new Error('MuPDF image API not found');
+              }
+
+              function loadPageSafe(doc, index) {
+                if (!doc || typeof doc.loadPage !== 'function') {
+                  throw new Error('MuPDF doc missing loadPage');
+                }
+                try {
+                  return doc.loadPage(index);
+                } catch (error) {
+                  return doc.loadPage(index + 1);
+                }
+              }
+
+              console.log('═══════════════════════════════════════════════════');
+              console.log('MUPDF VECTOR PDF MERGE');
+              console.log('  Total pages:', pdfBuffers.length);
+              console.log('═══════════════════════════════════════════════════');
+
+              showStatus('Merging vector PDFs with MuPDF...', 'info');
+
+              // Create a new blank PDF document
+              const mergedDoc = createPdfDocument();
+
+              let vectorCount = 0;
+              let pngCount = 0;
+              let pageIndex = 0;
+
+              // Process each buffer
+              for (let i = 0; i < pdfBuffers.length; i++) {
+                const buffer = pdfBuffers[i];
+
+                console.log(`[${i + 1}/${pdfBuffers.length}] Processing "${buffer.name}"`);
+
+                try {
+                  if (buffer.isPng && buffer.pngData) {
+                    // PNG page - embed as image
+                    console.log('  → Embedding PNG');
+
+                    const pngBytes = toUint8Array(buffer.pngData);
+                    const pngImage = createPngImage(pngBytes);
+
+                    // Create a new page with the frame dimensions
+                    const page = mergedDoc.newPage(pageIndex, buffer.width, buffer.height);
+
+                    // Insert the image at full size
+                    page.insertImage(pngImage, [0, 0, buffer.width, buffer.height]);
+
+                    pngCount++;
+                    pageIndex++;
+                    console.log('  ✓ PNG embedded');
+
+                  } else if (buffer.pdfData) {
+                    // Vector PDF - merge pages
+                    console.log('  → Merging vector PDF');
+
+                    const pdfBytes = toUint8Array(buffer.pdfData);
+                    const srcDoc = openPdfDocument(pdfBytes);
+
+                    // Copy all pages from source document
+                    const pageCount = srcDoc.countPages();
+                    for (let p = 0; p < pageCount; p++) {
+                      mergedDoc.graftPage(pageIndex, srcDoc, p);
+                      pageIndex++;
+                    }
+
+                    vectorCount++;
+                    console.log(`  ✓ Merged ${pageCount} vector page(s)`);
+
+                  } else {
+                    console.error('  ✗ No valid data');
+                  }
+
+                } catch (pageError) {
+                  console.error(`  ✗ Error processing page: ${pageError.message}`);
+
+                  // Add error placeholder page
+                  try {
+                    const page = mergedDoc.newPage(pageIndex, buffer.width || 800, buffer.height || 600);
+                    const font = new mupdf.Font("Helvetica");
+
+                    page.insertText("Export failed: " + buffer.name, font, 14, [40, buffer.height - 100]);
+                    page.insertText("Use Rasterized mode", font, 12, [40, buffer.height - 130]);
+                  } catch (placeholderError) {
+                    console.error('  ✗ Could not create placeholder:', placeholderError.message);
+                  }
+
+                  pageIndex++;
+                }
+              }
+
+              console.log('\n--- Adding Links ---');
+
+              // Add links to pages
+              let totalLinks = 0;
+              const pages = [];
+
+              // Get all pages
+              for (let i = 0; i < pageIndex; i++) {
+                try {
+                  pages.push(loadPageSafe(mergedDoc, i));
+                } catch (e) {
+                  console.error(`Could not load page ${i}:`, e);
+                  pages.push(null);
+                }
+              }
+
+              // Add links
+              for (let i = 0; i < pdfBuffers.length; i++) {
+                const buffer = pdfBuffers[i];
+                const page = pages[i];
+
+                if (!page) continue;
+
+                const frameLinks = frameConnections.filter(c => c.fromFrameId === buffer.id);
+
+                for (const link of frameLinks) {
+                  try {
+                    const bounds = calculateLinkBounds(link.elementBounds, buffer.width, buffer.height);
+
+                    // MuPDF uses bottom-left origin, need to flip Y
+                    const rect = [
+                      bounds.x,
+                      buffer.height - bounds.y - bounds.height,
+                      bounds.x + bounds.width,
+                      buffer.height - bounds.y
+                    ];
+
+                    if (link.type === 'internal') {
+                      const targetIdx = pdfBuffers.findIndex(b => b.id === link.toFrameId);
+                      if (targetIdx >= 0) {
+                        page.insertLink(rect, `#page=${targetIdx + 1}`);
+                        totalLinks++;
+                      }
+                    } else if (link.type === 'external') {
+                      const url = normalizeUrl(link.toUrl);
+                      if (url) {
+                        page.insertLink(rect, url);
+                        totalLinks++;
+                      }
+                    }
+
+                  } catch (linkError) {
+                    console.error(`  ✗ Link error: ${linkError.message}`);
+                  }
+                }
+              }
+
+              console.log(`✓ Added ${totalLinks} links`);
+
+              if (pageIndex === 0) {
+                throw new Error('No pages were added to the merged PDF');
+              }
+
+              // Save the merged PDF
+              console.log('\n--- Saving PDF ---');
+              showStatus('Saving merged PDF...', 'info');
+
+              const pdfBytes = mergedDoc.saveToBuffer("compress").asUint8Array();
+
+              // Download
+              const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+
+              const dateStr = new Date().toISOString().slice(0, 10);
+              const typeLabel = (vectorCount > 0 && pngCount > 0) ? 'hybrid' :
+                                (vectorCount > 0) ? 'vector' : 'png';
+              a.download = `figma-export-${typeLabel}-${dateStr}.pdf`;
+
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+
+              // Success message
+              console.log('\n═══════════════════════════════════════════════════');
+              console.log('COMPLETE:', pageIndex, 'pages');
+              console.log('  Vector PDFs:', vectorCount);
+              console.log('  PNG pages:', pngCount);
+              console.log('  Links:', totalLinks);
+              console.log('═══════════════════════════════════════════════════');
+
+              let statusMsg = `PDF exported: ${pageIndex} pages`;
+              if (vectorCount > 0 && pngCount > 0) {
+                statusMsg += ` (${vectorCount} vector, ${pngCount} PNG @ ${pngFallbackScale}x)`;
+              } else if (vectorCount > 0) {
+                statusMsg += ' (100% vector!)';
+              } else {
+                statusMsg += ` (PNG @ ${pngFallbackScale}x)`;
+              }
+
+              if (totalLinks > 0) {
+                statusMsg += ` with ${totalLinks} links`;
+              }
+
+              // Add layer stats if available
+              if (summary && summary.vectorLayers) {
+                statusMsg += `. ${summary.vectorLayers} layers kept as vector, ${summary.rasterLayers} rasterized`;
+              }
+
+              showStatus(statusMsg, 'success');
+
+            } catch (error) {
+              console.error('MuPDF merge error:', error);
+              console.warn('Falling back to pdf-lib merge');
+              try {
+                await mergeVectorPDFsWithPdfLib(pdfBuffers, frameConnections, pngFallbackScale, summary);
+                return;
+              } catch (fallbackError) {
+                console.error('pdf-lib merge error:', fallbackError);
+                showStatus('Failed: ' + fallbackError.message + '. Try Rasterized export.', 'error');
+              }
+            } finally {
+              document.getElementById('export-btn').disabled = false;
+            }
+          }
+
+    async function downloadImages(frames, frameConnections, order, qualityFromMessage) {
+      try {
+        const quality = qualityFromMessage || 'high';
+        const qualityLabel = QUALITY_SETTINGS[quality]?.label || 'High (1.5x)';
+        showStatus(`Generating PDF with internal links (${qualityLabel})...`, 'info');
+
+        const totalSize = frames.reduce((sum, f) => sum + f.imageData.length, 0);
+        const maxSizeForJsPDF = 50 * 1024 * 1024;
+
+        console.log(`Total image data size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
+
+        if (totalSize > maxSizeForJsPDF) {
+          console.log('Using pdf-lib for large file export');
+          await generatePDFWithPdfLib(frames, frameConnections, quality);
+        } else {
+          console.log('Using jsPDF for standard export');
+          await generatePDFWithJsPDFOptimized(frames, frameConnections, quality);
+        }
 
       } catch (error) {
         console.error('PDF generation error:', error);
         showStatus('Failed to generate PDF: ' + error.message, 'error');
-
-        // Fallback to image export
         exportImagesAsFallback(frames, frameConnections);
       } finally {
         document.getElementById('export-btn').disabled = false;
       }
     }
 
-    async function generatePDFWithJsPDFImproved(frames, frameConnections) {
+    async function generatePDFWithJsPDFOptimized(frames, frameConnections, quality) {
       const { jsPDF } = window.jspdf;
 
-      // Create PDF with first frame size as default
       const firstFrame = frames[0];
+      const orientation = firstFrame.width > firstFrame.height ? 'landscape' : 'portrait';
+
       const pdf = new jsPDF({
+        orientation: orientation,
         unit: 'pt',
         format: [firstFrame.width, firstFrame.height]
       });
 
-      // Remove the default first page
       pdf.deletePage(1);
 
-      for (let i = 0; i < frames.length; i++) {
-        const frame = frames[i];
-        const pageIndex = i + 1;
+      const batchSize = 5;
 
-        console.log(`Creating page ${pageIndex} for frame "${frame.name}" (${frame.width}x${frame.height})`);
+      for (let batchStart = 0; batchStart < frames.length; batchStart += batchSize) {
+        const batchEnd = Math.min(batchStart + batchSize, frames.length);
+        const batch = frames.slice(batchStart, batchEnd);
 
-        // Add new page with exact frame dimensions
-        pdf.addPage([frame.width, frame.height], 'portrait');
-        pdf.setPage(pageIndex);
+        for (let i = 0; i < batch.length; i++) {
+          const frame = batch[i];
+          const pageIndex = batchStart + i + 1;
 
-        // Convert image data to blob URL
-        const imageData = new Uint8Array(frame.imageData);
-        const blob = new Blob([imageData], { type: 'image/png' });
-        const imageUrl = URL.createObjectURL(blob);
+          console.log(`Processing page ${pageIndex}/${frames.length}: "${frame.name}"`);
 
-        // Add image to PDF
-        await new Promise((resolve) => {
-          const img = new Image();
-          img.onload = function() {
-            pdf.addImage(img, 'PNG', 0, 0, frame.width, frame.height);
-            URL.revokeObjectURL(imageUrl);
-            resolve();
-          };
-          img.onerror = function() {
-            console.error('Failed to load image for frame:', frame.name);
-            URL.revokeObjectURL(imageUrl);
-            resolve();
-          };
-          img.src = imageUrl;
-        });
+          const frameOrientation = frame.width > frame.height ? 'landscape' : 'portrait';
+
+          pdf.addPage([frame.width, frame.height], frameOrientation);
+          pdf.setPage(pageIndex);
+
+          try {
+            const imageData = await compressImageIfNeeded(frame.imageData, quality);
+
+            const blob = new Blob([imageData], { type: 'image/png' });
+            const imageUrl = URL.createObjectURL(blob);
+
+            await new Promise((resolve, reject) => {
+              const img = new Image();
+              img.onload = function() {
+                try {
+                  pdf.addImage(img, 'PNG', 0, 0, frame.width, frame.height, undefined, 'FAST');
+                  URL.revokeObjectURL(imageUrl);
+                  resolve();
+                } catch (err) {
+                  URL.revokeObjectURL(imageUrl);
+                  reject(err);
+                }
+              };
+              img.onerror = function(err) {
+                URL.revokeObjectURL(imageUrl);
+                reject(new Error(`Failed to load image for frame: ${frame.name}`));
+              };
+              img.src = imageUrl;
+            });
+          } catch (error) {
+            console.error(`Error adding frame ${frame.name}:`, error);
+          }
+        }
       }
 
-      // Second pass: Add all links after all pages are created
+      // Add links
       for (let i = 0; i < frames.length; i++) {
         const frame = frames[i];
         const pageIndex = i + 1;
-
-        // Add links for this frame
         const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
-        console.log(`Adding ${frameLinks.length} links to page ${pageIndex} ("${frame.name}")`);
 
         if (frameLinks.length > 0) {
           pdf.setPage(pageIndex);
 
           frameLinks.forEach(link => {
-            // Ensure coordinates are valid
-            const linkX = Math.max(0, Math.min(link.elementBounds.x, frame.width - 1));
-            const linkY = Math.max(0, Math.min(link.elementBounds.y, frame.height - 1));
-            const linkWidth = Math.max(1, Math.min(link.elementBounds.width, frame.width - linkX));
-            const linkHeight = Math.max(1, Math.min(link.elementBounds.height, frame.height - linkY));
+            try {
+              const bounds = calculateLinkBounds(link.elementBounds, frame.width, frame.height);
 
-            if (link.type === 'internal') {
-              // Internal frame-to-frame link
-              const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
-              if (targetFrameIndex >= 0) {
-                const targetPageNumber = targetFrameIndex + 1;
-
-                console.log(`Creating internal link: "${link.elementName}" from page ${pageIndex} -> page ${targetPageNumber}`, {
-                  coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight }
-                });
-
-                try {
-                  pdf.link(linkX, linkY, linkWidth, linkHeight, {
-                    pageNumber: targetPageNumber
+              if (link.type === 'internal') {
+                const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
+                if (targetFrameIndex >= 0) {
+                  pdf.link(bounds.x, bounds.y, bounds.width, bounds.height, {
+                    pageNumber: targetFrameIndex + 1
                   });
-                  console.log(`✅ Internal link added successfully`);
-                } catch (linkError) {
-                  console.error(`❌ Failed to add internal link:`, linkError);
                 }
-              } else {
-                console.error(`❌ Target frame not found for internal link from "${link.elementName}"`);
+              } else if (link.type === 'external') {
+                const normalizedUrl = normalizeUrl(link.toUrl);
+                if (normalizedUrl) {
+                  pdf.link(bounds.x, bounds.y, bounds.width, bounds.height, {
+                    url: normalizedUrl
+                  });
+                }
               }
-            } else if (link.type === 'external') {
-              // External URL link
-              console.log(`Creating external link: "${link.elementName}" from page ${pageIndex} -> ${link.toUrl}`, {
-                coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight }
-              });
-
-              try {
-                pdf.link(linkX, linkY, linkWidth, linkHeight, {
-                  url: link.toUrl
-                });
-                console.log(`✅ External link added successfully`);
-              } catch (linkError) {
-                console.error(`❌ Failed to add external link:`, linkError);
-              }
+            } catch (linkError) {
+              console.error(`Failed to add link on page ${pageIndex}:`, linkError);
             }
           });
         }
       }
 
-      // Save the PDF
-      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}_${quality}.pdf`;
       pdf.save(filename);
 
-      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
-      console.log(`✅ PDF export completed: ${filename}`);
+      showStatus(`PDF exported successfully as ${filename}!`, 'success');
     }
 
-    async function generatePDFWithPDFLib(frames, frameConnections) {
-      const { PDFDocument, rgb } = PDFLib;
+    async function generatePDFWithPdfLib(frames, frameConnections, quality) {
+      const { PDFDocument, PDFName } = PDFLib;
 
-      // Create a new PDF document
-      const pdfDoc = await PDFDocument.create();
+      try {
+        const pdfDoc = await PDFDocument.create();
 
-      for (let i = 0; i < frames.length; i++) {
-        const frame = frames[i];
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i];
+          console.log(`Processing frame ${i + 1}/${frames.length}: "${frame.name}"`);
 
-        // Convert image data to PNG
-        const imageData = new Uint8Array(frame.imageData);
-        const image = await pdfDoc.embedPng(imageData);
+          try {
+            const imageData = await compressImageIfNeeded(frame.imageData, quality);
+            const pngImage = await pdfDoc.embedPng(imageData);
+            const page = pdfDoc.addPage([frame.width, frame.height]);
 
-        // Create page with exact frame dimensions (convert to points)
-        const page = pdfDoc.addPage([frame.width, frame.height]);
-
-        // Draw the image
-        page.drawImage(image, {
-          x: 0,
-          y: 0,
-          width: frame.width,
-          height: frame.height,
-        });
-
-        // Add links for this frame
-        const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
-        console.log(`Adding ${frameLinks.length} links to page ${i + 1} (${frame.name})`);
-
-        for (const link of frameLinks) {
-          const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
-          if (targetFrameIndex >= 0) {
-            // PDFLib uses bottom-left coordinate system
-            const linkX = link.elementBounds.x;
-            const linkY = frame.height - link.elementBounds.y - link.elementBounds.height;
-
-            console.log(`Creating link: "${link.elementName}" -> Page ${targetFrameIndex + 1}`, {
-              x: linkX,
-              y: linkY,
-              width: link.elementBounds.width,
-              height: link.elementBounds.height
+            page.drawImage(pngImage, {
+              x: 0,
+              y: 0,
+              width: frame.width,
+              height: frame.height,
             });
-
-            // Create link annotation
-            page.addAnnotation(
-              PDFDocument.createLinkAnnotation({
-                rect: {
-                  x: linkX,
-                  y: linkY,
-                  width: link.elementBounds.width,
-                  height: link.elementBounds.height,
-                },
-                destination: pdfDoc.getPage(targetFrameIndex),
-              })
-            );
+          } catch (frameError) {
+            console.error(`Error processing frame ${frame.name}:`, frameError);
+            pdfDoc.addPage([frame.width, frame.height]);
           }
         }
+
+        // Add links
+        const pages = pdfDoc.getPages();
+
+        for (let i = 0; i < frames.length; i++) {
+          const frame = frames[i];
+          const page = pages[i];
+          const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
+
+          if (frameLinks.length === 0) continue;
+
+          for (const link of frameLinks) {
+            try {
+              const bounds = calculateLinkBounds(link.elementBounds, frame.width, frame.height);
+              const yFlipped = frame.height - bounds.y - bounds.height;
+
+              if (link.type === 'internal') {
+                const targetIndex = frames.findIndex(f => f.id === link.toFrameId);
+                if (targetIndex >= 0) {
+                  const linkAnnotation = pdfDoc.context.obj({
+                    Type: 'Annot',
+                    Subtype: 'Link',
+                    Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                    Border: [0, 0, 0],
+                    Dest: [pages[targetIndex].ref, PDFName.of('Fit')],
+                  });
+
+                  const annotations = page.node.lookup(PDFName.of('Annots'));
+                  if (annotations) {
+                    annotations.push(linkAnnotation);
+                  } else {
+                    page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                  }
+                }
+              } else if (link.type === 'external') {
+                const normalizedUrl = normalizeUrl(link.toUrl);
+                if (normalizedUrl) {
+                  const linkAnnotation = pdfDoc.context.obj({
+                    Type: 'Annot',
+                    Subtype: 'Link',
+                    Rect: [bounds.x, yFlipped, bounds.x + bounds.width, yFlipped + bounds.height],
+                    Border: [0, 0, 0],
+                    A: {
+                      Type: 'Action',
+                      S: 'URI',
+                      URI: PDFLib.PDFString.of(normalizedUrl),
+                    },
+                  });
+
+                  const annotations = page.node.lookup(PDFName.of('Annots'));
+                  if (annotations) {
+                    annotations.push(linkAnnotation);
+                  } else {
+                    page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
+                  }
+                }
+              }
+            } catch (linkError) {
+              console.error(`Failed to add link on page ${i + 1}:`, linkError);
+            }
+          }
+        }
+
+        let pdfBytes;
+        try {
+          pdfBytes = await pdfDoc.save();
+        } catch (saveError) {
+          console.error('pdf-lib save failed, retrying without object streams:', saveError);
+          pdfBytes = await pdfDoc.save({ useObjectStreams: false });
+        }
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `figma-export-${new Date().toISOString().slice(0, 10)}_${quality}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showStatus('PDF exported successfully!', 'success');
+
+      } catch (error) {
+        console.error('pdf-lib error:', error);
+        throw error;
       }
-
-      // Save the PDF
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-
-      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
     }
 
-    async function generatePDFWithJsPDF(frames, frameConnections) {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
+    async function compressImageIfNeeded(imageData, quality) {
+      const maxSize = 10 * 1024 * 1024;
 
-      // Remove the first empty page
-      pdf.deletePage(1);
+      if (imageData.length <= maxSize) {
+        return imageData instanceof Uint8Array ? imageData : new Uint8Array(imageData);
+      }
 
-      for (let i = 0; i < frames.length; i++) {
-        const frame = frames[i];
-        const pageIndex = i + 1;
+      console.log(`Compressing large image (${(imageData.length / 1024 / 1024).toFixed(2)}MB)`);
 
-        // Calculate page size
-        const pageWidth = frame.width;
-        const pageHeight = frame.height;
-
-        // Add new page with frame dimensions
-        pdf.addPage([pageWidth, pageHeight], 'portrait');
-        pdf.setPage(pageIndex);
-
-        // Convert image data to blob URL
-        const imageData = new Uint8Array(frame.imageData);
-        const blob = new Blob([imageData], { type: 'image/png' });
+      try {
+        const bytes = imageData instanceof Uint8Array ? imageData : new Uint8Array(imageData);
+        const blob = new Blob([bytes], { type: 'image/png' });
         const imageUrl = URL.createObjectURL(blob);
 
-        // Add image to PDF
-        await new Promise((resolve) => {
+        return new Promise((resolve) => {
           const img = new Image();
           img.onload = function() {
-            pdf.addImage(img, 'PNG', 0, 0, pageWidth, pageHeight);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const scale = QUALITY_SETTINGS[quality]?.compression || 0.7;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+              blob.arrayBuffer().then(buffer => {
+                URL.revokeObjectURL(imageUrl);
+                resolve(new Uint8Array(buffer));
+              });
+            }, 'image/png', 0.8);
+          };
+          img.onerror = function() {
             URL.revokeObjectURL(imageUrl);
-            resolve();
+            resolve(imageData instanceof Uint8Array ? imageData : new Uint8Array(imageData));
           };
           img.src = imageUrl;
         });
-
-        // Add internal links for this frame
-        const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
-        console.log(`Processing ${frameLinks.length} links for frame "${frame.name}" (page ${pageIndex})`);
-
-        frameLinks.forEach(link => {
-          const targetFrameIndex = frames.findIndex(f => f.id === link.toFrameId);
-          if (targetFrameIndex >= 0) {
-            // jsPDF uses bottom-left coordinate system, but let's try top-left first
-            // Also ensure coordinates are positive and within bounds
-            const linkX = Math.max(0, link.elementBounds.x);
-            const linkY = Math.max(0, link.elementBounds.y);
-            const linkWidth = Math.max(1, link.elementBounds.width);
-            const linkHeight = Math.max(1, link.elementBounds.height);
-
-            console.log(`Adding link on page ${pageIndex}:`, {
-              element: link.elementName,
-              fromPage: pageIndex,
-              toPage: targetFrameIndex + 1,
-              coordinates: { x: linkX, y: linkY, w: linkWidth, h: linkHeight },
-              frameSize: { w: pageWidth, h: pageHeight }
-            });
-
-            try {
-              // Try different jsPDF link methods
-
-              // Method 1: Internal link with pageNumber
-              pdf.link(linkX, linkY, linkWidth, linkHeight, {
-                pageNumber: targetFrameIndex + 1
-              });
-
-              // Method 2: Alternative syntax - add destination first
-              const destName = `page_${targetFrameIndex + 1}`;
-              pdf.setDestination(destName, targetFrameIndex + 1, 0, 0);
-
-              // Method 3: Create annotation directly
-              pdf.internal.addAnnotation({
-                type: 'link',
-                bounds: {
-                  x: linkX,
-                  y: linkY,
-                  w: linkWidth,
-                  h: linkHeight
-                },
-                pageNumber: targetFrameIndex + 1
-              });
-
-              console.log(`✅ Link added successfully`);
-
-            } catch (linkError) {
-              console.error(`❌ Failed to add link:`, linkError);
-            }
-          }
-        });
+      } catch (error) {
+        console.error('Compression failed:', error);
+        return imageData instanceof Uint8Array ? imageData : new Uint8Array(imageData);
       }
-
-      // Save the PDF
-      const filename = `figma-export-${new Date().toISOString().slice(0, 10)}.pdf`;
-      pdf.save(filename);
-
-      showStatus(`PDF exported successfully as ${filename} with ${frameConnections.length} internal links!`, 'success');
     }
 
     function exportImagesAsFallback(frames, frameConnections) {
       try {
         showStatus('PDF generation failed, exporting as images...', 'info');
 
-        // Create a simple text file with connection information
         let connectionInfo = "PDF Link Mapping:\n\n";
 
         frames.forEach((frame, index) => {
@@ -894,18 +2379,19 @@
           const frameLinks = frameConnections.filter(conn => conn.fromFrameId === frame.id);
 
           frameLinks.forEach(link => {
-            const targetFrame = frames.find(f => f.id === link.toFrameId);
-            const targetIndex = frames.findIndex(f => f.id === link.toFrameId);
-            if (targetFrame && targetIndex >= 0) {
-              connectionInfo += `  - Link from "${link.elementName}" to Page ${targetIndex + 1} (${targetFrame.name})\n`;
-              connectionInfo += `    Position: x=${Math.round(link.elementBounds.x)}, y=${Math.round(link.elementBounds.y)}\n`;
-              connectionInfo += `    Size: ${Math.round(link.elementBounds.width)}×${Math.round(link.elementBounds.height)}px\n`;
+            if (link.type === 'internal') {
+              const targetFrame = frames.find(f => f.id === link.toFrameId);
+              const targetIndex = frames.findIndex(f => f.id === link.toFrameId);
+              if (targetFrame && targetIndex >= 0) {
+                connectionInfo += `  - Link from "${link.elementName}" to Page ${targetIndex + 1} (${targetFrame.name})\n`;
+              }
+            } else if (link.type === 'external') {
+              connectionInfo += `  - External link from "${link.elementName}" to ${link.toUrl}\n`;
             }
           });
           connectionInfo += "\n";
         });
 
-        // Download connection info as text file
         const blob = new Blob([connectionInfo], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -916,9 +2402,8 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // Download each frame as individual image
         frames.forEach((frame, index) => {
-          const imageData = new Uint8Array(frame.imageData);
+          const imageData = frame.imageData instanceof Uint8Array ? frame.imageData : new Uint8Array(frame.imageData);
           const blob = new Blob([imageData], { type: 'image/png' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -937,13 +2422,92 @@
       }
     }
 
-    // Initialize
+    function beginVectorMerge(msg) {
+      pendingVectorMerge = {
+        buffersById: new Map(),
+        connections: msg.connections || [],
+        frameOrder: msg.frameOrder || [],
+        failedFrames: msg.failedFrames || [],
+        summary: msg.summary || {},
+        totalChunks: msg.totalChunks || 0,
+        receivedChunks: 0
+      };
+
+      const totalChunks = pendingVectorMerge.totalChunks || 0;
+      const statusMsg = totalChunks > 0
+        ? `Receiving export data... (0/${totalChunks})`
+        : 'Receiving export data...';
+      showStatus(statusMsg, 'info', { keepLog: true });
+    }
+
+    function addVectorMergeChunk(msg) {
+      if (!pendingVectorMerge) {
+        return;
+      }
+
+      const buffers = msg.pdfBuffers || [];
+      for (const buffer of buffers) {
+        if (buffer && buffer.id) {
+          pendingVectorMerge.buffersById.set(buffer.id, buffer);
+        }
+      }
+
+      pendingVectorMerge.receivedChunks += 1;
+      const totalChunks = pendingVectorMerge.totalChunks || 0;
+      if (totalChunks > 0) {
+        showStatus(`Receiving export data... (${pendingVectorMerge.receivedChunks}/${totalChunks})`, 'info', { keepLog: true });
+      }
+    }
+
+    function completeVectorMerge() {
+      if (!pendingVectorMerge) {
+        return;
+      }
+
+      const { buffersById, connections, frameOrder, failedFrames, summary } = pendingVectorMerge;
+      const orderedBuffers = [];
+
+      if (frameOrder && frameOrder.length > 0) {
+        for (const id of frameOrder) {
+          const buffer = buffersById.get(id);
+          if (buffer) {
+            orderedBuffers.push(buffer);
+          }
+        }
+      } else {
+        orderedBuffers.push(...buffersById.values());
+      }
+
+      pendingVectorMerge = null;
+      mergeVectorPDFs(orderedBuffers, connections, frameOrder, failedFrames, summary);
+    }
+
+    // ============================================================================
+    // INITIALIZATION
+    // ============================================================================
+
     document.addEventListener('DOMContentLoaded', function() {
+      initTheme();
+      updateExportTypeInfo();
+
+      // Check MuPDF loading status
+      window.mupdfLoadPromise.then(() => {
+        console.log('✓ MuPDF.js ready for vector exports');
+      }).catch((error) => {
+        console.error('✗ MuPDF.js failed to load:', error);
+        showStatus('Warning: Vector mode unavailable. Use Rasterized mode.', 'warning');
+      });
+
+      document.getElementById('theme-switch').addEventListener('change', toggleTheme);
       document.getElementById('export-btn').addEventListener('click', exportImages);
       document.getElementById('clear-list-btn').addEventListener('click', clearFrameList);
-      document.getElementById('cancel-btn').addEventListener('click', cancel);
+      document.getElementById('batch-cancel-btn').addEventListener('click', hideBatchWarning);
+      document.getElementById('batch-export-btn').addEventListener('click', executeBatchExport);
 
-      // Start with proper initial state
+      document.querySelectorAll('input[name="export-type"]').forEach(radio => {
+        radio.addEventListener('change', updateExportTypeInfo);
+      });
+
       document.getElementById('empty-state').style.display = 'block';
       document.getElementById('frame-list').style.display = 'none';
     });
@@ -951,18 +2515,57 @@
     // Listen for messages from plugin code
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
-      console.log('Received message:', msg);
+      console.log('Received message:', msg.type);
 
       if (msg.type === 'plugin-ready') {
         showStatus(msg.message, 'info');
+      } else if (msg.type === 'vector-export-progress') {
+        const phaseInfo = msg.phase ? ` [${msg.phase}]` : '';
+        showStatus('Export in progress...', 'info', { keepLog: true });
+        addStatusLine(`${msg.message}${phaseInfo}`);
+      } else if (msg.type === 'merge-vector-pdfs-start') {
+        beginVectorMerge(msg);
+      } else if (msg.type === 'merge-vector-pdfs-chunk') {
+        addVectorMergeChunk(msg);
+      } else if (msg.type === 'merge-vector-pdfs-end') {
+        completeVectorMerge();
+      } else if (msg.type === 'warning') {
+        showStatus(msg.message, 'warning');
+      } else if (msg.type === 'batch-warning') {
+        showBatchWarning(msg);
+      } else if (msg.type === 'restore-theme') {
+        if (msg.theme) {
+          currentTheme = msg.theme;
+          document.body.setAttribute('data-theme', currentTheme);
+          updateThemeUI(currentTheme);
+        }
       } else if (msg.type === 'frames-updated') {
         handleFramesUpdated(msg.frames, msg.connections, msg.justAdded);
       } else if (msg.type === 'generate-pdf') {
-        downloadImages(msg.frames, msg.connections, msg.frameOrder);
+        downloadImages(msg.frames, msg.connections, msg.frameOrder, msg.quality || 'high');
+      } else if (msg.type === 'merge-vector-pdfs') {
+        mergeVectorPDFs(msg.pdfBuffers, msg.connections, msg.frameOrder, msg.failedFrames, msg.summary);
       } else if (msg.type === 'selection-changed') {
         handleSelectionChanged(msg.selectedFrameIds, msg.selectedFrameNames);
+      } else if (msg.type === 'png-fallback-result') {
+        // Handle PNG fallback response from plugin
+        console.log('Received PNG fallback result:', msg.frameId, msg.success);
+
+        // Find and call the callback
+        const callbackKey = Object.keys(pngFallbackCallbacks).find(k => k.includes(msg.frameId));
+        if (callbackKey && pngFallbackCallbacks[callbackKey]) {
+          pngFallbackCallbacks[callbackKey]({
+            success: msg.success,
+            pngData: msg.pngData,
+            width: msg.width,
+            height: msg.height,
+            name: msg.name,
+            error: msg.error
+          });
+        }
       } else if (msg.type === 'error') {
         showStatus(msg.message, 'error');
+        document.getElementById('export-btn').disabled = false;
       }
     };
   </script>
