@@ -124,6 +124,31 @@
       font-size: 12px;
     }
 
+    .controls-top .left-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sort-select {
+      padding: 8px 12px;
+      padding-right: 28px;
+      border: 1px solid var(--border-secondary);
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    [data-theme="dark"] .sort-select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+    }
+
     /* Theme toggle switch */
     .theme-toggle {
       display: flex;
@@ -666,7 +691,14 @@
 </head>
 <body data-theme="dark">
   <div class="controls-top">
-    <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
+    <div class="left-controls">
+      <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
+      <select id="sort-select" class="sort-select" title="Sort frames">
+        <option value="none" selected>Sort</option>
+        <option value="az">Name A–Z</option>
+        <option value="za">Name Z–A</option>
+      </select>
+    </div>
     <div class="theme-toggle">
       <label class="theme-toggle-label">
         <span class="theme-icon">🌙</span>
@@ -1020,6 +1052,31 @@
       parent.postMessage({
         pluginMessage: { type: 'clear-list' }
       }, '*');
+    }
+
+    function sortFramesByName(direction) {
+      if (!direction || direction === 'none') return;
+
+      const byId = new Map(allFrames.map(frame => [frame.id, frame]));
+      const orderIndex = new Map(frameOrder.map((id, index) => [id, index]));
+
+      frameOrder.sort((a, b) => {
+        const frameA = byId.get(a);
+        const frameB = byId.get(b);
+
+        const nameA = frameA ? frameA.name : '';
+        const nameB = frameB ? frameB.name : '';
+
+        const comparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+        if (comparison !== 0) {
+          return direction === 'az' ? comparison : -comparison;
+        }
+
+        return (orderIndex.get(a) || 0) - (orderIndex.get(b) || 0);
+      });
+
+      renderFrameList();
+      showStatus(`Sorted ${frameOrder.length} frame${frameOrder.length !== 1 ? 's' : ''} (${direction === 'az' ? 'A–Z' : 'Z–A'})`, 'info');
     }
 
     // URL validation and normalization helper
@@ -2078,7 +2135,7 @@
               document.getElementById('export-btn').disabled = false;
             }
           }
-
+          
     async function downloadImages(frames, frameConnections, order, qualityFromMessage) {
       try {
         const quality = qualityFromMessage || 'high';
@@ -2501,6 +2558,10 @@
       document.getElementById('theme-switch').addEventListener('change', toggleTheme);
       document.getElementById('export-btn').addEventListener('click', exportImages);
       document.getElementById('clear-list-btn').addEventListener('click', clearFrameList);
+      document.getElementById('sort-select').addEventListener('change', (event) => {
+        sortFramesByName(event.target.value);
+        event.target.value = 'none';
+      });
       document.getElementById('batch-cancel-btn').addEventListener('click', hideBatchWarning);
       document.getElementById('batch-export-btn').addEventListener('click', executeBatchExport);
 

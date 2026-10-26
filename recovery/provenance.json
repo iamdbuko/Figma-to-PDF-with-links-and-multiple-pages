@@ -1,0 +1,36 @@
+{
+  "recovered_on": "2026-10-27",
+  "timezone": "Europe/Warsaw",
+  "plugin_id": "1535371360850075397",
+  "community_url": "https://www.figma.com/community/plugin/1535371360850075397",
+  "published_version": 8,
+  "published_date": "2026-02-17",
+  "figma_version_id": "188025",
+  "asset_path": "https://s3-alpha-sig.figma.com/plugins/1535371360850075397/188025/f1259ef9-2538-45b9-be6e-0c7e1b6dfd5d-code",
+  "retrieval": "Exact signed asset URL observed in Figma Desktop Network panel while launching the published Community plugin; downloaded directly without exporting session cookies or account credentials. Temporary signature intentionally omitted.",
+  "source_files": "code.js and ui.html extracted from downloaded runtime bundle; original bundle preserved.",
+  "manifest_origin": "Supporting manifest copied from the existing GitHub v7 baseline (commit ad4a7c538774613da2dc42f197fa50857174ecb0); not independently recovered from the v8 publication.",
+  "baseline_commit": "ad4a7c538774613da2dc42f197fa50857174ecb0",
+  "files": {
+    "code.js": {
+      "bytes": 50224,
+      "sha256": "cb8e3d4756b46f5518f4b95eedf856849a2f99b7537d505fa20babfce916f284"
+    },
+    "ui.html": {
+      "bytes": 92219,
+      "sha256": "b5f245253f191063693926bbe4fd17c0b7db06d357cfb0c8c6525dd82948ebfa"
+    },
+    "manifest.json": {
+      "bytes": 370,
+      "sha256": "431928bc26b92bc0ff7cda1cebedb5f29c48e61b02aaa2bdcbbff4a8898ea18f"
+    },
+    "recovery/published-bundle.js": {
+      "bytes": 145383,
+      "sha256": "ffcb715edcbddae793b6039df8e721499f77b19b5852b31fec3777f3129a48f3"
+    },
+    "recovery/v7-to-v8.diff": {
+      "bytes": 4029,
+      "sha256": "8cc3eee410d1c09219751f14b181b945ae88ce30e2f282271b8d6e3bd8710d73"
+    }
+  }
+}
