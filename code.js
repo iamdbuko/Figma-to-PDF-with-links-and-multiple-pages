@@ -50,10 +50,11 @@ figma.ui.onmessage = async (msg) => {
   } else if (!activeExportJob && msg.type === 'clear-list') {
     clearFrameList();
   } else if (!activeExportJob && msg.type === 'remove-frame') {
-    listRevision++;
+    const revision = ++listRevision;
     frameData = frameData.filter(frame => frame.id !== msg.frameId);
     connections = connections.filter(link => link.fromFrameId !== msg.frameId && link.toFrameId !== msg.frameId);
     sendFrameList([]);
+    await refreshListedConnections(frameData.map(frame => frame.id), revision, []);
   }
 };
 
@@ -97,13 +98,24 @@ async function autoAddSelectedFrames(selectedFrames) {
   }
   // Metadata is available immediately; link scans cannot mutate an active job.
   sendFrameList(justAdded);
+  // Adding a destination can make links in previously listed sources eligible.
+  // A selection-only refresh can keep its narrower scan when membership is stable.
+  const refreshIds = justAdded.length ? frameData.map(frame => frame.id) : selectedFrames.map(frame => frame.id);
+  await refreshListedConnections(refreshIds, revision, justAdded, new Map(selectedFrames.map(frame => [frame.id, frame])));
+}
+
+async function refreshListedConnections(frameIds, revision, justAdded, knownFrames = new Map()) {
   const freshLinks = [];
   const listedIds = new Set(frameData.map(frame => frame.id));
-  for (const frame of selectedFrames) {
+  for (const id of frameIds) {
+    if (activeExportJob || revision !== listRevision) return;
+    const frame = knownFrames.get(id) || await figma.getNodeByIdAsync(id);
+    if (activeExportJob || revision !== listRevision) return;
+    if (!frame || frame.removed || frame.type !== 'FRAME') continue;
     await scanNodeForConnections(frame, frame.id, 0, listedIds, freshLinks);
     if (activeExportJob || revision !== listRevision) return;
   }
-  const refreshedIds = new Set(selectedFrames.map(frame => frame.id));
+  const refreshedIds = new Set(frameIds);
   connections = connections.filter(link => !refreshedIds.has(link.fromFrameId)).concat(freshLinks);
   sendFrameList(justAdded);
 }
@@ -619,11 +631,27 @@ async function startExport(msg) {
     const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
     const selectedIds = new Set(ids);
     const liveFrames = [];
+    const unavailableIds = new Set();
     for (const id of ids) {
       const frame = await figma.getNodeByIdAsync(id);
       if (!verifySourceColorProfile(job)) return;
-      if (!frame || frame.type !== 'FRAME') throw new Error('A selected frame was removed or is no longer available. Refresh the list and try again.');
+      if (!frame || frame.removed || frame.type !== 'FRAME') {
+        unavailableIds.add(id);
+        continue;
+      }
       watchSourcePage(job, frame);
+      liveFrames.push(frame);
+    }
+    if (unavailableIds.size) {
+      // Discard only nodes that were proven unavailable. Keep every valid list
+      // entry so a failed preflight does not force the user to rebuild the list.
+      listRevision++;
+      frameData = frameData.filter(frame => !unavailableIds.has(frame.id));
+      connections = connections.filter(link => !unavailableIds.has(link.fromFrameId) && !unavailableIds.has(link.toFrameId));
+      sendFrameList([]);
+      throw new Error(`Removed ${unavailableIds.size} unavailable frame${unavailableIds.size === 1 ? '' : 's'} from the export list. Review the remaining frames and export again.`);
+    }
+    for (const frame of liveFrames) {
       validateFrameSize(frame);
       const metadata = describeFrame(frame);
       validateFrameSize(metadata);
@@ -633,7 +661,6 @@ async function startExport(msg) {
       }
       if (job.exportType === 'raster' || unsupportedMode) rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
       job.frames.push(metadata);
-      liveFrames.push(frame);
     }
     for (const frame of liveFrames) {
       await scanNodeForConnections(frame, frame.id, 0, selectedIds, job.connections);

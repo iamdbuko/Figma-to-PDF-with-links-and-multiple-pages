@@ -6,7 +6,7 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Development version
 
-This branch is **v9.0.0-dev.7**. The Community release is still v8. Importing or running this development copy does not publish an update.
+This branch is **v9.0.0-dev.8**. The Community release is still v8. Importing or running this development copy does not publish an update.
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
@@ -15,6 +15,8 @@ Other changes include cancellation, detection of edits during export, fresh fram
 **Color profile** defaults to **Same as Figma file**, including older files. Explicit sRGB and Display P3 remain available. The chosen profile applies to vector pages, raster pages, and fallbacks; raster profiles are embedded in the PDF, including compressed JPEGs. See [color-profile behavior and validation](docs/COLOR-PROFILES.md).
 
 **Vector or Rasterized → CMYK (beta)** works using the built-in basICColor ISO Coated v2 300% profile (FOGRA39 coated paper), or an optional custom printer profile. Conversion stays offline. Vector CMYK converts supported paths, text, gradients and images while preserving links; unsupported content stops with an explanation. Rasterized CMYK turns each page into pixels and flattens transparency onto white. See [Vector CMYK features and limits](docs/VECTOR-CMYK.md), [CMYK setup](docs/CMYK.md), and [finding profiles on Mac and Windows](docs/ICC-PROFILES.md).
+
+**Vector image resolution** offers Original plus 36–300 DPI for supported embedded images, in RGB and CMYK. It downsamples images according to their placement while retaining vector drawing, text and links; it cannot add detail beyond Figma's native export. Rasterized mode retains its separate page-resolution control. See the [functionality audit](docs/FUNCTIONALITY-AUDIT.md).
 
 ## Run and develop
 
@@ -30,7 +32,7 @@ npm run build
 3. Run **PDF Export with Links — v9 Dev**.
 4. Select frames, arrange the export order, choose Vector or Rasterized, then a Color profile, and export. Same as Figma file is the default. Both formats support CMYK; changing profiles preserves your chosen format.
 
-Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. Color helpers are in `src/color-profiles.js`, `src/cmyk.js`, `src/vector-cmyk.js` and `src/pdf-functions.js`. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
+Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. PDF and color helpers are in `src/color-profiles.js`, `src/cmyk.js`, `src/vector-cmyk.js`, `src/pdf-functions.js`, `src/pdf-image-resolution.js` and `src/pdf-loader.js`. `src/cooperative-yield.js` schedules processing and cancellation; the pinned PDF library uses the same scheduler. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
 
 ## Checks
 
@@ -49,8 +51,9 @@ See [large-file export options and validation](docs/LARGE-EXPORTS.md), [initial 
 
 - Raster rendering: at most **32 million scaled pixels** and **16,384 pixels per side**. Lower the quality or export a smaller frame when a request exceeds these limits.
 - Rasterized CMYK: **8 million scaled pixels** per page; fitting uses this lower limit. Vector CMYK: **16 million pixels per embedded image**, **32 million converted image pixels per page**, with additional drawing-content limits. It retains normal transparency with an appearance warning. The built-in profile describes FOGRA39 coated printing; use a custom profile when your printer specifies another condition. Neither mode is PDF/X.
+- Explicit Vector image downsizing: up to **20 million source pixels per image**, **80 million decoded source pixels per page**, and **16 million output pixels per image**. Unsupported images stay original with a warning; CMYK may still refuse them. Resized JPEGs use lossless compression, so fewer pixels do not guarantee fewer bytes.
 - Transport budget: **128 MiB per page**, including temporary text-link data. Earlier pages and discarded retries do not consume this allowance.
-- PDF data budget: **128 MiB per output document**, estimated from retained PDF objects and streams. This is not a total-memory measurement; final serialization needs additional memory. Split into smaller parts or use JPEG when a document exceeds it.
+- PDF data budget: **128 MiB per output document**, estimated from retained PDF objects and streams. This is not a total-memory measurement; final serialization needs additional memory. Lower image/page resolution, split into smaller parts, or use JPEG for raster pages when a document exceeds it.
 - RGB Vector mode rasterizes whole frames containing Figma's unsupported Plus lighter/darker blend modes, or when native export/import fails. The UI identifies fallback pages. Vector CMYK stops on unsupported content and never silently rasterizes a page.
 - Text links require native PDF annotation geometry. Missing or ambiguous geometry is omitted with a warning rather than guessed. Desktop Figma node URLs identify distinct internal targets; an empty native URI cannot distinguish multiple internal targets in one text layer.
 - Internal destinations must be included in the same export. Selected sources must be frames. Prototype actions are represented as static PDF hyperlinks, not interactive animations, overlays or conditional flows.

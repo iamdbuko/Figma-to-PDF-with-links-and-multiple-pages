@@ -7,6 +7,53 @@ import { build } from 'esbuild';
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const pdfLibraryLicenses = [
+  ['pdf-lib', 'pdf-lib/LICENSE.md', 'pdf-lib-MIT.txt'],
+  ['@pdf-lib/standard-fonts', '@pdf-lib/standard-fonts/LICENSE.md', 'pdf-lib-standard-fonts-MIT.txt'],
+  ['@pdf-lib/upng', '@pdf-lib/upng/LICENSE', 'pdf-lib-upng-MIT.txt'],
+  ['pako', 'pako/LICENSE', 'pako-MIT.txt'],
+  ['tslib', 'tslib/LICENSE.txt', 'tslib-0BSD.txt']
+];
+// tslib exposes its entry point but intentionally does not export license files.
+const resolvePdfLicense = location => location === 'tslib/LICENSE.txt'
+  ? path.join(path.dirname(require.resolve('tslib')), 'LICENSE.txt') : require.resolve(location);
+
+export async function buildPdfLibrary() {
+  const packageInfo = require('pdf-lib/package.json');
+  const asyncPath = require.resolve('pdf-lib/cjs/utils/async.js');
+  const expectedAsyncHash = 'd690606a1e505449ce947a83bd33f3d57d0c38c1f13f757329f1e5012ff706a6';
+  if (packageInfo.version !== '1.17.1' || createHash('sha256').update(readFileSync(asyncPath)).digest('hex') !== expectedAsyncHash) {
+    throw new Error('The pinned pdf-lib cooperative-wait adapter needs review for this dependency version.');
+  }
+  let overrides = 0;
+  const license = pdfLibraryLicenses.map(([name, location]) => `/*! ${name}\n${readFileSync(resolvePdfLicense(location), 'utf8').replace(/\r\n/g, '\n')}*/`).join('\n');
+  const result = await build({
+    stdin: { contents: 'globalThis.PDFLib = require("pdf-lib/cjs/index.js");', resolveDir: root, sourcefile: 'pdf-lib-offline-entry.js' },
+    bundle: true, platform: 'browser', format: 'iife', target: 'es2020', minify: true,
+    // Escape PDF writer line endings inside ordinary strings; never trim their data.
+    supported: { 'template-literal': false },
+    legalComments: 'inline', write: false,
+    banner: { js: `/*! pdf-lib 1.17.1; cooperative wait adapter applied only at build time. */\n${license}` },
+    plugins: [{
+      name: 'pdf-lib-cooperative-wait',
+      setup(builder) {
+        builder.onLoad({ filter: /[/\\]pdf-lib[/\\]cjs[/\\]utils[/\\]async\.js$/ }, args => {
+          if (path.resolve(args.path) !== path.resolve(asyncPath)) throw new Error('Unexpected pdf-lib async module path.');
+          overrides++;
+          return { loader: 'js', contents: `"use strict";
+            Object.defineProperty(exports, "__esModule", { value: true });
+            exports.waitForTick = function () {
+              if (typeof globalThis.__PDF_EXPORT_YIELD__ === 'function') return globalThis.__PDF_EXPORT_YIELD__();
+              return new Promise(function (resolve) { setTimeout(resolve, 0); });
+            };` };
+        });
+      }
+    }]
+  });
+  if (overrides !== 1) throw new Error('Expected exactly one pinned pdf-lib cooperative-wait override.');
+  return result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
+}
+
 export async function buildCmykBundle() {
   const wasm = readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')).toString('base64');
   // Keep the redistributed production profile byte-for-byte identical to OpenICC.
@@ -58,9 +105,7 @@ export async function buildPlugin(outputPath = process.env.PDF_EXPORT_UI_OUTPUT 
 const source = readFileSync(path.join(root, 'src/ui.html'), 'utf8');
 const marker = '<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>';
 if (source.split(marker).length !== 2) throw new Error('Expected exactly one PDF library marker in src/ui.html');
-const library = readFileSync(require.resolve('pdf-lib/dist/pdf-lib.min.js'), 'utf8')
-  .replace(/\/\/# sourceMappingURL=.*$/gm, '')
-  .replace(/<\/script/gi, '<\\/script');
+const library = await buildPdfLibrary();
 const colorMarker = '<script src="color-profiles.js"></script>';
 if (source.split(colorMarker).length !== 2) throw new Error('Expected exactly one color profile helper marker in src/ui.html');
 const colorHelper = readFileSync(path.join(root, 'src/color-profiles.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
@@ -75,7 +120,7 @@ const jpegBundle = await build({
   bundle: true, platform: 'browser', format: 'iife', target: 'es2020', minify: true, legalComments: 'inline', write: false,
   banner: { js: '/*! JPEG decoder: Copyright 2011 notmasteryet. Licensed under Apache-2.0; see licenses/jpeg-js-decoder-Apache-2.0.txt and https://www.apache.org/licenses/LICENSE-2.0 */' }
 });
-const vectorHelpers = [jpegBundle.outputFiles[0].text, ...['pdf-functions.js', 'vector-cmyk.js'].map(file => readFileSync(path.join(root, 'src', file), 'utf8'))]
+const vectorHelpers = [jpegBundle.outputFiles[0].text, ...['cooperative-yield.js', 'pdf-functions.js', 'pdf-loader.js', 'pdf-image-resolution.js', 'vector-cmyk.js'].map(file => readFileSync(path.join(root, 'src', file), 'utf8'))]
   .map(text => text.replace(/<\/script/gi, '<\\/script')).join('\n');
 const output = '<!-- Generated by npm run build. Edit src/ui.html and its helper files. -->\n' + source
   .replace(marker, () => '<script>\n' + library + '\n</script>')
@@ -84,7 +129,7 @@ const output = '<!-- Generated by npm run build. Edit src/ui.html and its helper
   .replace(vectorMarker, () => '<script>\n' + vectorHelpers + '\n</script>');
 writeFileSync(outputPath, output);
 mkdirSync(path.join(root, 'licenses'), { recursive: true });
-writeFileSync(path.join(root, 'licenses/pdf-lib-MIT.txt'), readFileSync(require.resolve('pdf-lib/LICENSE.md')));
+for (const [, location, filename] of pdfLibraryLicenses) writeFileSync(path.join(root, 'licenses', filename), readFileSync(resolvePdfLicense(location)));
 writeFileSync(path.join(root, 'licenses/lcms-wasm-MIT.txt'), readFileSync(require.resolve('lcms-wasm/LICENSE.md')));
 writeFileSync(path.join(root, 'licenses/jpeg-js-LICENSE.txt'), readFileSync(require.resolve('jpeg-js/LICENSE')));
 console.log(`Built ${outputPath} with bundled pdf-lib and offline LittleCMS; no network requests are required.`);

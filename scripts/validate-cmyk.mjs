@@ -10,6 +10,7 @@ import * as constants from 'lcms-wasm';
 const require = createRequire(import.meta.url);
 const PDFLib = require('pdf-lib');
 const { createPdfColorManagement } = require('../src/color-profiles.js');
+const { createPdfLoader } = require('../src/pdf-loader.js');
 const { createCmykExporter } = require('../src/cmyk.js');
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const profilePath = process.argv[2];
@@ -22,7 +23,7 @@ const color = createPdfColorManagement(PDFLib);
 const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }), getRasterProfile: color.getRasterProfile }).prepare(profile);
 const html = fs.readFileSync(path.join(root, 'src/ui.html'), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const { appendExportPage, addExportLinks } = new Function('PDFLib', 'yieldToBrowser', 'createPdfColorManagement', `${helpers}; return {appendExportPage,addExportLinks};`)(PDFLib, () => Promise.resolve(), createPdfColorManagement);
+const { appendExportPage, addExportLinks } = new Function('PDFLib', 'yieldToBrowser', 'createPdfLoader', 'createPdfColorManagement', `${helpers}; return {appendExportPage,addExportLinks};`)(PDFLib, () => Promise.resolve(), createPdfLoader, createPdfColorManagement);
 const input = new Uint8Array(fs.readFileSync(path.join(root, 'tests/fixtures/color-profiles/swatches-SRGB.png')));
 const document = await PDFLib.PDFDocument.create();
 try {

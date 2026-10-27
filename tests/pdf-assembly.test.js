@@ -4,13 +4,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const PDFLib = require('pdf-lib');
 const { createPdfColorManagement } = require('../src/color-profiles.js');
+const { createPdfLoader } = require('../src/pdf-loader.js');
 const { createVectorCmykConverter } = require('../src/vector-cmyk.js');
+const { createPdfImageResampler } = require('../src/pdf-image-resolution.js');
 
 const root = path.resolve(__dirname, '..');
 const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
 const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfColorManagement', 'createVectorCmykConverter', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfColorManagement, createVectorCmykConverter);
+const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfLoader', 'createPdfColorManagement', 'createVectorCmykConverter', 'createPdfImageResampler', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfLoader, createPdfColorManagement, createVectorCmykConverter, createPdfImageResampler);
 const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
 const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));
@@ -47,6 +49,38 @@ test('raster pages retain precise native text annotations without copying the na
   assert.deepEqual(plainRecords(output, page), expected);
   const saved = await output.save();
   assert.ok(saved.length < fixture.length / 2, 'only annotation geometry, not vector content, was copied');
+});
+
+test('Vector image resolution changes saved RGB and CMYK image pixels without changing native links or page dimensions', async () => {
+  const source = await PDFLib.PDFDocument.load(fixture), nativePage = source.getPage(0), name = PDFLib.PDFName.of;
+  const expectedLinks = plainRecords(source, nativePage);
+  const image = source.context.register(source.context.flateStream(new Uint8Array(800 * 400 * 3).fill(192), {
+    Type: 'XObject', Subtype: 'Image', Width: 800, Height: 400, BitsPerComponent: 8, ColorSpace: 'DeviceRGB'
+  }));
+  const resources = nativePage.node.Resources();
+  if (!resources.has(name('XObject'))) resources.set(name('XObject'), source.context.obj({}));
+  resources.lookup(name('XObject')).set(name('ResolutionImage'), image);
+  nativePage.pushOperators(PDFLib.pushGraphicsState(), PDFLib.concatTransformationMatrix(100, 0, 0, 50, 350, 200), PDFLib.drawObject('ResolutionImage'), PDFLib.popGraphicsState());
+  const bytes = await source.save();
+  const constants = await import('lcms-wasm');
+  const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
+  const { createCmykExporter } = require('../src/cmyk.js');
+  const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc')));
+  try {
+    for (const outputColorMode of ['RGB', 'CMYK']) for (const imageDpi of [null, 72, 144]) {
+      const output = await PDFLib.PDFDocument.create();
+      const { page } = await appendExportPage(output, { frame, format: 'PDF', data: bytes, exportColorProfile: 'SRGB', outputColorMode }, { imageDpi, cmykSession: outputColorMode === 'CMYK' ? session : undefined });
+      const saved = await PDFLib.PDFDocument.load(await output.save()), resultPage = saved.getPage(0);
+      assert.deepEqual(plainRecords(saved, resultPage), expectedLinks);
+      assert.deepEqual(resultPage.getSize(), page.getSize());
+      const resultImage = resultPage.node.Resources().lookup(name('XObject')).lookup(name('ResolutionImage'));
+      assert.equal(resultImage.dict.lookup(name('Width')).asNumber(), imageDpi === null ? 800 : 100 * imageDpi / 72);
+      assert.equal(resultImage.dict.lookup(name('Height')).asNumber(), imageDpi === null ? 400 : 50 * imageDpi / 72);
+      const space = resultImage.dict.lookup(name('ColorSpace'));
+      if (outputColorMode === 'CMYK') assert.equal(saved.context.lookup(space.get(1)).dict.lookup(name('N')).asNumber(), 4);
+      else assert.equal(space.toString(), '/DeviceRGB');
+    }
+  } finally { session.close(); }
 });
 
 test('real CMYK assembly retains exact native text-link rectangles in vector and raster modes', async () => {

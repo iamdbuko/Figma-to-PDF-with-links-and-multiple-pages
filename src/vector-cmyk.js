@@ -3,6 +3,7 @@
 function createVectorCmykConverter(P, options = {}) {
   const { PDFName: Name, PDFDict: Dict, PDFArray: Arr, PDFRawStream: Stream, PDFNumber: Num } = P;
   const n = Name.of, fail = message => { throw new Error(`Vector CMYK: ${message} Choose Rasterized for this page.`); };
+  const yieldToBrowser = options.yieldToBrowser || (() => new Promise(resolve => setTimeout(resolve, 0)));
   const decodeJpeg = options.decodeJpeg || (typeof require === 'function' ? require('jpeg-js').decode : globalThis.decodeCmykJpeg);
   const functionFactory = typeof createPdfFunctionEvaluator === 'function' ? createPdfFunctionEvaluator
     : typeof require === 'function' ? require('./pdf-functions').createPdfFunctionEvaluator : null;
@@ -80,9 +81,11 @@ function createVectorCmykConverter(P, options = {}) {
     if (doc.catalog.lookup(n('OutputIntents'))?.size()) fail('Document-wide output profiles are not supported.');
     const target = ctx.obj(['ICCBased', session.destinationProfileRef(doc)]);
     const profileCache = new WeakMap(), resourceCache = new WeakMap(), objectCache = new WeakMap();
-    const inProgress = new WeakSet(), colorCache = new Map();
+    const colorCache = new Map(), validatedFonts = new WeakSet(), formVariants = new WeakMap(), alphaMasks = new WeakMap();
+    const identityIds = new WeakMap(); let nextIdentity = 0;
+    const identity = object => { if (!object) return 0; if (!identityIds.has(object)) identityIds.set(object, ++nextIdentity); return identityIds.get(object); };
     const checkedForms = new WeakMap();
-    let contentBytes = 0, instructionCount = 0, resourceCount = 0, hasTransparency = false, approximateGradient = false;
+    let contentBytes = 0, instructionCount = 0, processedInstructions = 0, resourceCount = 0, hasTransparency = false, approximateGradient = false;
     const evaluator = functionFactory(P);
     const lookup = value => ctx.lookup(value);
     const dict = value => { value = lookup(value); if (!(value instanceof Dict)) fail('Invalid PDF resource dictionary.'); return value; };
@@ -183,16 +186,68 @@ function createVectorCmykConverter(P, options = {}) {
       return profiles.get(key);
     }
 
-    function rejectGroup(d) {
-      if (d.has(n('Group'))) fail('Transparency groups are not supported yet.');
+    function convertedGroup(d, resources, alphaOnly = false) {
+      if (!d.has(n('Group'))) return null;
+      const group = dict(d.get(n('Group')));
+      if (group.get(n('S'))?.toString() !== '/Transparency') fail('Unsupported Form group.');
+      if (group.get(n('K'))?.toString() === 'true') fail('Knockout transparency groups are not supported yet.');
+      for (const key of group.keys()) if (!['Type', 'S', 'CS', 'I', 'K'].includes(key.decodeText())) fail('Unsupported transparency-group property.');
+      if (group.has(n('CS')) && !['rgb', 'gray'].includes(colorSpace(group.get(n('CS')), resources).kind)) fail('Unsupported transparency-group color space.');
+      const result = group.clone(ctx);
+      result.set(n('CS'), alphaOnly ? n('DeviceGray') : target);
+      hasTransparency = true;
+      return result;
     }
-    function validateState(d) {
+
+    function alphaMask(value, resources) {
+      const mask = dict(value);
+      if (mask.get(n('S'))?.toString() !== '/Alpha') fail('Luminosity and other transparency-group soft masks are not supported yet.');
+      for (const key of mask.keys()) if (!['Type', 'S', 'G'].includes(key.decodeText())) fail('Soft-mask backdrop or transfer functions are not supported yet.');
+      const form = lookup(mask.get(n('G')));
+      if (!(form instanceof Stream) || form.dict.get(n('Subtype'))?.toString() !== '/Form') fail('Unsupported alpha-mask Form.');
+      if (form.dict.has(n('Ref')) || form.dict.has(n('OPI'))) fail('External alpha-mask Forms are not supported.');
+      const ownResources = form.dict.lookup(n('Resources')) || resources;
+      if (alphaMasks.get(form)?.has(ownResources)) return alphaMasks.get(form).get(ownResources);
+      const group = convertedGroup(form.dict, ownResources, true);
+      if (!group) fail('An alpha mask must contain a transparency group.');
+      // Figma uses opaque vector outlines as alpha masks. Their RGB color is
+      // irrelevant to alpha, but inherited RGB scn operands become invalid once
+      // the parent is CMYK. Normalize ONLY this bounded, path-only Alpha subset
+      // to DeviceGray; never apply this treatment to a luminosity mask.
+      const output = ['0 g', '0 G']; let depth = 0;
+      const pathOps = new Set('q Q cm w J j M d ri i m l c v y h re S s f F f* B B* b b* n W W*'.split(' '));
+      for (const { op, args } of formOps(form)) {
+        if (op === 'CS' || op === 'cs') {
+          if (args.length !== 1 || colorSpace(args[0], ownResources).kind === 'pattern') fail('Pattern colors in alpha masks are not supported.');
+          output.push(op === 'CS' ? '0 G' : '0 g'); continue;
+        }
+        if (['RG', 'rg', 'G', 'g', 'K', 'k', 'SC', 'SCN', 'sc', 'scn'].includes(op)) {
+          if (![1, 3, 4].includes(args.length)) fail('Invalid alpha-mask color operands.');
+          args.forEach(number); output.push(op === op.toUpperCase() ? '0 G' : '0 g'); continue;
+        }
+        if (!pathOps.has(op)) fail('This alpha mask uses unsupported images, text, patterns or graphics states.');
+        if (op === 'q' && ++depth > 128) fail('Alpha-mask graphics state is nested too deeply.');
+        if (op === 'Q' && --depth < 0) fail('Unbalanced alpha-mask graphics state.');
+        output.push(`${args.map(String).join(' ')}${args.length ? ' ' : ''}${op}`);
+      }
+      if (depth) fail('Unbalanced alpha-mask graphics state.');
+      const convertedForm = ctx.flateStream(output.join('\n') + '\n');
+      for (const [key, item] of form.dict.entries()) if (!['Length', 'Filter', 'DecodeParms', 'Resources', 'Group'].includes(key.decodeText())) convertedForm.dict.set(key, item);
+      convertedForm.dict.set(n('Resources'), ctx.obj({})); convertedForm.dict.set(n('Group'), group);
+      const result = mask.clone(ctx); result.set(n('G'), ctx.register(convertedForm));
+      if (!alphaMasks.has(form)) alphaMasks.set(form, new WeakMap());
+      alphaMasks.get(form).set(ownResources, result); hasTransparency = true; return result;
+    }
+
+    function convertedState(d, resources) {
       const blend = d.lookup(n('BM'));
-      if (blend && blend.toString() !== '/Normal' && blend.toString() !== '/Compatible') fail('Blend modes are not supported yet.');
-      const mask = d.lookup(n('SMask'));
-      if (mask && mask.toString() !== '/None') fail('Transparency-group soft masks are not supported yet.');
+      if (blend && !['/Normal', '/Compatible', '/Multiply'].includes(blend.toString())) fail('This blend mode is not supported yet.');
+      if (blend?.toString() === '/Multiply') hasTransparency = true;
       for (const key of ['TR', 'TR2', 'BG', 'BG2', 'UCR', 'UCR2', 'HT', 'OP', 'op', 'OPM', 'Font']) if (d.has(n(key))) fail(`Graphics-state ${key} is not supported yet.`);
       for (const key of ['CA', 'ca']) if (d.has(n(key))) { const v = count(d, key); if (v < 0 || v > 1) fail('Invalid opacity.'); if (v < 1) hasTransparency = true; }
+      const result = d.clone(ctx), mask = d.lookup(n('SMask'));
+      if (mask && mask.toString() !== '/None') result.set(n('SMask'), alphaMask(mask, resources));
+      return result;
     }
 
     async function shading(value, resources) {
@@ -296,12 +351,9 @@ function createVectorCmykConverter(P, options = {}) {
       if (depth > 32) fail('PDF resources are nested too deeply.');
       original = dict(original);
       if (resourceCache.has(original)) return resourceCache.get(original);
-      if (inProgress.has(original)) fail('Recursive PDF resources are not supported.');
-      inProgress.add(original);
       resourceCount += original.keys().length;
       for (const key of ['ColorSpace', 'ExtGState', 'XObject', 'Shading', 'Pattern', 'Font']) {
-        const child = original.lookup(n(key));
-        if (child instanceof Dict) resourceCount += child.keys().length;
+        const child = original.lookup(n(key)); if (child instanceof Dict) resourceCount += child.keys().length;
       }
       if (resourceCount > 100000) fail('This page has too many PDF resources.');
       const result = original.clone(ctx), spaces = ctx.obj({});
@@ -309,84 +361,87 @@ function createVectorCmykConverter(P, options = {}) {
       const existingSpaces = original.lookup(n('ColorSpace'));
       while (existingSpaces instanceof Dict && existingSpaces.has(n(colorName))) colorName += '_';
       spaces.set(n(colorName), target); result.set(n('ColorSpace'), spaces);
-      const bundle = { original, result, colorName };
-      // Source color resources are resolved from original, never from result.
-      const gs = original.lookup(n('ExtGState'));
-      if (gs) for (const value of dict(gs).values()) validateState(dict(value));
-      const xobjects = original.lookup(n('XObject'));
-      if (xobjects) {
-        const out = ctx.obj({});
-        for (const [key, ref] of dict(xobjects).entries()) {
-          const object = lookup(ref);
-          if (!(object instanceof Stream)) fail('Unsupported XObject.');
-          if (!cachedObject(object, original)) {
-            if (inProgress.has(object)) fail('Recursive Form XObject.');
-            inProgress.add(object);
-            const type = object.dict.get(n('Subtype'))?.toString();
-            if (type === '/Image') cacheObject(object, original, await image(object, original));
-            else if (type === '/Form') {
-              if (stats.forms >= 2048) fail('This page has too many Form XObjects.');
-              validateFormGraph(object, original);
-              rejectGroup(object.dict);
-              if (object.dict.has(n('Ref')) || object.dict.has(n('OPI'))) fail('External Form XObjects are not supported.');
-              const ownResources = object.dict.lookup(n('Resources'));
-              // A form without resources inherits this resource dictionary.
-              const convertedResources = ownResources ? await resourcesFor(ownResources, depth + 1) : bundle;
-              const bytes = await content(null, convertedResources, false, formOps(object));
-              const stream = ctx.flateStream(bytes);
-              for (const [k, v] of object.dict.entries()) if (!['Length', 'Filter', 'DecodeParms', 'Resources'].includes(k.decodeText())) stream.dict.set(k, v);
-              stream.dict.set(n('Resources'), convertedResources.result);
-              cacheObject(object, original, ctx.register(stream)); stats.forms++;
-            } else fail(`Unsupported XObject ${type}.`);
-            inProgress.delete(object);
-          }
-          out.set(key, cachedObject(object, original));
-        }
-        result.set(n('XObject'), out);
-      }
-      const shadings = original.lookup(n('Shading'));
-      if (shadings) {
-        const out = ctx.obj({});
-        for (const [key, value] of dict(shadings).entries()) out.set(key, await shading(value, original));
-        result.set(n('Shading'), out);
-      }
-      const patterns = original.lookup(n('Pattern'));
-      if (patterns) {
-        const out = ctx.obj({});
-        for (const [key, value] of dict(patterns).entries()) {
-          const pattern = dict(value);
-          if (count(pattern, 'PatternType') !== 2) fail('Tiling patterns are not supported yet.');
-          if (pattern.has(n('ExtGState'))) validateState(dict(pattern.get(n('ExtGState'))));
-          const clone = pattern.clone(ctx); clone.set(n('Shading'), await shading(pattern.get(n('Shading')), original)); out.set(key, clone);
-        }
-        result.set(n('Pattern'), out);
-      }
-      const fonts = original.lookup(n('Font'));
-      if (fonts) for (const value of dict(fonts).values()) {
-        const font = dict(value);
-        if (font.get(n('Subtype'))?.toString() === '/Type3') {
-          // Figma emits empty Type3 glyphs for its invisible text layer, while
-          // visible text is outlined in page content. Colored Type3 fonts need
-          // a separate inherited-color interpreter, so reject them explicitly.
-          for (const value of dict(font.get(n('CharProcs'))).values()) {
+      // Resolve only resources invoked by drawing instructions. Register this
+      // bundle first: shared dictionaries are legal; Do cycles are checked by
+      // validateFormGraph instead of confusing them with dictionary sharing.
+      for (const key of ['ExtGState', 'XObject', 'Shading', 'Pattern', 'Font']) result.set(n(key), ctx.obj({}));
+      const bundle = { original, result, colorName, depth, variants: new Map() };
+      resourceCache.set(original, bundle); return bundle;
+    }
+
+    async function useResource(bundle, category, key, state) {
+      const original = bundle.original.lookup(n(category))?.lookup(key);
+      if (!original) fail('Missing PDF drawing resource.');
+      const out = bundle.result.lookup(n(category));
+      if (category !== 'XObject' && out.has(key)) return key;
+      if (category === 'ExtGState') out.set(key, convertedState(dict(original), bundle.original));
+      else if (category === 'Shading') out.set(key, await shading(original, bundle.original));
+      else if (category === 'Pattern') {
+        const pattern = original instanceof Stream ? original.dict : dict(original);
+        if (count(pattern, 'PatternType') !== 2) fail('Tiling patterns are not supported yet.');
+        const clone = pattern.clone(ctx);
+        if (pattern.has(n('ExtGState'))) clone.set(n('ExtGState'), convertedState(dict(pattern.get(n('ExtGState'))), bundle.original));
+        clone.set(n('Shading'), await shading(pattern.get(n('Shading')), bundle.original)); out.set(key, clone);
+      } else if (category === 'Font') {
+        const font = dict(original);
+        if (!validatedFonts.has(font)) {
+          if (font.get(n('Subtype'))?.toString() === '/Type3') for (const value of dict(font.get(n('CharProcs'))).values()) {
             const glyphOps = parseOperations(readContent(lookup(value)));
             if (glyphOps.length !== 1 || glyphOps[0].op !== 'd1') fail('Painted Type3 fonts are not supported yet.');
           }
+          validatedFonts.add(font);
         }
+        out.set(key, bundle.original.lookup(n(category)).get(key));
+      } else if (category === 'XObject') {
+        if (!(original instanceof Stream)) fail('Unsupported XObject.');
+        const type = original.dict.get(n('Subtype'))?.toString();
+        if (type === '/Image') {
+          if (!cachedObject(original, bundle.original)) cacheObject(original, bundle.original, await image(original, bundle.original));
+          out.set(key, cachedObject(original, bundle.original));
+        } else if (type === '/Form') {
+          const variant = `${identity(original)}:${identity(state.fill)}:${identity(state.stroke)}`;
+          if (bundle.variants.has(variant)) return bundle.variants.get(variant);
+          if (stats.forms >= 2048) fail('This page has too many Form XObjects.');
+          validateFormGraph(original, bundle.original);
+          if (original.dict.has(n('Ref')) || original.dict.has(n('OPI'))) fail('External Form XObjects are not supported.');
+          const ownResources = original.dict.lookup(n('Resources'));
+          const resources = ownResources ? await resourcesFor(ownResources, bundle.depth + 1) : bundle;
+          const group = convertedGroup(original.dict, resources.original);
+          const variantKey = `${identity(resources.original)}:${identity(state.fill)}:${identity(state.stroke)}`;
+          if (!formVariants.has(original)) formVariants.set(original, new Map());
+          const cache = formVariants.get(original);
+          if (!cache.has(variantKey)) {
+            const bytes = await content(null, resources, false, formOps(original), state);
+            const stream = ctx.flateStream(bytes);
+            for (const [k, v] of original.dict.entries()) if (!['Length', 'Filter', 'DecodeParms', 'Resources', 'Group'].includes(k.decodeText())) stream.dict.set(k, v);
+            stream.dict.set(n('Resources'), resources.result); if (group) stream.dict.set(n('Group'), group);
+            cache.set(variantKey, ctx.register(stream)); stats.forms++;
+          }
+          let selected = key, suffix = 1;
+          // A later instruction may use a source XObject whose name happens to
+          // match our suffix. Reserve every source name, including unused ones.
+          const originalNames = bundle.original.lookup(n('XObject'));
+          while ((out.has(selected) && out.get(selected).toString() !== cache.get(variantKey).toString())
+            || (selected !== key && originalNames.has(selected))) selected = n(`${key.decodeText()}_${++suffix}`);
+          out.set(selected, cache.get(variantKey)); bundle.variants.set(variant, selected); return selected;
+        } else fail(`Unsupported XObject ${type}.`);
       }
-      resourceCache.set(original, bundle); inProgress.delete(original);
-      return bundle;
+      return key;
     }
 
-    async function content(bytes, bundle, root, parsed) {
+    async function content(bytes, bundle, root, parsed, inherited) {
       const ops = parsed || parseOperations(bytes), output = [], stack = [];
-      let state = { fill: root ? gray : null, stroke: root ? gray : null };
+      let state = inherited ? { ...inherited } : { fill: gray, stroke: gray };
       const emitColor = async (args, space, stroke) => {
         const color = await converted(args, space);
         output.push(`/${bundle.colorName} ${stroke ? 'CS' : 'cs'}\n${color.map(format).join(' ')} ${stroke ? 'SCN' : 'scn'}`);
       };
       if (root) { await emitColor([0], gray, false); await emitColor([0], gray, true); }
       for (let index = 0; index < ops.length; index++) {
+        // Color and resource instructions often continue below. Yield before
+        // dispatch so every instruction mix lets a queued Cancel event run.
+        // Share the counter across Forms, including many short nested streams.
+        if (++processedInstructions % 4096 === 0) await yieldToBrowser();
         active();
         const { op, args } = ops[index];
         const stroke = ['CS', 'SC', 'SCN', 'G', 'RG', 'K'].includes(op), channel = stroke ? 'stroke' : 'fill';
@@ -407,23 +462,21 @@ function createVectorCmykConverter(P, options = {}) {
           await emitColor(args.map(number), state[channel], stroke); continue;
         } else if (['SC', 'SCN', 'sc', 'scn'].includes(op)) {
           if (state[channel]?.kind === 'pattern') {
-            if (!['SCN', 'scn'].includes(op) || args.length !== 1 || !(args[0] instanceof Name) || !bundle.result.lookup(n('Pattern'))?.has(args[0])) fail('Unsupported pattern color instruction.');
+            if (!['SCN', 'scn'].includes(op) || args.length !== 1 || !(args[0] instanceof Name)) fail('Unsupported pattern color instruction.');
+            await useResource(bundle, 'Pattern', args[0], state);
           } else { await emitColor(args.map(number), state[channel], stroke); continue; }
-        } else if (op === 'gs') {
-          if (args.length !== 1 || !(args[0] instanceof Name)) fail('Invalid graphics-state instruction.');
-          const entry = bundle.original.lookup(n('ExtGState'))?.lookup(args[0]);
-          if (!entry) fail('Missing graphics state.'); validateState(dict(entry));
-        } else if (op === 'Do' || op === 'sh') {
-          if (args.length !== 1 || !(args[0] instanceof Name) || !bundle.result.lookup(n(op === 'Do' ? 'XObject' : 'Shading'))?.has(args[0])) fail('Missing PDF drawing resource.');
+        } else if (op === 'gs' || op === 'Do' || op === 'sh' || op === 'Tf') {
+          const length = op === 'Tf' ? 2 : 1;
+          if (args.length !== length || !(args[0] instanceof Name)) fail('Invalid drawing-resource instruction.');
+          const category = op === 'gs' ? 'ExtGState' : op === 'Do' ? 'XObject' : op === 'sh' ? 'Shading' : 'Font';
+          const selected = await useResource(bundle, category, args[0], state);
+          output.push(`${[selected, ...args.slice(1)].map(String).join(' ')} ${op}`); continue;
         }
         output.push(`${args.map(String).join(' ')}${args.length ? ' ' : ''}${op}`);
-        if (index % 4096 === 4095) { await new Promise(resolve => setTimeout(resolve, 0)); active(); }
       }
       if (stack.length) fail('Unbalanced PDF graphics state.');
       return new TextEncoder().encode(output.join('\n') + '\n');
     }
-
-    rejectGroup(page.node);
     // Appearance streams would need their own conversion; link annotations
     // created by Figma have no appearance stream and remain untouched.
     const annotations = page.node.lookup(n('Annots'));
@@ -433,6 +486,7 @@ function createVectorCmykConverter(P, options = {}) {
     }
     const resources = page.node.Resources() || ctx.obj({});
     const bundle = await resourcesFor(resources, 0);
+    const pageGroup = convertedGroup(page.node, resources);
     const value = page.node.Contents();
     const streams = value instanceof Arr ? value.asArray().map(lookup) : value ? [lookup(value)] : [];
     const chunks = [];
@@ -445,6 +499,7 @@ function createVectorCmykConverter(P, options = {}) {
     active();
     page.node.set(n('Contents'), ctx.register(ctx.flateStream(convertedContent)));
     page.node.set(n('Resources'), bundle.result);
+    if (pageGroup) page.node.set(n('Group'), pageGroup);
     const warnings = [];
     if (hasTransparency) warnings.push('Vector CMYK preserves transparency. Overlapping colors can look different from RGB or Rasterized CMYK; check the PDF before printing.');
     if (approximateGradient) warnings.push('Some vector gradient colors are approximated. Check very narrow color stops before printing.');

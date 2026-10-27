@@ -449,15 +449,20 @@ test('export initialization rejects unsupported or contradictory color profiles'
   }
 });
 
-test('Vector CMYK stays selected and available while irrelevant raster settings are preserved', { timeout: 15000 }, async t => {
+test('Vector CMYK retains image resolution controls and remembers separate raster settings', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
   assert.equal(await h.frame.locator('#color-profile').inputValue(), 'DOCUMENT');
   assert.equal(await h.frame.locator('.export-type-selector').evaluate(element => element.nextElementSibling.htmlFor), 'color-profile');
+  assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), 'original');
+  assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), true);
+  await h.frame.locator('#vector-image-dpi').selectOption('144');
+  await h.frame.locator('label[for="export-raster"]').click();
   await h.frame.locator('#raster-format').selectOption('JPG');
   await h.frame.locator('#quality-select').selectOption('print-high');
   await h.frame.locator('#fit-oversized').check();
+  await h.frame.locator('label[for="export-vector"]').click();
   await h.frame.locator('#color-profile').selectOption('CMYK');
   assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
   for (const id of ['export-vector', 'export-raster']) assert.equal(await h.frame.locator(`#${id}`).isEnabled(), true);
@@ -468,9 +473,13 @@ test('Vector CMYK stays selected and available while irrelevant raster settings 
   assert.match(await h.frame.locator('#cmyk-format-help').textContent(), /experimental/);
   for (const id of ['quality-setting', 'fit-oversized-setting', 'raster-format-setting', 'compression-help']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), false);
   for (const id of ['quality-select', 'fit-oversized', 'raster-format']) assert.equal(await h.frame.locator(`#${id}`).isDisabled(), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').isEnabled(), true);
+  assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), '144');
   await h.frame.locator('label[for="export-raster"]').click();
   assert.equal(await h.frame.locator('#color-profile').inputValue(), 'CMYK');
   assert.equal(await h.frame.locator('#quality-setting').isVisible(), true);
+  assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), false);
   assert.equal(await h.frame.locator('#fit-oversized-setting').isVisible(), true);
   assert.match(await h.frame.locator('#cmyk-format-help').textContent(), /8 million pixels/);
   assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
@@ -482,7 +491,9 @@ test('Vector CMYK stays selected and available while irrelevant raster settings 
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
   assert.equal(await h.frame.locator('#quality-select').inputValue(), 'print-high');
   assert.equal(await h.frame.locator('#fit-oversized').isChecked(), true);
-  for (const id of ['quality-setting', 'fit-oversized-setting', 'raster-format-setting']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), true);
+  assert.equal(await h.frame.locator('#quality-setting').isVisible(), false);
+  for (const id of ['vector-resolution-setting', 'fit-oversized-setting', 'raster-format-setting']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), '144');
   assert.deepEqual(h.errors, []);
 });
 

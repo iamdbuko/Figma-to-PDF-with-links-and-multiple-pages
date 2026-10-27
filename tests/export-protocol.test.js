@@ -409,9 +409,75 @@ test('invalid selection, missing frames and reused IDs fail explicitly', async (
   await h.start(['a'], { selectedFrames: ['a', 'missing'] });
   assert.match(h.messagesOf('export-error').at(-1).error, /missing from the page order/);
   await h.start(['missing'], { jobId: 'job-2' });
-  assert.match(h.messagesOf('export-error').at(-1).error, /no longer available/);
+  assert.match(h.messagesOf('export-error').at(-1).error, /Removed 1 unavailable frame/);
   await h.start(['a'], { jobId: 'job-1' });
   assert.match(h.messagesOf('export-error').at(-1).error, /already finished/);
+  assert.equal(h.exports.length, 0);
+});
+
+test('adding a destination later refreshes links in previously listed source frames', async () => {
+  const h = harness(), a = h.frame('a'), b = h.frame('b');
+  h.child(a, { reactions: [{ actions: [{ type: 'NODE', destinationId: b.id }] }] });
+  const select = async frames => { h.figma.currentPage.selection = frames; await h.events.get('selectionchange')(); };
+  await select([a]);
+  assert.equal(h.messagesOf('frames-updated').at(-1).connections.length, 0);
+  await select([b]);
+  const last = h.messagesOf('frames-updated').at(-1);
+  assert.deepEqual(last.frames.map(frame => frame.id), ['a', 'b']);
+  assert.deepEqual(last.connections.map(link => [link.fromFrameId, link.toFrameId]), [['a', 'b']]);
+});
+
+test('removing and re-adding a nested destination refreshes its remaining ancestor mapping', async () => {
+  const h = harness(), a = h.frame('a'), outer = h.frame('outer');
+  const inner = h.frame('inner', { parent: outer }); outer.children.push(inner);
+  h.child(a, { reactions: [{ actions: [{ type: 'NODE', destinationId: inner.id }] }] });
+  await h.context.autoAddSelectedFrames([a, outer, inner]);
+  const target = () => h.messagesOf('frames-updated').at(-1).connections.find(link => link.fromFrameId === a.id)?.toFrameId;
+  assert.equal(target(), inner.id);
+  await h.send({ type: 'remove-frame', frameId: inner.id });
+  assert.equal(target(), outer.id, 'the link now targets the remaining exported ancestor');
+  assert.deepEqual(h.messagesOf('frames-updated').at(-1).frames.map(frame => frame.id), ['a', 'outer']);
+  await h.context.autoAddSelectedFrames([inner]);
+  assert.equal(target(), inner.id);
+});
+
+test('a membership scan cannot restore a frame or its links after a later removal', async () => {
+  const h = harness(), a = h.frame('a'), b = h.frame('b'), lookup = deferred();
+  h.child(a, { reactions: [{ actions: [{ type: 'NODE', destinationId: b.id }] }] });
+  await h.context.autoAddSelectedFrames([a]);
+  const originalLookup = h.figma.getNodeByIdAsync;
+  h.figma.getNodeByIdAsync = async id => id === a.id ? lookup.promise : originalLookup(id);
+  const adding = h.context.autoAddSelectedFrames([b]);
+  await h.send({ type: 'remove-frame', frameId: a.id });
+  lookup.resolve(a); await adding;
+  const last = h.messagesOf('frames-updated').at(-1);
+  assert.deepEqual(last.frames.map(frame => frame.id), ['b']);
+  assert.deepEqual(last.connections, []);
+});
+
+test('preflight removes all proven stale selected frames, retains valid entries and permits a clean retry', async () => {
+  const h = harness(), a = h.frame('a'), keep = h.frame('keep'), missing = h.frame('missing'), removed = h.frame('removed'), changedType = h.frame('changed-type');
+  h.child(a, { reactions: [urlReaction('https://example.com/retained'), { actions: [{ type: 'NODE', destinationId: missing.id }] }] });
+  await h.context.autoAddSelectedFrames([a, missing, keep, removed, changedType]);
+  h.nodes.delete(missing.id); removed.removed = true; changedType.type = 'COMPONENT';
+  await h.start([a.id, missing.id, removed.id, changedType.id]);
+  assert.equal(h.exports.length, 0); assert.equal(h.messagesOf('export-start').length, 0);
+  assert.match(h.messagesOf('export-error').at(-1).error, /Removed 3 unavailable frames.*Review.*export again/);
+  const last = h.messagesOf('frames-updated').at(-1);
+  assert.deepEqual(last.frames.map(frame => frame.id), ['a', 'keep'], 'unselected valid entries are retained too');
+  assert.deepEqual(last.connections.map(link => link.toUrl), ['https://example.com/retained']);
+  await h.start([keep.id, a.id], { jobId: 'retry' });
+  assert.deepEqual(h.messagesOf('export-start').at(-1).frames.map(frame => frame.id), ['keep', 'a']);
+  assert.equal(h.exports[0].id, keep.id);
+});
+
+test('a failed node lookup does not prune potentially valid listed frames', async () => {
+  const h = harness(), a = h.frame('a'), b = h.frame('b');
+  await h.context.autoAddSelectedFrames([a, b]);
+  h.figma.getNodeByIdAsync = async () => { throw new Error('Temporary lookup failure'); };
+  await h.start([a.id, b.id]);
+  assert.match(h.messagesOf('export-error').at(-1).error, /Temporary lookup failure/);
+  assert.deepEqual(h.messagesOf('frames-updated').at(-1).frames.map(frame => frame.id), ['a', 'b']);
   assert.equal(h.exports.length, 0);
 });
 

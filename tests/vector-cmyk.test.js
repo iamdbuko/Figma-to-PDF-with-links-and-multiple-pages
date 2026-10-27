@@ -361,6 +361,91 @@ for (const kind of ['stitching', 'calculator']) test(`narrow ${kind} gradient ba
   assert.equal(result.warnings.some(text => /gradient.*approximated/.test(text)), kind === 'calculator');
 });
 
+test('opaque path Alpha masks preserve mask geometry and groups without converting luminosity to ink', async () => {
+  const outline = 'q\n1 0 0 1 51 72 cm\n0 0 0 scn\n0 12 m\n101 12 l\n101 0 l\n0 0 l\nh\nf\nn\nQ\n';
+  const { document, page } = await makePage('/DeviceRGB cs\n/Gs gs\n/Fm Do\n', ctx => {
+    const mask = ctx.register(ctx.flateStream(outline, { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, 240, 160],
+      Group: { Type: 'Group', S: 'Transparency' }, Resources: {} }));
+    const form = ctx.register(ctx.flateStream('0.25 0.5 0.75 scn\n0 0 240 160 re\nf\n', {
+      Type: 'XObject', Subtype: 'Form', BBox: [0, 0, 240, 160], Group: { S: 'Transparency', I: true }, Resources: {},
+    }));
+    return { ExtGState: { Gs: { Type: 'ExtGState', SMask: { Type: 'Mask', S: 'Alpha', G: mask }, BM: 'Multiply', ca: 0.7 } }, XObject: { Fm: form } };
+  });
+  page.node.set(name('Group'), document.context.obj({ S: 'Transparency', CS: 'DeviceRGB' }));
+  const destination = printer(), source = await defaultProfile(document), session = await exporter().prepare(destination);
+  let result;
+  try { result = await converter().convertPage(document, page, session); } finally { session.close(); }
+  const loaded = await P.PDFDocument.load(await document.save()), output = loaded.getPage(0), resources = output.node.Resources();
+  const state = resources.lookup(name('ExtGState')).lookup(name('Gs')), mask = state.lookup(name('SMask'));
+  const maskForm = mask.lookup(name('G'));
+  assert.equal(state.get(name('BM')).toString(), '/Multiply');
+  assert.equal(state.lookup(name('ca')).asNumber(), 0.7);
+  assert.equal(mask.get(name('S')).toString(), '/Alpha');
+  assert.equal(maskForm.dict.lookup(name('Group')).get(name('CS')).toString(), '/DeviceGray');
+  assert.equal(maskForm.dict.lookup(name('Resources')).keys().length, 0);
+  assert.deepEqual(geometryAndText(Buffer.from(decoded(maskForm)).toString('latin1')), geometryAndText(outline));
+  assert(!/\b(?:scn|rg|cs)\b/.test(Buffer.from(decoded(maskForm)).toString('latin1')), 'alpha shape has explicit gray colors, independent of the CMYK parent');
+  const form = resources.lookup(name('XObject')).lookup(name('Fm'));
+  assert.equal(form.dict.lookup(name('Group')).get(name('I')).toString(), 'true');
+  assertIcc(loaded, form.dict.lookup(name('Group')).get(name('CS')), destination);
+  assertIcc(loaded, output.node.lookup(name('Group')).get(name('CS')), destination);
+  assertFloatColor(cmykInstructions(Buffer.from(decoded(form)).toString('latin1'))[0], reference(source, destination, [0.25, 0.5, 0.75]));
+  assert(result.warnings.some(warning => /transparency.*different/i.test(warning)));
+});
+
+test('unused unsupported resources are neither interpreted nor retained in the output resource table', async () => {
+  const { document, page } = await makePage('0.2 0.3 0.4 rg\n0 0 20 30 re\nf\n', ctx => ({
+    ExtGState: { Unused: { BM: 'Screen', SMask: { S: 'Luminosity' } } },
+    XObject: { Unused: ctx.register(ctx.flateStream(new Uint8Array(), { Subtype: 'Image', Width: 99999, Height: 99999 })) },
+    Font: { Unused: { Subtype: 'Type3', CharProcs: {} } },
+    Shading: { Unused: { ShadingType: 4 } }, Pattern: { Unused: { PatternType: 1 } },
+  }));
+  const session = await exporter().prepare(printer());
+  try { await converter().convertPage(document, page, session); } finally { session.close(); }
+  for (const key of ['ExtGState', 'XObject', 'Font', 'Shading', 'Pattern']) assert.equal(page.node.Resources().lookup(name(key)).keys().length, 0, key);
+  assertCmykPaint(content(document, page));
+});
+
+test('a Form may explicitly share its parent resource dictionary without a drawing recursion', async () => {
+  let resourcesRef;
+  const { document, page } = await makePage('/DeviceRGB cs\n/Fm Do\n', ctx => {
+    const resources = ctx.obj({}); resourcesRef = ctx.register(resources);
+    const form = ctx.register(ctx.flateStream('0.2 0.4 0.6 scn\n0 0 20 30 re\nf\n', {
+      Subtype: 'Form', BBox: [0, 0, 240, 160], Resources: resourcesRef,
+    }));
+    resources.set(name('XObject'), ctx.obj({ Fm: form })); return resources;
+  });
+  page.node.set(name('Resources'), resourcesRef);
+  const loaded = await P.PDFDocument.load(await document.save()), output = loaded.getPage(0), destination = printer();
+  const source = await defaultProfile(loaded), session = await exporter().prepare(destination);
+  try { await converter().convertPage(loaded, output, session); } finally { session.close(); }
+  const form = output.node.Resources().lookup(name('XObject')).lookup(name('Fm'));
+  assert.equal(form.dict.lookup(name('Resources')), output.node.Resources());
+  assertFloatColor(cmykInstructions(Buffer.from(decoded(form)).toString('latin1'))[0], reference(source, destination, [0.2, 0.4, 0.6]));
+  await P.PDFDocument.load(await loaded.save());
+});
+
+test('the same Form gets separate color conversions for inherited sRGB and Display P3', async () => {
+  const nativeP3 = await P.PDFDocument.load(read('color-profiles/swatches-DISPLAY_P3_V4.pdf'));
+  const p3 = sourceProfile(nativeP3, nativeP3.getPage(0));
+  const { document, page } = await makePage('/DeviceRGB cs\n/Fm Do\n/P3 cs\n/Fm Do\n/Fm_2 Do\n', ctx => ({
+    ColorSpace: { P3: ['ICCBased', ctx.register(ctx.flateStream(p3, { N: 3 }))] },
+    XObject: { Fm: ctx.register(ctx.flateStream('0.8 0.2 0.4 scn\n0 0 20 30 re\nf\n', { Subtype: 'Form', BBox: [0, 0, 240, 160], Resources: {} })),
+      Fm_2: ctx.register(ctx.flateStream(new Uint8Array([128, 128, 128]), { Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8, ColorSpace: 'DeviceRGB' })),
+    },
+  }));
+  const source = await defaultProfile(document), destination = printer(), session = await exporter().prepare(destination);
+  try { await converter().convertPage(document, page, session); } finally { session.close(); }
+  const used = [...content(document, page).matchAll(/\/(\w+) Do/g)].map(match => name(match[1]));
+  assert.equal(used.length, 3); assert.notEqual(used[0], used[1]);
+  assert.notEqual(used[1], used[2], 'generated Form variant must not collide with an existing source image name');
+  assert.equal(page.node.Resources().lookup(name('XObject')).lookup(used[2]).dict.get(name('Subtype')).toString(), '/Image');
+  for (let i = 0; i < 2; i++) {
+    const form = page.node.Resources().lookup(name('XObject')).lookup(used[i]);
+    assertFloatColor(cmykInstructions(Buffer.from(decoded(form)).toString('latin1'))[0], reference(i ? p3 : source, destination, [0.8, 0.2, 0.4]));
+  }
+});
+
 test('unsupported PDF constructs are refused without replacing the page contents or resources', async t => {
   const session = await exporter().prepare(printer());
   const cases = [
@@ -370,11 +455,13 @@ test('unsupported PDF constructs are refused without replacing the page contents
     ['calibrated RGB', '/Cal cs\n0 0 0 scn\n', ctx => ({ ColorSpace: { Cal: ctx.obj(['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }]) } }), /color space/],
     ['mesh shading', '/Mesh sh\n', ctx => ({ Shading: { Mesh: ctx.obj({ ShadingType: 4, ColorSpace: 'DeviceRGB' }) } }), /gradients/],
     ['tiling pattern', '/Pattern cs\n/P scn\n', ctx => ({ Pattern: { P: ctx.register(ctx.flateStream('', { PatternType: 1, PaintType: 1, TilingType: 1, BBox: [0, 0, 1, 1], XStep: 1, YStep: 1, Resources: {} })) } }), /Tiling|Invalid PDF resource dictionary/],
-    ['blend mode', '/Gs gs\n', () => ({ ExtGState: { Gs: { BM: 'Multiply' } } }), /Blend/],
+    ['blend mode', '/Gs gs\n', () => ({ ExtGState: { Gs: { BM: 'Screen' } } }), /blend mode/],
     ['luminosity soft mask', '/Gs gs\n', () => ({ ExtGState: { Gs: { SMask: { S: 'Luminosity' } } } }), /soft masks/],
+    ['alpha mask with transfer function', '/Gs gs\n', ctx => ({ ExtGState: { Gs: { SMask: { S: 'Alpha', TR: 'Identity', G: ctx.register(ctx.flateStream('', { Subtype: 'Form', Group: { S: 'Transparency' } })) } } } }), /transfer functions/],
+    ['alpha mask with nested graphics state', '/Gs gs\n', ctx => ({ ExtGState: { Gs: { SMask: { S: 'Alpha', G: ctx.register(ctx.flateStream('/Nested gs\n', { Subtype: 'Form', Group: { S: 'Transparency' }, Resources: { ExtGState: { Nested: { ca: 0.5 } } } })) } } } }), /alpha mask.*graphics states/],
     ['transfer function', '/Gs gs\n', () => ({ ExtGState: { Gs: { TR: 'Identity' } } }), /TR/],
     ['inline image', 'BI /W 1 /H 1 /BPC 8 /CS /RGB ID abc EI\n', () => ({}), /instruction/],
-    ['painted Type3 font', '', ctx => ({ Font: { F: ctx.obj({ Subtype: 'Type3', CharProcs: { A: ctx.register(ctx.flateStream('0 0 0 0 10 10 d1\n0 0 10 10 re\nf\n')) } }) } }), /Type3/],
+    ['painted Type3 font', '/F 12 Tf\n', ctx => ({ Font: { F: ctx.obj({ Subtype: 'Type3', CharProcs: { A: ctx.register(ctx.flateStream('0 0 0 0 10 10 d1\n0 0 10 10 re\nf\n')) } }) } }), /Type3/],
     ['image Matte', '/I Do\n', ctx => ({ XObject: { I: ctx.register(ctx.flateStream(Uint8Array.from([255, 0, 0]), { Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8, ColorSpace: 'DeviceRGB', Matte: [1, 1, 1] })) } }), /Matte/],
     ['custom image Decode', '/I Do\n', ctx => ({ XObject: { I: ctx.register(ctx.flateStream(Uint8Array.from([255, 0, 0]), { Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8, ColorSpace: 'DeviceRGB', Decode: [1, 0, 1, 0, 1, 0] })) } }), /decode/],
     ['oversized image metadata', '/I Do\n', ctx => ({ XObject: { I: ctx.register(ctx.flateStream(new Uint8Array(), { Subtype: 'Image', Width: 4001, Height: 4000, BitsPerComponent: 8, ColorSpace: 'DeviceRGB' })) } }), /16 million/],
@@ -383,7 +470,7 @@ test('unsupported PDF constructs are refused without replacing the page contents
       const mask = ctx.register(ctx.flateStream(Uint8Array.from([128]), { Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8, ColorSpace: 'DeviceGray', Matte: [1, 1, 1] }));
       return { XObject: { I: ctx.register(ctx.flateStream(Uint8Array.from([10, 30, 50]), { Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8, ColorSpace: 'DeviceRGB', SMask: mask })) } };
     }, /Matte/],
-    ['transparency Form group', '/Fm Do\n', ctx => ({ XObject: { Fm: ctx.register(ctx.flateStream('', { Subtype: 'Form', BBox: [0, 0, 1, 1], Resources: {}, Group: { S: 'Transparency', CS: 'DeviceRGB' } })) } }), /Transparency groups/],
+    ['knockout transparency Form group', '/Fm Do\n', ctx => ({ XObject: { Fm: ctx.register(ctx.flateStream('', { Subtype: 'Form', BBox: [0, 0, 1, 1], Resources: {}, Group: { S: 'Transparency', CS: 'DeviceRGB', K: true } })) } }), /Knockout/],
     ['recursive Form with inherited resources', '/Fm Do\n', ctx => ({ XObject: { Fm: ctx.register(ctx.flateStream('/Fm Do\n', { Subtype: 'Form', BBox: [0, 0, 1, 1] })) } }), /Recursive/],
     ['mutually recursive Forms with inherited resources', '/A Do\n', ctx => ({ XObject: {
       A: ctx.register(ctx.flateStream('/B Do\n', { Subtype: 'Form', BBox: [0, 0, 1, 1] })),
@@ -398,9 +485,9 @@ test('unsupported PDF constructs are refused without replacing the page contents
       await assert.rejects(converter().convertPage(document, page, session), expected);
       assert.equal(page.node.Contents(), beforeContents); assert.equal(page.node.Resources(), beforeResources);
     });
-    await t.test('page transparency group', async () => {
-      const { document, page } = await makePage(''); page.node.set(name('Group'), document.context.obj({ S: 'Transparency', CS: 'DeviceRGB' }));
-      await assert.rejects(converter().convertPage(document, page, session), /Transparency groups/);
+    await t.test('knockout page transparency group', async () => {
+      const { document, page } = await makePage(''); page.node.set(name('Group'), document.context.obj({ S: 'Transparency', CS: 'DeviceRGB', K: true }));
+      await assert.rejects(converter().convertPage(document, page, session), /Knockout/);
     });
     await t.test('annotation appearance', async () => {
       const { document, page } = await makePage('');
@@ -445,4 +532,35 @@ test('cancellation before and during image conversion leaves the page unchanged'
     assert.equal(yields, 2);
     assert.equal(page.node.Contents(), beforeContents); assert.equal(page.node.Resources(), beforeResources);
   } finally { session.close(); }
+});
+
+test('a color-only vector instruction sequence yields so queued cancellation can run', async () => {
+  const { document, page } = await makePage('0.2 0.4 0.6 rg\n'.repeat(9000));
+  const beforeContents = page.node.Contents(), beforeResources = page.node.Resources();
+  const session = await exporter().prepare(printer());
+  let active = true, timerRan = false;
+  // A resolved Promise only yields to microtasks. User input needs the next
+  // browser task, which the drawing loop must reach even on color-op continues.
+  const timer = setTimeout(() => { active = false; timerRan = true; }, 0);
+  try {
+    await assert.rejects(converter().convertPage(document, page, session, { stillActive: () => active }), /cancelled/);
+    assert.equal(timerRan, true);
+    assert.equal(page.node.Contents(), beforeContents); assert.equal(page.node.Resources(), beforeResources);
+  } finally { clearTimeout(timer); session.close(); }
+});
+
+test('many short Form streams share a cancellation yield budget', async () => {
+  const { document, page } = await makePage(Array.from({ length: 50 }, (_, i) => `/F${i} Do\n`).join(''), ctx => ({
+    XObject: Object.fromEntries(Array.from({ length: 50 }, (_, i) => [`F${i}`, ctx.register(ctx.flateStream('0.2 0.4 0.6 rg\n'.repeat(100), {
+      Subtype: 'Form', BBox: [0, 0, 240, 160], Resources: {},
+    }))])),
+  }));
+  const beforeContents = page.node.Contents(), beforeResources = page.node.Resources();
+  const session = await exporter().prepare(printer());
+  let active = true;
+  const timer = setTimeout(() => { active = false; }, 0);
+  try {
+    await assert.rejects(converter().convertPage(document, page, session, { stillActive: () => active }), /cancelled/);
+    assert.equal(page.node.Contents(), beforeContents); assert.equal(page.node.Resources(), beforeResources);
+  } finally { clearTimeout(timer); session.close(); }
 });

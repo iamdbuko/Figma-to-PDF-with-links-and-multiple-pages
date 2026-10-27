@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-27",
+  "version": "9.0.0-dev.8",
+  "privacy": "Private customer report and detailed outputs remain in ignored test-results; only aggregate evidence is distributed.",
+  "baseline": {
+    "pages": 156,
+    "profileSetting": "Same as Figma file (document reports LEGACY)",
+    "bytes": 112490628,
+    "sha256": "bf9b3edfa0b2f5915db76f288e5b2ce015010fa7a23fe43e8f81d85857ec428f",
+    "knownIssue": "One compressed stream lost a trailing checksum byte in the earlier importer. The new loader prevents loss on fresh imports; it does not invent absent bytes in saved files.",
+    "drawing": {
+      "pathPaints": 5583,
+      "textShows": 4922,
+      "forms": 200,
+      "alphaForms": 194,
+      "imageMasks": 90,
+      "deviceColorOperators": 0,
+      "images": 90,
+      "imagePixels": 483822969
+    }
+  },
+  "nativeCmyk72": {
+    "status": "passed",
+    "uiSha256": "1e1cda82fe3a9ea92cc302319e77251c9680039f6d718fb14c33a63c07bc3406",
+    "bytes": 82721150,
+    "sha256": "36a8bd93b3c58560070e27ab5927a6e3560df58d07c8f1a786b6fb2a3dab3e65",
+    "pages": 156,
+    "links": {
+      "total": 115,
+      "uri": 81,
+      "internal": 34,
+      "allRectanglesAndTargetsMatch": true
+    },
+    "pageBoxesMatch": true,
+    "drawing": {
+      "pathPaints": 5583,
+      "textShows": 4922,
+      "forms": 200,
+      "alphaForms": 194,
+      "imageMasks": 90,
+      "deviceColorOperators": 0,
+      "images": 90,
+      "imagePixels": 7932764
+    },
+    "strictFlateStreams": 5498,
+    "invalidFlateStreams": 0,
+    "destinationIccCount": 1,
+    "destinationIccSha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "renderedPages": 156,
+    "overviewInspectedPages": 156,
+    "detailedInspectionPages": [
+      2,
+      136,
+      153,
+      156
+    ],
+    "renderWarnings": [
+      "Figma Type 3 glyph bounding-box warnings"
+    ],
+    "exportWarnings": [
+      "Preserved transparency may look different after CMYK conversion."
+    ],
+    "buildScope": "Native run preceded final cancellation scheduling, posted-message scheduler and superseded-stream validation adjustments. Final full suite covers those changes; artifact hash identifies the exact earlier build."
+  },
+  "scope": "Independent pypdf/zlib inspection and Poppler rendering of saved native Figma exports. Drawing counts establish retained vectors/text, not pixel or colorimetric identity. No physical printer proof or new PDF-viewer navigation test.",
+  "nativeRgb72": {
+    "status": "passed",
+    "uiSha256": "d872818948d46e860fc77382ee38da5a3b7f4f03d4b2bbf7c2bb03e4eb7bcd18",
+    "bytes": 88593029,
+    "sha256": "477ea2a13d53e745fde602a48bab749ac6ea3bdb666cbe2d6f477efe79437ee6",
+    "pages": 156,
+    "profileSetting": "Same as Figma file (document reports LEGACY)",
+    "exportWarnings": [],
+    "links": {
+      "total": 115,
+      "uri": 81,
+      "internal": 34,
+      "allRectanglesAndTargetsMatch": true
+    },
+    "pageBoxesMatch": true,
+    "drawing": {
+      "pathPaints": 5583,
+      "textShows": 4922,
+      "forms": 200,
+      "alphaForms": 194,
+      "imageMasks": 90,
+      "deviceColorOperators": 0,
+      "images": 90,
+      "imagePixels": 7932764
+    },
+    "strictFlateStreams": 1325,
+    "invalidFlateStreams": 0,
+    "rgbIccBytesMatchBaselinePerPage": true,
+    "rgbIccSha256": "2b3aa1645779a9e634744faf9b01e9102b0c9b88fd6deced7934df86b949af7e",
+    "rgbIccBytes": 3144,
+    "imageDimensionsMatchCmyk72": true,
+    "renderedPages": 156,
+    "overviewInspectedPages": 156,
+    "detailedInspectionPages": [
+      136,
+      153
+    ],
+    "renderWarnings": [
+      "Figma Type 3 glyph bounding-box warnings"
+    ]
+  },
+  "scheduling": {
+    "observation": "An initial RGB72 run stalled at page108 and later hit the two-minute acknowledgment deadline at page110. Individually, pages108\u2013110 processed in under one second in Node.",
+    "causeAssessment": "Background timer throttling is a plausible trigger; Figma visibility/OS state was not instrumented.",
+    "fix": "Cooperative posted-message tasks replace zero-delay timer chains in UI processing and the pinned PDF library. Watchdog and cleanup timers remain unchanged.",
+    "limitations": "A fully frozen or suspended renderer can still pause; this is not a host-level availability guarantee.",
+    "nativeRetry": "Final bundle exported all 156 pages successfully; independent saved-file inspection passed."
+  },
+  "finalBuild": {
+    "uiSha256": "d872818948d46e860fc77382ee38da5a3b7f4f03d4b2bbf7c2bb03e4eb7bcd18",
+    "uiBytes": 2596065,
+    "automatedTestsPassed": 258,
+    "reproducible": true,
+    "syntaxAndWhitespaceChecks": "passed"
+  }
+}

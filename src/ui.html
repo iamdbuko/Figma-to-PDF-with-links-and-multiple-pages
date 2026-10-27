@@ -733,6 +733,14 @@
     <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
     <p id="color-profile-compatibility" class="export-help" role="status" aria-live="polite" hidden></p>
     <div class="controls">
+      <div class="quality-selector" id="vector-resolution-setting">
+        <label class="quality-label" for="vector-image-dpi">Image resolution:</label>
+        <select id="vector-image-dpi" class="quality-select" aria-describedby="vector-resolution-help">
+          <option value="original" selected>Original from Figma</option>
+          <optgroup label="Screen"><option value="36">36 DPI</option><option value="72">72 DPI</option><option value="108">108 DPI</option></optgroup>
+          <optgroup label="Print"><option value="144">144 DPI</option><option value="216">216 DPI</option><option value="288">288 DPI</option><option value="300">300 DPI</option></optgroup>
+        </select>
+      </div>
       <div class="quality-selector" id="quality-setting">
         <label class="quality-label" for="quality-select" id="quality-label">Fallback quality:</label>
         <select id="quality-select" class="quality-select">
@@ -742,6 +750,7 @@
       </div>
       <button id="export-btn" class="btn btn-primary" aria-describedby="color-profile-compatibility" disabled>Export PDF</button>
     </div>
+    <p id="vector-resolution-help" class="export-help">Lowers the resolution of supported images inside the PDF while keeping text and shapes vector. Never adds detail beyond Figma’s export. Unsupported images keep their original resolution with a warning.</p>
     <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
     <label class="export-setting" id="raster-format-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
     <p id="compression-help" class="export-help">Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.</p>
@@ -769,7 +778,7 @@
     <label class="export-setting" for="output-mode">Output <select id="output-mode"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></label>
     <label class="export-setting" id="part-size-setting" for="pages-per-part" hidden>Pages per part <input type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
     <p id="parts-help" class="export-help" hidden>Save each part before continuing. Keep every PDF together with its original filename. Links between parts require a compatible desktop PDF viewer. The export pauses for up to 15 minutes between parts.</p>
-    <p class="export-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. For RGB exports, JPEG can help photo-heavy pages. Processing also needs memory beyond the PDF size.</p>
+    <p class="export-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. For RGB raster pages and vector fallbacks, JPEG can help photo-heavy pages. Processing also needs memory beyond the PDF size.</p>
     <button id="continue-btn" class="btn btn-primary" hidden>Continue to next part</button>
     <button id="cancel-btn" class="btn btn-secondary" hidden>Cancel export</button>
     <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
@@ -796,10 +805,11 @@
     let jobSequence = 0;
     const $ = id => document.getElementById(id);
     const post = message => parent.postMessage({ pluginMessage: message }, '*');
-    const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+    const yieldToBrowser = globalThis.__PDF_EXPORT_YIELD__ = createCooperativeYield();
 
     // PDF_ASSEMBLY_START: tested against the pinned pdf-lib implementation.
     const pdfColorManagement = createPdfColorManagement(PDFLib);
+    const pdfLoader = createPdfLoader(PDFLib);
     const PDF_DOCUMENT_LIMIT = 128 * 1024 * 1024;
 
     function estimatePdfBytes(pdfDoc) {
@@ -814,7 +824,7 @@
 
     function assertPdfBudget(pdfDoc, limit = PDF_DOCUMENT_LIMIT) {
       const bytes = estimatePdfBytes(pdfDoc);
-      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower raster quality or split the export into fewer pages per part.');
+      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower image/page resolution or split the export into fewer pages per part.');
       return bytes;
     }
 
@@ -944,7 +954,7 @@
 
     async function copyNativeUriAnnotations(pdfDoc, page, bytes, frame) {
       bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-      const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+      const source = await pdfLoader.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
       if (source.getPageCount() !== 1) throw new Error('Unexpected annotation page count.');
       const sourcePage = source.getPage(0);
       if (!nativePageMatchesFrame(sourcePage, frame)) throw new Error('Text annotation dimensions differ from the frame.');
@@ -1026,7 +1036,7 @@
         throw new Error('CMYK export requires an sRGB PDF or PNG and a prepared printer profile.');
       }
       if (message.format === 'PDF') {
-        const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+        const source = await pdfLoader.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
         if (source.getPageCount() !== 1) throw new Error('A frame must produce exactly one PDF page.');
         const sourcePage = source.getPage(0);
         if (sourcePage.getRotation().angle % 360 !== 0) throw new Error('Rotated native PDF pages cannot be merged.');
@@ -1035,9 +1045,15 @@
           throw new Error('Native PDF dimensions differ from the frame.');
         }
         const warnings = [];
+        if (options.imageDpi != null) {
+          if (typeof createPdfImageResampler !== 'function') throw new Error('The image resolution helper is unavailable. Reopen the plugin and try again.');
+          const resized = await createPdfImageResampler(PDFLib, { yieldToBrowser }).resamplePage(source, sourcePage, { dpi: options.imageDpi, stillActive: options.stillActive });
+          if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+          warnings.push(...(resized?.warnings || []));
+        }
         if (cmyk) {
           if (typeof createVectorCmykConverter !== 'function') throw new Error('The vector CMYK converter is unavailable. Reopen the plugin and try again.');
-          const converted = await createVectorCmykConverter(PDFLib).convertPage(source, sourcePage, options.cmykSession, { stillActive: options.stillActive });
+          const converted = await createVectorCmykConverter(PDFLib, { yieldToBrowser }).convertPage(source, sourcePage, options.cmykSession, { stillActive: options.stillActive });
           if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
           warnings.push(...(converted?.warnings || []));
         }
@@ -1247,17 +1263,19 @@
       $('color-profile-compatibility').textContent = '';
       $('color-profile-help').hidden = false;
       $('raster-format-setting').hidden = cmyk;
-      $('quality-setting').hidden = vectorCmyk;
+      $('quality-setting').hidden = vector;
+      $('vector-resolution-setting').hidden = !vector;
+      $('vector-resolution-help').hidden = !vector;
       $('fit-oversized-setting').hidden = vectorCmyk;
       $('fit-oversized-help').hidden = vectorCmyk;
       $('compression-help').hidden = vectorCmyk;
-      $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
+      $('quality-label').textContent = 'Page resolution:';
       $('export-help').textContent = vectorCmyk
         ? 'Converts native vectors, text and images to the selected CMYK profile. Unsupported content stops the export; pages are never automatically rasterized.'
         : cmyk
         ? 'CMYK rasterizes every page at the selected resolution and converts colors using the selected profile. Transparent areas become white.'
         : vector
-        ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
+        ? 'Keeps native vectors and text where supported. Pages that require rasterization use the selected image resolution, or 72 DPI when Original is selected.'
         : 'Creates image pages at the selected resolution. Page links and web links remain clickable.';
       $('compression-help').textContent = cmyk
         ? 'CMYK uses lossless image compression. Your RGB export settings are kept for when you switch back.'
@@ -1289,7 +1307,8 @@
         ? Boolean(bundledCmykProfile && !bundledCmykProfileError)
         : $('cmyk-profile-source').value === 'CUSTOM' && !readingCmykProfile && Boolean(selectedCmykProfile);
       $('raster-format').disabled = busy || cmyk;
-      $('quality-select').disabled = busy || (cmyk && $('export-vector').checked);
+      $('quality-select').disabled = busy || $('export-vector').checked;
+      $('vector-image-dpi').disabled = busy || !$('export-vector').checked;
       $('fit-oversized').disabled = busy || (cmyk && $('export-vector').checked);
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
@@ -1424,6 +1443,8 @@
       if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
       const cmyk = requestedColorProfile === 'CMYK';
       const exportType = $('export-vector').checked ? 'vector' : 'raster';
+      const imageDpi = exportType === 'vector' && $('vector-image-dpi').value !== 'original' ? Number($('vector-image-dpi').value) : null;
+      if (imageDpi !== null && ![36, 72, 108, 144, 216, 288, 300].includes(imageDpi)) { showStatus('Choose a supported image resolution.', 'error'); return; }
       let cmykProfile = null;
       const cmykProfileSource = cmyk ? $('cmyk-profile-source').value : null;
       if (cmykProfileSource === 'CUSTOM') {
@@ -1441,15 +1462,16 @@
       const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
       const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType, pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileSource, cmykProfileName: cmykProfile?.name || null, cmykProfileBytes: cmykProfile ? cmykProfile.bytes.slice() : null };
       Object.defineProperty(job, 'outputColorMode', { value: cmyk ? 'CMYK' : 'RGB', writable: false, configurable: false, enumerable: true });
+      Object.defineProperty(job, 'imageDpi', { value: imageDpi, writable: false, configurable: false, enumerable: true });
       // Snapshot every setting before asynchronous profile preparation or page work.
-      const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };
+      const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: exportType === 'vector' ? (imageDpi || 72) / 72 : QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };
       activeJob = job;
       updateControls();
       showStatus(cmyk ? 'Preparing and validating the CMYK profile…' : 'Preparing frames…');
       enqueue(job, async () => {
         if (cmyk) {
           if (typeof createCmykExporter !== 'function' || typeof loadCmykEngine !== 'function') throw new Error('The CMYK conversion engine is unavailable. Reopen the plugin and try again.');
-          const session = await createCmykExporter(PDFLib, { loadEngine: loadCmykEngine }).prepare(job.cmykProfileBytes);
+          const session = await createCmykExporter(PDFLib, { loadEngine: loadCmykEngine, yieldToBrowser }).prepare(job.cmykProfileBytes);
           if (!isCurrent(job)) { session.close(); return; }
           job.cmykSession = session;
           job.cmykProfileBytes = null;
@@ -1491,7 +1513,7 @@
       const before = job.pdf.getPageCount();
       let appended;
       try {
-        appended = await appendExportPage(job.pdf, message, { cmykSession: job.cmykSession, stillActive: () => isCurrent(job) });
+        appended = await appendExportPage(job.pdf, message, { cmykSession: job.cmykSession, imageDpi: job.imageDpi, stillActive: () => isCurrent(job) });
       } catch (error) {
         // A failed embed must never leave a partial/blank page in a successful file.
         while (job.pdf.getPageCount() > before) job.pdf.removePage(job.pdf.getPageCount() - 1);
@@ -1571,7 +1593,7 @@
       if (!isCurrent(job)) return false;
       if (bytes.byteLength > PDF_DOCUMENT_LIMIT) throw new Error(job.outputColorMode === 'CMYK'
         ? 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or a lower resolution.'
-        : 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or JPEG compression.');
+        : 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or a lower resolution. JPEG can help raster pages.');
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
