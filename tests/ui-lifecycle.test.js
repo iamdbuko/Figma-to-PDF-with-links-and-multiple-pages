@@ -7,6 +7,7 @@ const PDFLib = require('pdf-lib');
 
 const root = path.resolve(__dirname, '..');
 const png = [...Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64')];
+const p3Png = [...fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/native-DISPLAY_P3_V4.png'))];
 const nativePdf = [...fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'))];
 const first = { id: 'first', name: 'Page 1', width: 600, height: 400, parent: 'Page' };
 let browser;
@@ -19,6 +20,7 @@ async function harness(t) {
   t.after(() => context.close());
   const page = await context.newPage();
   const downloads = [], errors = [];
+  const profilesByJob = new Map();
   page.on('download', download => downloads.push(download));
   page.on('pageerror', error => errors.push(error.message));
   // Only an isolated local document is controlled; no Figma account or user browser is used.
@@ -52,15 +54,21 @@ async function harness(t) {
     }
     if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat);
     if (options.fitOversized) await frame.locator('#fit-oversized').check();
+    if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile);
     await frame.locator('#export-btn').click();
     await page.waitForFunction(count => received.filter(message => message.type === 'export-pdf').length > count, previousRequests);
     const request = await waitMessage('export-pdf');
     const ordered = request.selectedFrames.map(id => frames.find(item => item.id === id));
-    await post({ type: 'export-start', jobId: request.jobId, frames: ordered, connections: options.links || [] });
+    const exportColorProfile = options.resolvedProfile || (request.colorProfile === 'DOCUMENT' ? 'SRGB' : request.colorProfile);
+    profilesByJob.set(request.jobId, exportColorProfile);
+    await post({ type: 'export-start', jobId: request.jobId, frames: ordered, connections: options.links || [], exportColorProfile });
     await frame.waitForFunction(() => activeJob?.started);
     return request;
   };
-  const pageMessage = (jobId, index = 0, item = first, format = 'PNG', data = png) => ({ type: 'export-page', jobId, index, frame: item, format, data });
+  const pageMessage = (jobId, index = 0, item = first, format = 'PNG', data) => {
+    const exportColorProfile = profilesByJob.get(jobId) || 'SRGB';
+    return { type: 'export-page', jobId, index, frame: item, format, data: data ?? (exportColorProfile === 'DISPLAY_P3_V4' ? p3Png : png), exportColorProfile };
+  };
   return { page, frame, post, messages, waitMessage, start, pageMessage, downloads, errors };
 }
 
@@ -188,7 +196,7 @@ test('selection updates preserve sorting and checks, render names safely, and ne
   await h.frame.locator('#export-btn').click();
   const request = await h.waitMessage('export-pdf');
   assert.deepEqual(request.selectedFrames, ['ten', 'literal']);
-  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[0], malicious], connections: [] });
+  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[0], malicious], connections: [], exportColorProfile: 'SRGB' });
   await h.frame.waitForFunction(() => activeJob?.started);
   await h.post({ type: 'frames-updated', frames: [...frames, malicious, { ...first, id: 'new' }], connections: [], justAdded: ['new'] });
   await h.post({ type: 'selection-changed', selectedFrameIds: ['ten'], selectedFrameNames: ['Page 10'] });
@@ -262,7 +270,13 @@ test('multipart export pauses without ACK, releases each PDF, and preserves cros
     { fromFrameId: 'a', toFrameId: 'c', source: 'prototype', type: 'internal', elementBounds: { x: 10, y: 20, width: 30, height: 40 } },
     { fromFrameId: 'c', toFrameId: 'b', source: 'prototype', type: 'internal', elementBounds: { x: 50, y: 60, width: 70, height: 80 } }
   ];
-  const { jobId } = await h.start(frames, { pagesPerPart: 2, links });
+  const { jobId } = await h.start(frames, { pagesPerPart: 2, links, colorProfile: 'DOCUMENT', resolvedProfile: 'DISPLAY_P3_V4' });
+  assert.equal(await h.frame.evaluate(() => activeJob.exportColorProfile), 'DISPLAY_P3_V4');
+  await h.frame.evaluate(() => {
+    const append = appendExportPage;
+    window.appendedProfiles = [];
+    appendExportPage = (...args) => { window.appendedProfiles.push(args[1].exportColorProfile); return append(...args); };
+  });
   const filenames = await h.frame.evaluate(() => activeJob.parts.map(part => part.filename));
   await h.post(h.pageMessage(jobId, 0, frames[0]));
   await h.waitMessage('page-ack', { jobId, index: 0 });
@@ -274,7 +288,10 @@ test('multipart export pauses without ACK, releases each PDF, and preserves cros
   assert.equal((await h.messages('page-ack')).filter(message => message.index === 1).length, 0);
   assert.deepEqual(await h.frame.evaluate(() => ({ pdf: activeJob.pdf, pages: activeJob.pages.length, retained: activeJob.retainedBytes })), { pdf: null, pages: 0, retained: 0 });
   assert.equal(await h.frame.locator('#continue-btn').isEnabled(), true);
-  for (const selector of ['#export-btn', '#raster-format', '#output-mode', '#pages-per-part', '#fit-oversized']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
+  for (const selector of ['#export-btn', '#raster-format', '#output-mode', '#pages-per-part', '#fit-oversized', '#color-profile']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
+  assert.equal(await h.frame.evaluate(() => activeJob.exportColorProfile), 'DISPLAY_P3_V4');
+  // A later control value cannot change the profile already resolved for this job.
+  await h.frame.evaluate(() => { document.getElementById('color-profile').value = 'SRGB'; });
   await h.post(h.pageMessage(jobId, 1, frames[1]));
   await h.frame.evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
   assert.equal(await h.frame.evaluate(() => window.downloadClicks), 1);
@@ -284,6 +301,7 @@ test('multipart export pauses without ACK, releases each PDF, and preserves cros
   assert.equal((await h.messages('page-ack')).filter(message => message.index === 1).length, 1);
   assert.equal(await h.frame.evaluate(url => window.revokedUrls.includes(url), previousUrl), true);
   assert.equal(await h.frame.evaluate(() => activeJob.pdf.getPageCount()), 0);
+  assert.equal(await h.frame.evaluate(() => activeJob.exportColorProfile), 'DISPLAY_P3_V4');
   await h.post(h.pageMessage(jobId, 2, frames[2]));
   await h.waitMessage('page-ack', { jobId, index: 2 });
   const secondDownloadPromise = h.page.waitForEvent('download');
@@ -301,6 +319,8 @@ test('multipart export pauses without ACK, releases each PDF, and preserves cros
     assert.equal(action.lookup(PDFLib.PDFName.of('D'), PDFLib.PDFArray).lookup(0).asNumber(), targetPage);
   }
   assert.equal(await h.frame.evaluate(() => activeJob), null);
+  assert.deepEqual(await h.frame.evaluate(() => window.appendedProfiles), ['DISPLAY_P3_V4', 'DISPLAY_P3_V4', 'DISPLAY_P3_V4']);
+  assert.equal(await h.frame.locator('#color-profile').isEnabled(), true);
   assert.deepEqual(h.errors, []);
 });
 
@@ -356,4 +376,66 @@ test('annotations are included in the final pre-save retained-budget check', { t
   await h.frame.waitForFunction(() => activeJob === null);
   assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
   assert.deepEqual(h.errors, []);
+});
+
+test('color choices are sent explicitly and the concrete resolved profile is frozen per job', { timeout: 20000 }, async t => {
+  for (const [choice, resolved] of [['SRGB', 'SRGB'], ['DISPLAY_P3_V4', 'DISPLAY_P3_V4'], ['DOCUMENT', 'DISPLAY_P3_V4'], ['DOCUMENT', 'SRGB']]) {
+    const h = await harness(t);
+    assert.equal(await h.frame.locator('#color-profile').inputValue(), 'SRGB', 'sRGB is the compatibility default');
+    const request = await h.start([first], { colorProfile: choice, resolvedProfile: resolved });
+    assert.equal(request.colorProfile, choice);
+    assert.equal(await h.frame.evaluate(() => activeJob.exportColorProfile), resolved);
+    assert.deepEqual(await h.frame.evaluate(() => {
+      const descriptor = Object.getOwnPropertyDescriptor(activeJob, 'exportColorProfile');
+      return { writable: descriptor.writable, configurable: descriptor.configurable };
+    }), { writable: false, configurable: false });
+    assert.equal(await h.frame.locator('#color-profile').isDisabled(), true);
+    await h.frame.locator('#cancel-btn').click();
+    await h.waitMessage('export-cancel', { jobId: request.jobId });
+    await h.post({ type: 'export-cancelled', jobId: request.jobId });
+    await h.frame.waitForFunction(() => activeJob === null);
+    assert.equal(await h.frame.locator('#color-profile').isEnabled(), true);
+    assert.deepEqual(h.errors, []);
+  }
+});
+
+test('inconsistent or missing page color profiles fail before import without raster retry', { timeout: 15000 }, async t => {
+  for (const receivedProfile of ['SRGB', undefined]) {
+    const h = await harness(t);
+    const { jobId } = await h.start([first], { colorProfile: 'DOCUMENT', resolvedProfile: 'DISPLAY_P3_V4' });
+    await h.frame.evaluate(() => {
+      const append = appendExportPage;
+      window.appendCalls = 0;
+      appendExportPage = (...args) => { window.appendCalls++; return append(...args); };
+    });
+    await h.post({ ...h.pageMessage(jobId, 0, first, 'PDF', nativePdf), exportColorProfile: receivedProfile });
+    const failure = await h.waitMessage('export-failed', { jobId });
+    assert.match(failure.message, /page color profile differs/);
+    assert.equal(await h.frame.evaluate(() => window.appendCalls), 0);
+    assert.equal(await h.frame.evaluate(() => activeJob.nextIndex), 0);
+    assert.equal((await h.messages('page-ack')).length, 0);
+    await h.post({ type: 'export-error', jobId, error: failure.message });
+    await h.frame.waitForFunction(() => activeJob === null);
+    assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+    assert.deepEqual(h.errors, []);
+  }
+});
+
+test('export initialization rejects unresolved or contradictory color profiles', { timeout: 15000 }, async t => {
+  for (const [choice, resolved] of [['SRGB', 'DISPLAY_P3_V4'], ['DOCUMENT', 'DOCUMENT'], ['DOCUMENT', undefined]]) {
+    const h = await harness(t);
+    await h.post({ type: 'frames-updated', frames: [first], connections: [], justAdded: [first.id] });
+    await h.frame.locator('#color-profile').selectOption(choice);
+    await h.frame.locator('#export-btn').click();
+    const { jobId } = await h.waitMessage('export-pdf');
+    await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: resolved });
+    const failure = await h.waitMessage('export-failed', { jobId });
+    assert.match(failure.message, /color profile/);
+    assert.equal(await h.frame.evaluate(() => activeJob.started), false);
+    assert.equal(await h.frame.evaluate(() => activeJob.pdf), null);
+    await h.post({ type: 'export-error', jobId, error: failure.message });
+    await h.frame.waitForFunction(() => activeJob === null);
+    assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+    assert.deepEqual(h.errors, []);
+  }
 });

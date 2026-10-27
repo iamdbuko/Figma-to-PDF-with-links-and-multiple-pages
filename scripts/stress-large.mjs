@@ -10,7 +10,8 @@ import { PDFDocument, PDFName, PDFArray, PDFDict } from 'pdf-lib';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = await fs.readFile(path.join(root, 'ui.html'), 'utf8');
-const output = path.join(root, 'docs/large-file-results.json');
+const reportPath = process.argv.find(value => value.startsWith('--output='))?.slice('--output='.length);
+const output = path.resolve(root, reportPath || 'docs/large-file-results.json');
 const hash = value => createHash('sha256').update(value).digest('hex');
 const MiB = 1024 * 1024;
 const productionBudget = 128 * MiB;
@@ -125,6 +126,7 @@ async function inspectPart(download, part, plan, scenario) {
   const document = await PDFDocument.load(bytes);
   assert.equal(document.getPageCount(), part.end - part.start);
   let localLinks = 0, remoteLinks = 0, jpegStreams = 0;
+  const colorProfileRefs = new Set();
   for (let localIndex = 0; localIndex < document.getPageCount(); localIndex++) {
     const index = part.start + localIndex, page = document.getPage(localIndex);
     assert.deepEqual(page.getSize(), dimensions);
@@ -132,6 +134,10 @@ async function inspectPart(download, part, plan, scenario) {
     const images = xobjects.values().map(ref => document.context.lookup(ref)).filter(object => object.dict?.get(PDFName.of('Subtype'))?.toString() === '/Image');
     assert.equal(images.length, 1, 'each page contains precisely one image');
     const image = images[0];
+    const colorSpace = image.dict.lookup(PDFName.of('ColorSpace'), PDFArray);
+    assert.equal(colorSpace.get(0).toString(), '/ICCBased', 'raster color profiles survive the large export');
+    colorProfileRefs.add(colorSpace.get(1).toString());
+    assert.equal(document.context.lookup(colorSpace.get(1)).dict.lookup(PDFName.of('N')).asNumber(), 3);
     assert.equal(image.dict.lookup(PDFName.of('Width')).asNumber(), pixels.width);
     assert.equal(image.dict.lookup(PDFName.of('Height')).asNumber(), pixels.height);
     if (scenario.format === 'JPG') {
@@ -158,7 +164,8 @@ async function inspectPart(download, part, plan, scenario) {
       remoteLinks++;
     }
   }
-  return { index: part.index, filename: part.filename, startPage: part.start, endPageExclusive: part.end, outputBytes: bytes.length, sha256: hash(bytes), validation: { pages: document.getPageCount(), exactPageDimensions: true, exactRasterDimensions: true, localLinks, remoteLinks, originalJpegStreams: jpegStreams } };
+  assert.equal(colorProfileRefs.size, 1, 'the shared sRGB profile is embedded once per document');
+  return { index: part.index, filename: part.filename, startPage: part.start, endPageExclusive: part.end, outputBytes: bytes.length, sha256: hash(bytes), validation: { pages: document.getPageCount(), exactPageDimensions: true, exactRasterDimensions: true, localLinks, remoteLinks, originalJpegStreams: jpegStreams, sharedRgbProfiles: colorProfileRefs.size } };
 }
 
 async function runScenario({ name, format, pagesPerPart = 30, testBudget = null }) {
@@ -213,8 +220,9 @@ async function runScenario({ name, format, pagesPerPart = 30, testBudget = null 
     assert.deepEqual(request.selectedFrames, frames.map(item => item.id));
     assert.equal(request.rasterFormat, format);
     assert.equal(request.qualityScale, 1.5);
+    assert.equal(request.colorProfile, 'SRGB');
     const jobId = request.jobId;
-    await post({ type: 'export-start', jobId, frames, connections });
+    await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB' });
     await frame.waitForFunction(() => activeJob?.started);
     const plan = await frame.evaluate(() => activeJob.parts);
     assert.equal(plan.length, Math.ceil(count / pagesPerPart));
@@ -226,7 +234,7 @@ async function runScenario({ name, format, pagesPerPart = 30, testBudget = null 
       result.compressedInputBytes += source.inputBytes;
       const assemblyStart = performance.now();
       await page.evaluate(({ jobId, index, frame, format }) => {
-        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format, data: window.nextStressRaster } }, '*');
+        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format, data: window.nextStressRaster, exportColorProfile: 'SRGB' } }, '*');
         window.nextStressRaster = null;
       }, { jobId, index, frame: frames[index], format });
       const message = await waitMessage(['page-ack', 'part-ready'], { jobId, index });

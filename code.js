@@ -1,4 +1,6 @@
 // Figma PDF export: whole-frame rendering, one acknowledged page at a time.
+// Resolve export colors once per job; publish that concrete profile alongside
+// every page so the assembler can embed matching profiles without relabeling.
 figma.showUI(__html__, { width: 400, height: 600 });
 
 let frameData = [];
@@ -509,6 +511,39 @@ function unsupportedPdfBlendMode(frame) {
   return null;
 }
 
+function readDocumentColorProfile() {
+  const profile = figma.root && figma.root.documentColorProfile;
+  if (profile !== 'LEGACY' && profile !== 'SRGB' && profile !== 'DISPLAY_P3') {
+    throw new Error('The document color profile is unavailable or unsupported. Reopen the file in an updated Figma version before exporting.');
+  }
+  return profile;
+}
+
+function resolveExportColorProfile(requested, sourceProfile) {
+  if (requested === 'SRGB' || requested === 'DISPLAY_P3_V4') return requested;
+  if (requested !== 'DOCUMENT') throw new Error('Choose sRGB, Display P3, or the document color profile.');
+  if (sourceProfile === 'SRGB') return 'SRGB';
+  if (sourceProfile === 'DISPLAY_P3') return 'DISPLAY_P3_V4';
+  // A legacy document can follow a user preference that the Plugin API does
+  // not expose. Never label those pixels with a guessed ICC profile.
+  throw new Error('This legacy document has no explicit color profile. Choose sRGB or Display P3 for this export.');
+}
+
+function verifySourceColorProfile(job) {
+  if (!jobIsRunning(job)) return false;
+  try {
+    if (readDocumentColorProfile() !== job.sourceColorProfile) {
+      throw new Error('The document color profile changed during export. Start a new export so every page uses the same source colors.');
+    }
+    return true;
+  } catch (error) {
+    // Terminal state rather than a thrown error prevents native-PDF fallback
+    // and auxiliary-annotation catches from swallowing a changed profile.
+    terminateJob(job, 'export-error', error.message || String(error));
+    return false;
+  }
+}
+
 async function startExport(msg) {
   if (typeof msg.jobId !== 'string' || !msg.jobId) {
     failNewJob(msg.jobId, 'The export request is missing its job ID. Please try again.');
@@ -540,15 +575,21 @@ async function startExport(msg) {
     scale: msg.qualityScale === undefined ? 1.5 : msg.qualityScale,
     exportType: msg.exportType || 'raster',
     rasterFormat: msg.rasterFormat === undefined ? 'PNG' : msg.rasterFormat,
-    fitOversized: msg.fitOversized === undefined ? false : msg.fitOversized
+    fitOversized: msg.fitOversized === undefined ? false : msg.fitOversized,
+    requestedColorProfile: msg.colorProfile === undefined ? 'SRGB' : msg.colorProfile,
+    sourceColorProfile: null,
+    exportColorProfile: null
   };
   activeExportJob = job;
   usedJobIds.add(job.id);
   listRevision++;
 
   await runJobOperation(job, async () => {
+    job.sourceColorProfile = readDocumentColorProfile();
+    job.exportColorProfile = resolveExportColorProfile(job.requestedColorProfile, job.sourceColorProfile);
     const sourceChanged = () => {
       if (jobIsRunning(job) && job.phase !== 'awaiting-finish') {
+        if (!verifySourceColorProfile(job)) return;
         terminateJob(job, 'export-error', 'The design changed during export. Wait until editing is finished, then export again so all pages and links match.');
       }
     };
@@ -567,7 +608,7 @@ async function startExport(msg) {
     const liveFrames = [];
     for (const id of ids) {
       const frame = await figma.getNodeByIdAsync(id);
-      if (!jobIsRunning(job)) return;
+      if (!verifySourceColorProfile(job)) return;
       if (!frame || frame.type !== 'FRAME') throw new Error('A selected frame was removed or is no longer available. Refresh the list and try again.');
       watchSourcePage(job, frame);
       validateFrameSize(frame);
@@ -579,7 +620,7 @@ async function startExport(msg) {
     }
     for (const frame of liveFrames) {
       await scanNodeForConnections(frame, frame.id, 0, selectedIds, job.connections);
-      if (!jobIsRunning(job)) return;
+      if (!verifySourceColorProfile(job)) return;
     }
     job.connections = job.connections.filter(link =>
       selectedIds.has(link.fromFrameId) && (link.type === 'external' || selectedIds.has(link.toFrameId))
@@ -588,7 +629,7 @@ async function startExport(msg) {
     const freshById = new Map(job.frames.map(frame => [frame.id, frame]));
     frameData = frameData.map(frame => freshById.get(frame.id) || frame);
     connections = connections.filter(link => !selectedIds.has(link.fromFrameId)).concat(job.connections);
-    figma.ui.postMessage({ type: 'export-start', jobId: job.id, frames: job.frames, connections: job.connections, warnings: [] });
+    figma.ui.postMessage({ type: 'export-start', jobId: job.id, frames: job.frames, connections: job.connections, exportColorProfile: job.exportColorProfile, warnings: [] });
     if (!jobIsRunning(job)) return;
     await exportPage(job, 0);
   });
@@ -609,11 +650,11 @@ function checkedExportBytes(data, name) {
 }
 
 async function exportPage(job, index, options = {}) {
-  if (!jobIsRunning(job)) return;
+  if (!verifySourceColorProfile(job)) return;
   job.phase = 'exporting';
   const metadata = job.frames[index];
   const frame = await figma.getNodeByIdAsync(metadata.id);
-  if (!jobIsRunning(job)) return;
+  if (!verifySourceColorProfile(job)) return;
   if (!frame || frame.type !== 'FRAME') throw new Error(`“${metadata.name}” is no longer available. Start the export again.`);
   assertUnchangedDimensions(frame, metadata);
   const warnings = [];
@@ -628,11 +669,11 @@ async function exportPage(job, index, options = {}) {
   if (options.forceRaster) warnings.push(`“${metadata.name}” was rasterized because its native PDF could not be merged.`);
   if (format === 'PDF') {
     try {
-      data = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true });
-      if (!jobIsRunning(job)) return;
+      data = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true, colorProfile: job.exportColorProfile });
+      if (!verifySourceColorProfile(job)) return;
       data = checkedExportBytes(data, metadata.name);
     } catch (error) {
-      if (!jobIsRunning(job)) return;
+      if (!verifySourceColorProfile(job)) return;
       nativeExportFailed = true;
       format = job.rasterFormat;
       warnings.push(`“${metadata.name}” was rasterized because Figma could not export its PDF: ${error.message || error}`);
@@ -643,21 +684,19 @@ async function exportPage(job, index, options = {}) {
     if (plan.scale < job.scale) {
       warnings.push(`“${metadata.name}” was fitted to ${plan.width}×${plan.height} pixels: requested ${Number(job.scale.toPrecision(4))}×, actual ${Number(plan.scale.toPrecision(4))}×. Its PDF page dimensions are unchanged.`);
     }
-    const settings = { format, useAbsoluteBounds: true, constraint: { type: 'SCALE', value: plan.scale } };
-    // pdf-lib's JPEG embedding uses DeviceRGB rather than the source ICC profile.
-    if (format === 'JPG') settings.colorProfile = 'SRGB';
+    const settings = { format, useAbsoluteBounds: true, colorProfile: job.exportColorProfile, constraint: { type: 'SCALE', value: plan.scale } };
     data = await frame.exportAsync(settings);
-    if (!jobIsRunning(job)) return;
+    if (!verifySourceColorProfile(job)) return;
     data = checkedExportBytes(data, metadata.name);
     const hasTextLinks = job.connections.some(link => link.fromFrameId === metadata.id && link.source === 'text');
     if (!hasTextLinks) annotationPdfData = undefined;
     if (hasTextLinks && !annotationPdfData && !nativeExportFailed) {
       try {
-        annotationPdfData = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true });
-        if (!jobIsRunning(job)) return;
+        annotationPdfData = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true, colorProfile: job.exportColorProfile });
+        if (!verifySourceColorProfile(job)) return;
         annotationPdfData = checkedExportBytes(annotationPdfData, metadata.name);
       } catch (error) {
-        if (!jobIsRunning(job)) return;
+        if (!verifySourceColorProfile(job)) return;
         annotationPdfData = undefined;
         warnings.push(`Precise text links could not be recovered for “${metadata.name}”: ${error.message || error}`);
       }
@@ -665,7 +704,7 @@ async function exportPage(job, index, options = {}) {
       warnings.push(`Precise text links could not be recovered for “${metadata.name}” because its native PDF export failed.`);
     }
   }
-  if (!jobIsRunning(job)) return;
+  if (!verifySourceColorProfile(job)) return;
   assertUnchangedDimensions(frame, metadata);
   const transferBytes = data.byteLength + (annotationPdfData ? annotationPdfData.byteLength : 0);
   if (transferBytes > EXPORT_LIMITS.maxPageTransferBytes) {
@@ -680,7 +719,7 @@ async function exportPage(job, index, options = {}) {
       terminateJob(job, 'export-error', `PDF processing did not acknowledge page ${index + 1} within two minutes. Start a new export.`);
     }
   }, EXPORT_LIMITS.acknowledgementTimeoutMs);
-  const message = { type: 'export-page', jobId: job.id, index, frame: metadata, format, data, warnings };
+  const message = { type: 'export-page', jobId: job.id, index, frame: metadata, format, data, exportColorProfile: job.exportColorProfile, warnings };
   if (annotationPdfData) message.annotationPdfData = annotationPdfData;
   figma.ui.postMessage(message);
 }
@@ -688,6 +727,7 @@ async function exportPage(job, index, options = {}) {
 function pauseForSavedPart(msg) {
   const job = matchingJob(msg.jobId);
   if (!jobIsRunning(job) || job.phase !== 'awaiting-ack' || !job.pending || job.pending.index !== msg.index) return;
+  if (!verifySourceColorProfile(job)) return;
   clearJobTimer(job);
   job.pending.nativePdfData = null;
   job.phase = 'awaiting-part';
@@ -707,6 +747,7 @@ async function acknowledgePage(msg) {
   const pending = job.pending;
   // A saved part cannot be rewritten, and raster replacements cannot retry.
   if (msg.fallback === true && (job.phase === 'awaiting-part' || pending.format !== 'PDF')) return;
+  if (!verifySourceColorProfile(job)) return;
   const annotationPdfData = msg.fallback === true &&
     job.connections.some(link => link.fromFrameId === job.frames[msg.index].id && link.source === 'text')
     ? pending.nativePdfData : undefined;

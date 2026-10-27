@@ -1,4 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 *.pdf binary
+*.png binary
+*.jpg binary
+*.icc binary
 ui.html linguist-generated=true

@@ -3,12 +3,13 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const PDFLib = require('pdf-lib');
+const { createPdfColorManagement } = require('../src/color-profiles.js');
 
 const root = path.resolve(__dirname, '..');
 const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
 const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const context = new Function('PDFLib', 'yieldToBrowser', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve());
+const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfColorManagement', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfColorManagement);
 const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
 const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));

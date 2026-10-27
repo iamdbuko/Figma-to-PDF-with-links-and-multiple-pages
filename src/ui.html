@@ -735,6 +735,8 @@
     <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
     <label class="export-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
     <p id="compression-help" class="export-help">Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.</p>
+    <label class="export-setting" for="color-profile">Color profile <select id="color-profile"><option value="SRGB" selected>sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="DOCUMENT">Same as Figma file</option></select></label>
+    <p id="color-profile-help" class="export-help">sRGB works well across most screens and PDF viewers.</p>
     <label class="export-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
     <p class="export-help">When enabled, lowers resolution only for pages above the raster size limits. PDF page dimensions stay unchanged.</p>
     <label class="export-setting" for="output-mode">Output <select id="output-mode"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></label>
@@ -747,6 +749,7 @@
   </div>
   <!-- Replaced with the pinned local library by the production build. -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="color-profiles.js"></script>
   <script>
     'use strict';
     const QUALITY_SETTINGS = {
@@ -767,6 +770,7 @@
     const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
 
     // PDF_ASSEMBLY_START: tested against the pinned pdf-lib implementation.
+    const pdfColorManagement = createPdfColorManagement(PDFLib);
     const PDF_DOCUMENT_LIMIT = 128 * 1024 * 1024;
 
     function estimatePdfBytes(pdfDoc) {
@@ -937,6 +941,7 @@
           throw new Error('Native PDF dimensions differ from the frame.');
         }
         const [page] = await pdfDoc.copyPages(source, [0]);
+        await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
         pdfDoc.addPage(page);
         return { page, warnings: [] };
       }
@@ -947,6 +952,7 @@
       page.drawImage(image, { x: 0, y: 0, width: frame.width, height: frame.height });
       // Flush this image now so pdf-lib releases its decoded RGB/alpha buffers before the next page.
       await image.embed();
+      await pdfColorManagement.attachRasterProfile(pdfDoc, image, bytes, message.format, message.exportColorProfile || 'SRGB');
       const warnings = [];
       if (message.annotationPdfData) {
         try { await copyNativeUriAnnotations(pdfDoc, page, message.annotationPdfData, frame); }
@@ -1071,6 +1077,11 @@
       $('compression-help').textContent = $('raster-format').value === 'JPG'
         ? 'Applies to raster pages and vector fallbacks. JPEG can reduce photo-heavy exports; transparent areas become white and text may soften. Flat graphics can be larger than PNG.'
         : 'Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.';
+      $('color-profile-help').textContent = {
+        SRGB: 'sRGB works well across most screens and PDF viewers.',
+        DISPLAY_P3_V4: 'Display P3 supports a wider range of colors. Appearance depends on the screen and PDF viewer.',
+        DOCUMENT: 'Uses the Figma file’s color profile, fixed when this export starts.'
+      }[$('color-profile').value];
       const parts = $('output-mode').value === 'parts';
       $('part-size-setting').hidden = !parts;
       $('parts-help').hidden = !parts;
@@ -1206,17 +1217,19 @@
       if (!selectedFrames.length) return;
       if (!window.PDFLib?.PDFDocument) { showStatus('The PDF library is unavailable. Reopen the plugin and try again.', 'error'); return; }
       const quality = $('quality-select').value;
+      const requestedColorProfile = $('color-profile').value;
+      if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
       const split = $('output-mode').value === 'parts';
       const pagesPerPart = split ? Number($('pages-per-part').value) : selectedFrames.length;
       if (split && (!Number.isInteger(pagesPerPart) || pagesPerPart < 1 || pagesPerPart > 250)) { showStatus('Choose between 1 and 250 pages per part.', 'error'); return; }
       const id = `${Date.now()}-${++jobSequence}`;
       const unique = globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(16).slice(2, 10);
       const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
-      const job = { id, requestedIds: selectedFrames, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0 };
+      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0 };
       activeJob = job;
       updateControls();
       showStatus('Preparing frames…');
-      post({ type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames, qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: $('raster-format').value, fitOversized: $('fit-oversized').checked });
+      post({ type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames, qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile });
     }
 
     function cancelExport() {
@@ -1234,6 +1247,8 @@
       if (!job.started || !job.pdf || job.awaitingContinue) throw new Error('Page arrived before the PDF part was ready.');
       if (message.index !== job.nextIndex || job.frames[message.index]?.id !== message.frame?.id) throw new Error('Exported page order does not match the selection.');
       if (job.fallbackIndex === message.index && message.format === 'PDF') return;
+      // Reject inconsistent metadata before import, so a profile error cannot trigger raster fallback.
+      if (message.exportColorProfile !== job.exportColorProfile) throw new Error('The page color profile differs from this export. Start a new export with one consistent color profile.');
       addWarnings(job, message.warnings);
       showStatus(`Preparing page ${message.index + 1} of ${job.frames.length}: ${message.frame.name}`, 'info', job.warnings);
       const before = job.pdf.getPageCount();
@@ -1378,6 +1393,10 @@
       if (message.type === 'export-start') {
         enqueue(job, async () => {
           if (job.started) throw new Error('Duplicate export initialization.');
+          const resolvedProfile = message.exportColorProfile;
+          if (!['SRGB', 'DISPLAY_P3_V4'].includes(resolvedProfile)) throw new Error('Figma did not provide a supported color profile for this export. Choose sRGB or Display P3 and try again.');
+          if (job.requestedColorProfile !== 'DOCUMENT' && resolvedProfile !== job.requestedColorProfile) throw new Error('The resolved color profile differs from the selected profile. Start a new export.');
+          Object.defineProperty(job, 'exportColorProfile', { value: resolvedProfile, writable: false, configurable: false, enumerable: true });
           const frames = message.frames || [];
           if (frames.length !== job.requestedIds.length || frames.some((frame, index) => frame.id !== job.requestedIds[index])) throw new Error('Export order differs from the selected frames.');
           job.frames = frames; job.connections = message.connections || []; addWarnings(job, message.warnings);
@@ -1418,7 +1437,7 @@
       });
       $('sort-select').addEventListener('change', event => { sortFramesByName(event.target.value); event.target.value = 'none'; });
       for (const input of document.querySelectorAll('input[name="export-type"]')) input.addEventListener('change', updateExportTypeInfo);
-      for (const id of ['raster-format', 'output-mode']) $(id).addEventListener('change', updateExportTypeInfo);
+      for (const id of ['raster-format', 'output-mode', 'color-profile']) $(id).addEventListener('change', updateExportTypeInfo);
       updateExportTypeInfo(); updateControls();
       post({ type: 'ui-ready' });
     });

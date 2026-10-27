@@ -6,11 +6,13 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Development version
 
-This branch is **v9.0.0-dev.2**. The Community release is still v8. Importing or running this development copy does not publish an update.
+This branch is **v9.0.0-dev.3**. The Community release is still v8. Importing or running this development copy does not publish an update.
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
 Other changes include cancellation, detection of edits during export, fresh frame dimensions, explicit failures instead of blank placeholder pages, stable sorting and selection, and an offline bundled PDF library. Original layers are never hidden or rewritten during export.
+
+**Color profile** offers sRGB (default), Display P3, and Same as Figma file. The chosen profile applies to vector pages, raster pages, and fallbacks; raster profiles are embedded in the PDF, including compressed JPEGs. Same as Figma file requires an explicitly assigned sRGB/P3 document profile. Legacy files must choose an export profile explicitly. See [color-profile behavior and validation](docs/COLOR-PROFILES.md).
 
 ## Run and develop
 

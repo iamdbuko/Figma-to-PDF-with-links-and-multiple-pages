@@ -1,0 +1,1049 @@
+{
+  "sourceProfile": "LEGACY",
+  "figmaFile": "yKf6bZSYBB3tZoWz5qMmen",
+  "frameId": "28:3",
+  "builtUiSha256": "aeab7595e027ebca145f651ca5d38cf3f6f4905b937cde7f62e1307073e5aa8e",
+  "backendSha256": "6e5ced0ee684641a0e76700c6b692517aff8588505187282712597da34f8bb78",
+  "visualComparison": [
+    {
+      "profile": "SRGB",
+      "format": "PDF",
+      "comparison": "native PDF render",
+      "difference": {
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "pixelsWithAnyDifference": 0,
+        "pixels": 60000
+      }
+    },
+    {
+      "profile": "SRGB",
+      "format": "PNG",
+      "comparison": "original image converted to standard sRGB with LittleCMS",
+      "difference": {
+        "maximumChannelDifference": 153,
+        "meanChannelDifference": 1.0771222222222223,
+        "pixelsWithAnyDifference": 17591,
+        "pixels": 60000
+      },
+      "interiorSamples": [
+        {
+          "at": [
+            25,
+            25
+          ],
+          "expected": [
+            255,
+            0,
+            0
+          ],
+          "actual": [
+            255,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            75,
+            25
+          ],
+          "expected": [
+            0,
+            255,
+            0
+          ],
+          "actual": [
+            0,
+            255,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            125,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            255
+          ],
+          "actual": [
+            0,
+            0,
+            255
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            175,
+            25
+          ],
+          "expected": [
+            255,
+            128,
+            0
+          ],
+          "actual": [
+            255,
+            128,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            25
+          ],
+          "expected": [
+            128,
+            128,
+            128
+          ],
+          "actual": [
+            128,
+            128,
+            128
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            275,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            25,
+            90
+          ],
+          "expected": [
+            233,
+            0,
+            22
+          ],
+          "actual": [
+            233,
+            0,
+            21
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            75,
+            90
+          ],
+          "expected": [
+            191,
+            0,
+            64
+          ],
+          "actual": [
+            191,
+            0,
+            63
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            125,
+            90
+          ],
+          "expected": [
+            148,
+            0,
+            106
+          ],
+          "actual": [
+            148,
+            0,
+            105
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            175,
+            90
+          ],
+          "expected": [
+            106,
+            0,
+            149
+          ],
+          "actual": [
+            106,
+            0,
+            148
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            225,
+            90
+          ],
+          "expected": [
+            63,
+            0,
+            192
+          ],
+          "actual": [
+            63,
+            0,
+            190
+          ],
+          "maxDifference": 2
+        },
+        {
+          "at": [
+            275,
+            90
+          ],
+          "expected": [
+            21,
+            1,
+            234
+          ],
+          "actual": [
+            21,
+            0,
+            233
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            225,
+            160
+          ],
+          "expected": [
+            128,
+            0,
+            127
+          ],
+          "actual": [
+            128,
+            0,
+            127
+          ],
+          "maxDifference": 0
+        }
+      ]
+    },
+    {
+      "profile": "SRGB",
+      "format": "JPG",
+      "comparison": "original image converted to standard sRGB with LittleCMS",
+      "difference": {
+        "maximumChannelDifference": 153,
+        "meanChannelDifference": 1.1137944444444445,
+        "pixelsWithAnyDifference": 17526,
+        "pixels": 60000
+      },
+      "interiorSamples": [
+        {
+          "at": [
+            25,
+            25
+          ],
+          "expected": [
+            254,
+            0,
+            0
+          ],
+          "actual": [
+            254,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            75,
+            25
+          ],
+          "expected": [
+            0,
+            255,
+            1
+          ],
+          "actual": [
+            0,
+            255,
+            1
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            125,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            254
+          ],
+          "actual": [
+            0,
+            0,
+            254
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            175,
+            25
+          ],
+          "expected": [
+            255,
+            127,
+            0
+          ],
+          "actual": [
+            255,
+            127,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            25
+          ],
+          "expected": [
+            128,
+            128,
+            128
+          ],
+          "actual": [
+            128,
+            128,
+            128
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            275,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            25,
+            90
+          ],
+          "expected": [
+            233,
+            0,
+            21
+          ],
+          "actual": [
+            232,
+            0,
+            21
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            75,
+            90
+          ],
+          "expected": [
+            190,
+            0,
+            64
+          ],
+          "actual": [
+            190,
+            0,
+            63
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            125,
+            90
+          ],
+          "expected": [
+            148,
+            1,
+            107
+          ],
+          "actual": [
+            148,
+            0,
+            106
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            175,
+            90
+          ],
+          "expected": [
+            106,
+            0,
+            148
+          ],
+          "actual": [
+            106,
+            0,
+            148
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            90
+          ],
+          "expected": [
+            63,
+            0,
+            192
+          ],
+          "actual": [
+            62,
+            0,
+            190
+          ],
+          "maxDifference": 2
+        },
+        {
+          "at": [
+            275,
+            90
+          ],
+          "expected": [
+            21,
+            2,
+            234
+          ],
+          "actual": [
+            21,
+            0,
+            231
+          ],
+          "maxDifference": 3
+        },
+        {
+          "at": [
+            225,
+            160
+          ],
+          "expected": [
+            129,
+            0,
+            127
+          ],
+          "actual": [
+            129,
+            0,
+            127
+          ],
+          "maxDifference": 0
+        }
+      ]
+    },
+    {
+      "profile": "DISPLAY_P3_V4",
+      "format": "PDF",
+      "comparison": "native PDF render",
+      "difference": {
+        "maximumChannelDifference": 0,
+        "meanChannelDifference": 0.0,
+        "pixelsWithAnyDifference": 0,
+        "pixels": 60000
+      }
+    },
+    {
+      "profile": "DISPLAY_P3_V4",
+      "format": "PNG",
+      "comparison": "original image converted to standard sRGB with LittleCMS",
+      "difference": {
+        "maximumChannelDifference": 161,
+        "meanChannelDifference": 1.0954722222222222,
+        "pixelsWithAnyDifference": 26518,
+        "pixels": 60000
+      },
+      "interiorSamples": [
+        {
+          "at": [
+            25,
+            25
+          ],
+          "expected": [
+            255,
+            0,
+            0
+          ],
+          "actual": [
+            255,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            75,
+            25
+          ],
+          "expected": [
+            0,
+            255,
+            0
+          ],
+          "actual": [
+            0,
+            255,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            125,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            255
+          ],
+          "actual": [
+            0,
+            0,
+            255
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            175,
+            25
+          ],
+          "expected": [
+            255,
+            119,
+            0
+          ],
+          "actual": [
+            255,
+            119,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            25
+          ],
+          "expected": [
+            128,
+            128,
+            128
+          ],
+          "actual": [
+            128,
+            128,
+            128
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            275,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            25,
+            90
+          ],
+          "expected": [
+            255,
+            0,
+            0
+          ],
+          "actual": [
+            255,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            75,
+            90
+          ],
+          "expected": [
+            209,
+            0,
+            61
+          ],
+          "actual": [
+            209,
+            0,
+            59
+          ],
+          "maxDifference": 2
+        },
+        {
+          "at": [
+            125,
+            90
+          ],
+          "expected": [
+            162,
+            0,
+            109
+          ],
+          "actual": [
+            162,
+            0,
+            108
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            175,
+            90
+          ],
+          "expected": [
+            117,
+            0,
+            155
+          ],
+          "actual": [
+            117,
+            0,
+            154
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            225,
+            90
+          ],
+          "expected": [
+            70,
+            0,
+            200
+          ],
+          "actual": [
+            70,
+            0,
+            198
+          ],
+          "maxDifference": 2
+        },
+        {
+          "at": [
+            275,
+            90
+          ],
+          "expected": [
+            24,
+            0,
+            244
+          ],
+          "actual": [
+            24,
+            0,
+            243
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            225,
+            160
+          ],
+          "expected": [
+            141,
+            0,
+            131
+          ],
+          "actual": [
+            141,
+            0,
+            132
+          ],
+          "maxDifference": 1
+        }
+      ]
+    },
+    {
+      "profile": "DISPLAY_P3_V4",
+      "format": "JPG",
+      "comparison": "original image converted to standard sRGB with LittleCMS",
+      "difference": {
+        "maximumChannelDifference": 161,
+        "meanChannelDifference": 1.0624277777777777,
+        "pixelsWithAnyDifference": 14672,
+        "pixels": 60000
+      },
+      "interiorSamples": [
+        {
+          "at": [
+            25,
+            25
+          ],
+          "expected": [
+            255,
+            0,
+            0
+          ],
+          "actual": [
+            255,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            75,
+            25
+          ],
+          "expected": [
+            0,
+            255,
+            0
+          ],
+          "actual": [
+            0,
+            255,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            125,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            255
+          ],
+          "actual": [
+            0,
+            0,
+            255
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            175,
+            25
+          ],
+          "expected": [
+            255,
+            117,
+            0
+          ],
+          "actual": [
+            255,
+            117,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            25
+          ],
+          "expected": [
+            128,
+            128,
+            128
+          ],
+          "actual": [
+            128,
+            128,
+            128
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            275,
+            25
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            25,
+            90
+          ],
+          "expected": [
+            255,
+            0,
+            0
+          ],
+          "actual": [
+            254,
+            0,
+            0
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            75,
+            90
+          ],
+          "expected": [
+            208,
+            0,
+            61
+          ],
+          "actual": [
+            208,
+            0,
+            60
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            125,
+            90
+          ],
+          "expected": [
+            162,
+            0,
+            110
+          ],
+          "actual": [
+            162,
+            0,
+            109
+          ],
+          "maxDifference": 1
+        },
+        {
+          "at": [
+            175,
+            90
+          ],
+          "expected": [
+            117,
+            0,
+            154
+          ],
+          "actual": [
+            117,
+            0,
+            154
+          ],
+          "maxDifference": 0
+        },
+        {
+          "at": [
+            225,
+            90
+          ],
+          "expected": [
+            70,
+            0,
+            200
+          ],
+          "actual": [
+            69,
+            0,
+            198
+          ],
+          "maxDifference": 2
+        },
+        {
+          "at": [
+            275,
+            90
+          ],
+          "expected": [
+            24,
+            1,
+            244
+          ],
+          "actual": [
+            24,
+            0,
+            241
+          ],
+          "maxDifference": 3
+        },
+        {
+          "at": [
+            225,
+            160
+          ],
+          "expected": [
+            142,
+            0,
+            131
+          ],
+          "actual": [
+            142,
+            0,
+            131
+          ],
+          "maxDifference": 0
+        }
+      ]
+    }
+  ],
+  "liveExports": [
+    {
+      "file": "live-JPG-P3.pdf",
+      "bytes": 43059,
+      "sha256": "764d26c2fe60237bcc4ca20da844f96ae68be0c78e1ca77a7928e8ec12f49ade",
+      "pageDimensions": [
+        600.0,
+        400.0
+      ],
+      "profiles": [
+        {
+          "bytes": 536,
+          "sha256": "20789fdbea9835251a4f0796c8bf45cbd964896044886540da21ffc7457af0ab",
+          "description": "Display P3"
+        }
+      ],
+      "webLinks": [
+        "https://example.com/color"
+      ]
+    },
+    {
+      "file": "live-JPG-sRGB.pdf",
+      "bytes": 42516,
+      "sha256": "ef951b5107e82ed6ddc9ba60034a7ad83b673a7c671bc57b55327c0785c830f2",
+      "pageDimensions": [
+        600.0,
+        400.0
+      ],
+      "profiles": [
+        {
+          "bytes": 588,
+          "sha256": "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8",
+          "description": "sRGB built-in"
+        }
+      ],
+      "webLinks": [
+        "https://example.com/color"
+      ]
+    },
+    {
+      "file": "live-PNG-P3.pdf",
+      "bytes": 85913,
+      "sha256": "caa27b4d2f273a37b4670c42a26add1554288c021b273eb3c962b16799dccced",
+      "pageDimensions": [
+        600.0,
+        400.0
+      ],
+      "profiles": [
+        {
+          "bytes": 536,
+          "sha256": "20789fdbea9835251a4f0796c8bf45cbd964896044886540da21ffc7457af0ab",
+          "description": "Display P3"
+        }
+      ],
+      "webLinks": [
+        "https://example.com/color"
+      ]
+    },
+    {
+      "file": "live-vector-P3.pdf",
+      "bytes": 3586,
+      "sha256": "625abc4f4bad913d64e17b748d7ddc1495e9f98e538f0e23828fa04341efa9d6",
+      "pageDimensions": [
+        600.0,
+        400.0
+      ],
+      "profiles": [
+        {
+          "bytes": 536,
+          "sha256": "20789fdbea9835251a4f0796c8bf45cbd964896044886540da21ffc7457af0ab",
+          "description": "Display P3"
+        }
+      ],
+      "webLinks": [
+        "https://example.com/color"
+      ]
+    }
+  ],
+  "legacySameAsFile": "Actionable error requesting explicit sRGB or Display P3; no download.",
+  "renderingScope": "Poppler pdftoppm at 36 DPI into the generated sRGB display profile; source PNG/JPEG converted with Pillow LittleCMS, relative colorimetric. Whole-image differences include raster edge resampling; interior swatch/gradient sample differences are recorded separately. Native vector comparisons use identical Poppler settings for source and assembled PDFs. No physical printer or display calibration measurement.",
+  "automatedTests": 97,
+  "visualInspection": "Inspected assembled P3 PNG and live P3 vector previews: swatches, gradient, embedded image and transparency present without clipping or blank content."
+}

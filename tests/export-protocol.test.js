@@ -15,6 +15,7 @@ function harness(options = {}) {
   let nextTimer = 0;
   const figma = {
     mixed: Symbol('mixed'),
+    root: { documentColorProfile: 'documentColorProfile' in options ? options.documentColorProfile : 'SRGB' },
     showUI() {},
     ui: { postMessage(message) { messages.push(structuredClone(message)); } },
     on(event, callback) { events.set(event, callback); },
@@ -269,7 +270,7 @@ test('JPEG raster exports request sRGB and still obtain native text annotations'
   await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG', qualityScale: 1.5 });
   assert.deepEqual(h.exports, [
     { id: 'a', format: 'JPG', useAbsoluteBounds: true, constraint: { type: 'SCALE', value: 1.5 }, colorProfile: 'SRGB' },
-    { id: 'a', format: 'PDF', useAbsoluteBounds: true }
+    { id: 'a', format: 'PDF', useAbsoluteBounds: true, colorProfile: 'SRGB' }
   ]);
   assert.equal(h.messagesOf('export-page')[0].format, 'JPG');
   assert.ok(h.messagesOf('export-page')[0].annotationPdfData);
@@ -446,6 +447,151 @@ test('style edits during native rendering stop the result; source watchers end b
   await h.start(['a'], { jobId: 'job-2' });
   await h.ack(0, { jobId: 'job-2' });
   assert.equal(h.messagesOf('export-complete').length, 1);
+  assert.equal(h.pageEvents.size, 0);
+  assert.equal(h.events.has('stylechange'), false);
+});
+
+test('the default export profile is explicit sRGB even in a Display P3 document', async () => {
+  const h = harness({ documentColorProfile: 'DISPLAY_P3' }); h.frame('a');
+  await h.start(['a']);
+  assert.equal(h.messagesOf('export-start')[0].exportColorProfile, 'SRGB');
+  assert.equal(h.messagesOf('export-page')[0].exportColorProfile, 'SRGB');
+  assert.equal(h.exports[0].colorProfile, 'SRGB');
+});
+
+test('explicit RGB profiles reach native PDFs, both raster formats, annotation PDFs and merge retries', async () => {
+  for (const colorProfile of ['SRGB', 'DISPLAY_P3_V4']) {
+    for (const rasterFormat of ['PNG', 'JPG']) {
+      for (const exportType of ['vector', 'raster']) {
+        const h = harness({ documentColorProfile: 'LEGACY' }), frame = h.frame('a');
+        textLink(h, frame);
+        await h.start(['a'], { colorProfile, rasterFormat, exportType });
+        if (exportType === 'vector') await h.ack(0, { fallback: true });
+        assert.equal(h.messagesOf('export-error').length, 0);
+        assert.ok(h.exports.every(item => item.colorProfile === colorProfile));
+        assert.equal(h.messagesOf('export-start')[0].exportColorProfile, colorProfile);
+        assert.ok(h.messagesOf('export-page').every(page => page.exportColorProfile === colorProfile));
+        assert.equal(h.messagesOf('export-page').at(-1).format, rasterFormat);
+        assert.ok(h.messagesOf('export-page').at(-1).annotationPdfData);
+        assert.deepEqual(h.exports.map(item => item.format), exportType === 'vector' ? ['PDF', rasterFormat] : [rasterFormat, 'PDF']);
+      }
+    }
+  }
+});
+
+test('native rendering failure and unsupported blending preserve the selected P3 profile', async () => {
+  for (const rasterFormat of ['PNG', 'JPG']) {
+    const h = harness();
+    h.frame('failure', { exporter(settings) {
+      if (settings.format === 'PDF') throw new Error('Native PDF unavailable');
+      return new Uint8Array([1]);
+    } });
+    h.frame('blend', { blendMode: 'LINEAR_DODGE' });
+    await h.start(['failure', 'blend'], { colorProfile: 'DISPLAY_P3_V4', rasterFormat });
+    await h.ack(0);
+    assert.deepEqual(h.exports.map(item => item.format), ['PDF', rasterFormat, rasterFormat]);
+    assert.ok(h.exports.every(item => item.colorProfile === 'DISPLAY_P3_V4'));
+    assert.ok(h.messagesOf('export-page').every(page => page.exportColorProfile === 'DISPLAY_P3_V4'));
+  }
+});
+
+test('document profiles resolve once to a concrete profile shared by every message and export', async () => {
+  for (const [documentColorProfile, resolved] of [['SRGB', 'SRGB'], ['DISPLAY_P3', 'DISPLAY_P3_V4']]) {
+    const h = harness({ documentColorProfile }); h.frame('a'); h.frame('b');
+    await h.start(['a', 'b'], { colorProfile: 'DOCUMENT', exportType: 'raster' });
+    await h.ack(0);
+    assert.equal(vm.runInContext('activeExportJob.sourceColorProfile', h.context), documentColorProfile);
+    assert.equal(vm.runInContext('activeExportJob.exportColorProfile', h.context), resolved);
+    assert.equal(h.messagesOf('export-start')[0].exportColorProfile, resolved);
+    assert.ok(h.exports.every(item => item.colorProfile === resolved));
+    assert.ok(h.messagesOf('export-page').every(page => page.exportColorProfile === resolved));
+  }
+});
+
+test('legacy documents require an explicit export choice rather than a guessed document profile', async () => {
+  const h = harness({ documentColorProfile: 'LEGACY' }); h.frame('a');
+  await h.start(['a'], { colorProfile: 'DOCUMENT' });
+  assert.match(h.messagesOf('export-error')[0].error, /legacy document.*Choose sRGB or Display P3/);
+  assert.equal(h.exports.length, 0);
+  assert.equal(h.messagesOf('export-start').length, 0);
+});
+
+test('invalid choices and unavailable document profiles fail before exporting any pixels', async () => {
+  for (const colorProfile of ['CMYK', 'DISPLAY_P3', '', null, 42]) {
+    const h = harness(); h.frame('a');
+    await h.start(['a'], { colorProfile });
+    assert.match(h.messagesOf('export-error')[0].error, /Choose sRGB, Display P3/);
+    assert.equal(h.exports.length, 0);
+  }
+  for (const documentColorProfile of ['ADOBE_RGB', '', null, undefined]) {
+    const h = harness({ documentColorProfile }); h.frame('a');
+    await h.start(['a']);
+    assert.match(h.messagesOf('export-error')[0].error, /document color profile is unavailable or unsupported/);
+    assert.equal(h.exports.length, 0);
+  }
+});
+
+test('a document-profile change during preflight aborts before emitting export-start', async () => {
+  const h = harness(), frame = h.frame('a'), lookup = deferred();
+  h.figma.getNodeByIdAsync = () => lookup.promise;
+  const started = h.start(['a'], { colorProfile: 'DOCUMENT' });
+  h.figma.root.documentColorProfile = 'DISPLAY_P3';
+  lookup.resolve(frame); await started;
+  assert.match(h.messagesOf('export-error')[0].error, /color profile changed/);
+  assert.equal(h.messagesOf('export-start').length, 0);
+  assert.equal(h.exports.length, 0);
+});
+
+test('profile changes during native PDF awaits cannot be swallowed by raster fallback', async () => {
+  for (const reject of [false, true]) {
+    const h = harness(), rendered = deferred();
+    h.frame('a', { exporter: () => rendered.promise });
+    const started = h.start(['a']);
+    while (!h.exports.length) await new Promise(resolve => setImmediate(resolve));
+    h.figma.root.documentColorProfile = 'DISPLAY_P3';
+    if (reject) rendered.reject(new Error('Native failure'));
+    else rendered.resolve(new Uint8Array([1]));
+    await started;
+    assert.match(h.messagesOf('export-error')[0].error, /color profile changed/);
+    assert.deepEqual(h.exports.map(item => item.format), ['PDF']);
+    assert.equal(h.messagesOf('export-page').length, 0);
+  }
+});
+
+test('profile changes during raster or auxiliary annotation exports discard the page', async () => {
+  for (const changedFormat of ['PNG', 'PDF']) {
+    const h = harness(), frame = h.frame('a', { exporter(settings) {
+      if (settings.format === changedFormat) h.figma.root.documentColorProfile = 'DISPLAY_P3';
+      return new Uint8Array([1]);
+    } });
+    textLink(h, frame);
+    await h.start(['a'], { exportType: 'raster' });
+    assert.match(h.messagesOf('export-error')[0].error, /color profile changed/);
+    assert.equal(h.messagesOf('export-page').length, 0);
+    assert.deepEqual(h.exports.map(item => item.format), changedFormat === 'PNG' ? ['PNG'] : ['PNG', 'PDF']);
+  }
+});
+
+test('document-profile changes are checked before continuing a part and before final completion', async () => {
+  for (const paused of [false, true]) {
+    const h = harness(); h.frame('a'); h.frame('b');
+    await h.start(paused ? ['a', 'b'] : ['a']);
+    if (paused) await h.send({ type: 'part-ready', jobId: 'job-1', index: 0 });
+    h.figma.root.documentColorProfile = 'DISPLAY_P3';
+    await h.ack(0);
+    assert.match(h.messagesOf('export-error')[0].error, /color profile changed/);
+    assert.equal(h.exports.length, 1);
+    assert.equal(h.messagesOf('export-complete').length, 0);
+    assert.equal(h.timers.size, 0);
+  }
+});
+
+test('existing source-change events report changed document profiles and clear the job', async () => {
+  const h = harness(); h.frame('a');
+  await h.start(['a']);
+  h.figma.root.documentColorProfile = 'DISPLAY_P3';
+  h.events.get('stylechange')({ styleChanges: [] });
+  assert.match(h.messagesOf('export-error')[0].error, /color profile changed/);
   assert.equal(h.pageEvents.size, 0);
   assert.equal(h.events.has('stylechange'), false);
 });

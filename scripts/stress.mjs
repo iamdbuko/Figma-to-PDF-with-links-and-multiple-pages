@@ -80,7 +80,7 @@ async function runScenario(name, count, format, lowTexture = false) {
     const request = await waitForMessage('export-pdf');
     assert.deepEqual(request.selectedFrames, frames.map(item => item.id));
     const jobId = request.jobId;
-    await post({ type: 'export-start', jobId, frames, connections });
+    await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB' });
     await frame.waitForFunction(() => activeJob?.started);
     result.pageDimensions = { width, height };
     if (format === 'PNG') result.rasterDimensions = { width: 5760, height: 3240, scale: 1.5, pixels: 5760 * 3240 };
@@ -150,9 +150,9 @@ async function runScenario(name, count, format, lowTexture = false) {
       }
       result.compressedInputBytes += bytes;
       const assemblyStart = performance.now();
-      if (format === 'PDF') await post({ type: 'export-page', jobId, index, frame: frames[index], format, data: [...nativePdf] });
+      if (format === 'PDF') await post({ type: 'export-page', jobId, index, frame: frames[index], format, data: [...nativePdf], exportColorProfile: 'SRGB' });
       else await page.evaluate(({ jobId, index, frame }) => {
-        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format: 'PNG', data: window.nextStressPng } }, '*');
+        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format: 'PNG', data: window.nextStressPng, exportColorProfile: 'SRGB' } }, '*');
         window.nextStressPng = null;
       }, { jobId, index, frame: frames[index] });
       const ack = await waitForMessage('page-ack', { jobId, index });
