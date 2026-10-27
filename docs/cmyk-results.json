@@ -113,8 +113,48 @@
       }
     ],
     "cmyk": {
-      "status": "not-completed",
-      "reason": "Computer-use automation could not complete the macOS file picker. Real CMYK conversion is verified separately in the bundled browser UI and independent native LittleCMS comparison."
+      "status": "passed",
+      "recordedAt": "2026-10-27T14:44:56.620Z",
+      "application": "Figma Desktop on macOS",
+      "file": "live-CMYK.pdf",
+      "fileSHA256": "5edafff4ad0c8b656b5aba35fc3f8de62feaaf1d312a8fe22f87f9cde6cdc8f2",
+      "bytes": 103381,
+      "pages": 1,
+      "pageSize": {
+        "width": 600,
+        "height": 400
+      },
+      "quality": "Medium (1x, 72 DPI)",
+      "pixels": [
+        600,
+        400
+      ],
+      "imageColorSpace": "ICCBased",
+      "components": 4,
+      "decodedImageBytes": 960000,
+      "profile": "Generic CMYK Profile.icc",
+      "profileBytes": 55280,
+      "profileSHA256": "0c8a584b288a306eac9e1d3f1e68bc1b64331c717ceb051420e6257f17b3509a",
+      "exactProfilePreserved": true,
+      "transparencyMask": false,
+      "links": [
+        {
+          "url": "https://example.com/color",
+          "rect": [
+            300,
+            0,
+            600,
+            160
+          ]
+        }
+      ],
+      "outputIntent": false,
+      "scope": "Live Figma export and saved PDF structure; source fixture contains color swatches, a gradient, a raster image and alpha. No physical-print claim.",
+      "visualInspection": {
+        "renderer": "Poppler pdftoppm",
+        "status": "passed",
+        "content": "All six swatches, the gradient, raster image and composited alpha region are present without missing or clipped content."
+      }
     }
   },
   "stressReport": "cmyk-stress-results.json",
@@ -123,5 +163,5 @@
     "No physical printer, calibrated monitor, Windows Figma, Acrobat or full vector-CMYK validation.",
     "Synthetic stress is compressible photo-like content, not worst-case entropy or arbitrary Figma-file proof."
   ],
-  "localSystemProfile": "The macOS Generic CMYK profile was used only for local comparison. It is not redistributed or offered as a printer preset."
+  "localSystemProfile": "The macOS Generic CMYK profile was used for local comparison and the live Figma test. It is not redistributed or offered as a printer preset."
 }
