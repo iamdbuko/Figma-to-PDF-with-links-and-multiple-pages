@@ -1,6 +1,6 @@
-# v9 development validation
+# v9.0.0-dev.1 validation checkpoint
 
-Validation date: 2026-10-27. This is a development checkpoint, not a Community release approval.
+Validation date: 2026-10-27. This records the initial v9 checkpoint; see [large-file export changes](LARGE-EXPORTS.md) for dev.2. This is a development checkpoint, not a Community release approval.
 
 ## Scope
 

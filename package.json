@@ -1,12 +1,12 @@
 {
   "name": "figma-to-pdf-with-links",
-  "version": "9.0.0-dev.1",
+  "version": "9.0.0-dev.2",
   "private": true,
   "description": "Figma PDF export with links and multiple pages",
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.js",
-    "test:stress": "npm run build && node scripts/stress.mjs"
+    "test:stress": "npm run build && node scripts/stress-large.mjs"
   },
   "dependencies": {
     "pdf-lib": "1.17.1"

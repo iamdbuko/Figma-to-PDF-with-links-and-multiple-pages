@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '..');
 const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
 const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const context = new Function('PDFLib', 'yieldToBrowser', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation };`)(PDFLib, () => Promise.resolve());
+const context = new Function('PDFLib', 'yieldToBrowser', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve());
 const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
 const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));
@@ -261,4 +261,64 @@ test('many pages with duplicate names preserve count, ID mapping, and exact dime
   assert.equal(reloaded.getPageCount(), 80);
   assert.equal(reloaded.getPage(79).getWidth(), 279);
   assert.equal(plainRecords(output, pages[0])[0].target, `page:${pages[79].ref}`);
+});
+
+test('part plans are deterministic, use frame IDs, and address zero-based pages in each file', () => {
+  const frames = Array.from({ length: 5 }, (_, i) => ({ id: `id-${i}`, name: 'Repeated name' }));
+  const plan = context.createOutputPlan(frames, 2, 'unique-job');
+  assert.deepEqual(plan.parts, [
+    { index: 0, start: 0, end: 2, filename: 'unique-job-part-1-of-3.pdf' },
+    { index: 1, start: 2, end: 4, filename: 'unique-job-part-2-of-3.pdf' },
+    { index: 2, start: 4, end: 5, filename: 'unique-job-part-3-of-3.pdf' }
+  ]);
+  assert.deepEqual(plan.destinations.get('id-3'), { partIndex: 1, pageIndex: 1, filename: 'unique-job-part-2-of-3.pdf' });
+  assert.deepEqual(context.createOutputPlan(frames, 2, 'unique-job').parts, plan.parts);
+  assert.equal(context.createOutputPlan(frames, 5, 'single').parts[0].filename, 'single.pdf');
+});
+
+test('prototype and native text links cross part files with exact GoToR destinations', async () => {
+  const frames = [frame, { id: 'same-part', name: frame.name, width: 600, height: 400 }, { id: 'third', name: frame.name }, { id: 'fourth', name: frame.name }];
+  const plan = context.createOutputPlan(frames, 2, 'unique-job');
+  const nativeRect = [40, 300, 190, 330];
+  for (const uri of ['', 'https://www.figma.com/design/abc123/Example?node-id=9-10']) {
+    for (const format of ['PDF', 'PNG']) {
+      const output = await PDFLib.PDFDocument.create();
+      const annotationBytes = await nativeUriFixture([{ uri, rect: nativeRect }]);
+      const { page } = await appendExportPage(output, { frame, format, data: format === 'PDF' ? annotationBytes : png, annotationPdfData: format === 'PNG' ? annotationBytes : undefined });
+      const local = output.addPage([600, 400]);
+      const result = await addExportLinks(output, [page, local], frames.slice(0, 2), [
+        { fromFrameId: frame.id, source: 'text', type: 'internal', textNodeId: 'text', toNodeId: '9:10', toFrameId: 'fourth', elementBounds: { x: 40, y: 70, width: 150, height: 30 } },
+        { fromFrameId: frame.id, source: 'prototype', type: 'internal', toFrameId: 'third', elementBounds: { x: 10, y: 10, width: 20, height: 20 } },
+        { fromFrameId: frame.id, source: 'prototype', type: 'internal', toFrameId: 'same-part', elementBounds: { x: 100, y: 10, width: 20, height: 20 } }
+      ], () => true, plan.destinations);
+      assert.equal(result.skipped, 0);
+      const reloaded = await PDFLib.PDFDocument.load(await output.save());
+      assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), [
+        { target: 'remote:unique-job-part-2-of-2.pdf:1', rect: nativeRect },
+        { target: 'remote:unique-job-part-2-of-2.pdf:0', rect: [10, 370, 30, 390] },
+        { target: `page:${reloaded.getPage(1).ref}`, rect: [100, 370, 120, 390] }
+      ]);
+      const annotation = nativeLinkRecords(reloaded, reloaded.getPage(0))[0].annotation;
+      const action = annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict);
+      assert.equal(annotation.has(PDFLib.PDFName.of('Dest')), false);
+      assert.equal(action.get(PDFLib.PDFName.of('S')).toString(), '/GoToR');
+      assert.equal(action.lookup(PDFLib.PDFName.of('F')).decodeText(), plan.parts[1].filename);
+      assert.equal(action.lookup(PDFLib.PDFName.of('D'), PDFLib.PDFArray).get(1).toString(), '/Fit');
+    }
+  }
+});
+
+test('retained PDF budgeting excludes temporary annotation bytes but includes orphaned retained streams', async () => {
+  const auxiliary = await PDFLib.PDFDocument.load(fixture);
+  auxiliary.context.register(auxiliary.context.stream(new Uint8Array(2 * 1024 * 1024)));
+  const auxiliaryBytes = await auxiliary.save({ useObjectStreams: false });
+  assert.ok(auxiliaryBytes.byteLength > 2 * 1024 * 1024);
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: auxiliaryBytes });
+  assert.equal(nativeLinkRecords(output, page).length, 5);
+  const retained = context.assertPdfBudget(output, 20000);
+  assert.ok(retained < 20000, 'only imported annotations and raster page are retained');
+  output.context.register(output.context.stream(new Uint8Array(24000)));
+  assert.ok(context.estimatePdfBytes(output) > retained + 24000, 'unreferenced streams still consume the document budget');
+  assert.throws(() => context.assertPdfBudget(output, 20000), /retained-data allowance/);
 });

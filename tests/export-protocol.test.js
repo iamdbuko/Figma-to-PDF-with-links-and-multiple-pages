@@ -10,7 +10,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function harness() {
+function harness(options = {}) {
   const messages = [], exports = [], nodes = new Map(), events = new Map(), timers = new Map(), pageEvents = new Map();
   let nextTimer = 0;
   const figma = {
@@ -32,7 +32,12 @@ function harness() {
     setTimeout(fn, ms) { const id = ++nextTimer; timers.set(id, { fn, ms }); return id; },
     clearTimeout(id) { timers.delete(id); }
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'code.js'), 'utf8'), context);
+  let source = fs.readFileSync(path.join(__dirname, '..', 'code.js'), 'utf8');
+  // Exercise byte-limit edges without allocating hundreds of megabytes in tests.
+  if (options.maxPageTransferBytes !== undefined) {
+    source = source.replace('maxPageTransferBytes: 128 * 1024 * 1024', `maxPageTransferBytes: ${options.maxPageTransferBytes}`);
+  }
+  vm.runInContext(source, context);
   const frame = (id, properties = {}) => {
     const node = {
       id, name: id, type: 'FRAME', width: 600, height: 800, x: 0, y: 0,
@@ -40,7 +45,7 @@ function harness() {
       ...properties
     };
     node.exportAsync = async settings => {
-      exports.push({ id, ...settings });
+      exports.push(structuredClone({ id, ...settings }));
       return properties.exporter ? properties.exporter(settings) : new Uint8Array([1, 2, 3, 4]);
     };
     nodes.set(id, node);
@@ -237,14 +242,150 @@ test('ACK timeout releases the job and unfinished page never advances', async ()
   assert.equal(h.exports.length, 1);
 });
 
-test('transfer budget includes retried page data and auxiliary annotation PDFs', async () => {
-  const h = harness(), frame = h.frame('a'); textLink(h, frame);
+test('per-page budget includes fallback data and auxiliary annotation PDFs', async () => {
+  const h = harness({ maxPageTransferBytes: 7 }), frame = h.frame('a'); textLink(h, frame);
   await h.start(['a']);
-  vm.runInContext('activeExportJob.transferredBytes = EXPORT_LIMITS.maxTransferBytes - 7', h.context);
   await h.ack(0, { fallback: true }); // 4 bytes PNG + 4 bytes annotation PDF cannot fit.
   assert.match(h.messagesOf('export-error')[0].error, /128 MiB/);
+  assert.match(h.messagesOf('export-error')[0].error, /per-page/);
   assert.equal(h.messagesOf('export-page').length, 1);
   assert.equal(h.messagesOf('export-complete').length, 0);
+});
+
+test('previous pages and discarded retries do not consume the next page transfer allowance', async () => {
+  const h = harness({ maxPageTransferBytes: 4 }); h.frame('a'); h.frame('b');
+  await h.start(['a', 'b']);
+  await h.ack(0, { fallback: true });
+  await h.ack(0);
+  await h.ack(1);
+  assert.deepEqual(h.messagesOf('export-page').map(page => page.format), ['PDF', 'PNG', 'PDF']);
+  assert.equal(h.messagesOf('export-error').length, 0);
+  assert.equal(h.messagesOf('export-complete').length, 1);
+  assert.equal(vm.runInContext('activeExportJob.transferredBytes', h.context), 12);
+});
+
+test('JPEG raster exports request sRGB and still obtain native text annotations', async () => {
+  const h = harness(), frame = h.frame('a'); textLink(h, frame);
+  await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG', qualityScale: 1.5 });
+  assert.deepEqual(h.exports, [
+    { id: 'a', format: 'JPG', useAbsoluteBounds: true, constraint: { type: 'SCALE', value: 1.5 }, colorProfile: 'SRGB' },
+    { id: 'a', format: 'PDF', useAbsoluteBounds: true }
+  ]);
+  assert.equal(h.messagesOf('export-page')[0].format, 'JPG');
+  assert.ok(h.messagesOf('export-page')[0].annotationPdfData);
+});
+
+test('native failure, unsupported blending and merge fallback all respect JPEG selection', async () => {
+  const h = harness();
+  h.frame('native-failure', { exporter(settings) {
+    if (settings.format === 'PDF') throw new Error('Cannot render PDF');
+    return new Uint8Array([1]);
+  } });
+  h.frame('blend', { blendMode: 'LINEAR_BURN' });
+  h.frame('merge-failure');
+  await h.start(['native-failure', 'blend', 'merge-failure'], { rasterFormat: 'JPG' });
+  await h.ack(0); await h.ack(1); await h.ack(2, { fallback: true });
+  assert.deepEqual(h.messagesOf('export-page').map(page => page.format), ['JPG', 'JPG', 'PDF', 'JPG']);
+  assert.ok(h.exports.filter(item => item.format === 'JPG').every(item => item.colorProfile === 'SRGB'));
+  await h.ack(2, { fallback: true });
+  assert.equal(h.exports.length, 5);
+});
+
+test('explicit fitting respects rounded pixel and side limits without changing PDF dimensions', async () => {
+  const h = harness();
+  h.frame('square', { width: 6000, height: 6000 });
+  h.frame('wide', { width: 100000, height: 10 });
+  h.frame('small', { width: 100, height: 200 });
+  await h.start(['square', 'wide', 'small'], { exportType: 'raster', rasterFormat: 'JPG', qualityScale: 2, fitOversized: true });
+  await h.ack(0); await h.ack(1);
+  const pages = h.messagesOf('export-page');
+  assert.equal(h.messagesOf('export-error').length, 0);
+  for (let i = 0; i < pages.length; i++) {
+    const frame = pages[i].frame, scale = h.exports[i].constraint.value;
+    const width = Math.ceil(frame.width * scale), height = Math.ceil(frame.height * scale);
+    assert.ok(width * height <= 32000000);
+    assert.ok(width <= 16384 && height <= 16384);
+    assert.ok(scale <= 2);
+  }
+  assert.deepEqual(pages.map(page => [page.frame.width, page.frame.height]), [[6000, 6000], [100000, 10], [100, 200]]);
+  assert.match(pages[0].warnings.join(' '), /requested 2×, actual .*PDF page dimensions are unchanged/);
+  assert.match(pages[1].warnings.join(' '), /16384×2 pixels/);
+  assert.equal(h.exports[2].constraint.value, 2);
+  assert.deepEqual(pages[2].warnings, []);
+});
+
+test('fitting is also applied when a large native PDF needs raster fallback', async () => {
+  const h = harness(); h.frame('a', { width: 9000, height: 4000 });
+  await h.start(['a'], { rasterFormat: 'JPG', qualityScale: 2, fitOversized: true });
+  await h.ack(0, { fallback: true });
+  assert.deepEqual(h.exports.map(item => item.format), ['PDF', 'JPG']);
+  const scale = h.exports[1].constraint.value;
+  assert.ok(Math.ceil(9000 * scale) * Math.ceil(4000 * scale) <= 32000000);
+  assert.match(h.messagesOf('export-page')[1].warnings.join(' '), /was fitted/);
+});
+
+test('invalid raster format and non-boolean fitting options fail before rendering', async () => {
+  const h = harness(); h.frame('a');
+  await h.start(['a'], { rasterFormat: 'JPEG' });
+  assert.match(h.messagesOf('export-error')[0].error, /PNG or JPG/);
+  await h.start(['a'], { jobId: 'job-2', fitOversized: 'false' });
+  assert.match(h.messagesOf('export-error')[1].error, /enabled or disabled/);
+  assert.equal(h.exports.length, 0);
+});
+
+test('part-ready pauses only the pending job, releases native bytes and resumes at the next page', async () => {
+  const h = harness(); h.frame('a'); h.frame('b');
+  await h.start(['a', 'b']);
+  const originalTimer = [...h.timers.keys()][0];
+  await h.send({ type: 'part-ready', jobId: 'stale', index: 0 });
+  await h.send({ type: 'part-ready', jobId: 'job-1', index: 1 });
+  assert.deepEqual([...h.timers.keys()], [originalTimer]);
+  await h.send({ type: 'part-ready', jobId: 'job-1', index: 0 });
+  assert.equal(h.exports.length, 1);
+  assert.equal(h.timers.size, 1);
+  const pauseTimer = [...h.timers.keys()][0];
+  assert.equal([...h.timers.values()][0].ms, 15 * 60 * 1000);
+  assert.equal(vm.runInContext('activeExportJob.phase', h.context), 'awaiting-part');
+  assert.equal(vm.runInContext('activeExportJob.pending.nativePdfData', h.context), null);
+  assert.ok(h.pageEvents.has('nodechange'));
+  await h.send({ type: 'part-ready', jobId: 'job-1', index: 0 });
+  await h.ack(0, { fallback: true });
+  await h.ack(1);
+  assert.equal(h.exports.length, 1);
+  assert.deepEqual([...h.timers.keys()], [pauseTimer]);
+  await h.ack(0);
+  assert.deepEqual(h.exports.map(item => item.id), ['a', 'b']);
+  assert.equal([...h.timers.values()][0].ms, 120000);
+  await h.ack(0);
+  assert.equal(h.exports.length, 2);
+});
+
+test('a paused part expires and stale continuation cannot start another page', async () => {
+  const h = harness(); h.frame('a'); h.frame('b');
+  await h.start(['a', 'b']);
+  await h.send({ type: 'part-ready', jobId: 'job-1', index: 0 });
+  [...h.timers.values()][0].fn();
+  assert.match(h.messagesOf('export-error')[0].error, /15 minutes/);
+  await h.ack(0);
+  assert.equal(h.exports.length, 1);
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.pageEvents.size, 0);
+});
+
+test('source changes, cancellation and UI failure remain effective while a part is paused', async () => {
+  for (const action of ['source-change', 'export-cancel', 'export-failed']) {
+    const h = harness(); h.frame('a'); h.frame('b');
+    await h.start(['a', 'b']);
+    await h.send({ type: 'part-ready', jobId: 'job-1', index: 0 });
+    if (action === 'source-change') h.pageEvents.get('nodechange')({ nodeChanges: [] });
+    else await h.send({ type: action, jobId: 'job-1', error: 'Save failed' });
+    const expected = action === 'export-cancel' ? 'export-cancelled' : 'export-error';
+    assert.equal(h.messagesOf(expected).length, 1);
+    assert.equal(h.timers.size, 0);
+    assert.equal(h.pageEvents.size, 0);
+    await h.ack(0);
+    assert.equal(h.exports.length, 1);
+  }
 });
 
 test('active export freezes list additions and changed dimensions abort before rendering', async () => {

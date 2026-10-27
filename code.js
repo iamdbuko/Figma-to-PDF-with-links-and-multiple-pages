@@ -7,13 +7,16 @@ let activeExportJob = null;
 let listRevision = 0;
 const usedJobIds = new Set();
 
-// Provisional v9 safety limits. Raster pixels are measured after scaling;
-// the transfer allowance includes PNG annotation PDFs and retried pages.
+// Provisional v9 safety limits. Raster pixels are measured after scaling.
+// The transfer cap applies to one page plus its annotation PDF, not historical
+// traffic. The UI separately bounds retained PDF resources and saves parts.
+// Optional fitting changes raster resolution only, never PDF page dimensions.
 const EXPORT_LIMITS = Object.freeze({
   maxRasterPixels: 32000000,
   maxRasterSide: 16384,
-  maxTransferBytes: 128 * 1024 * 1024,
+  maxPageTransferBytes: 128 * 1024 * 1024,
   acknowledgementTimeoutMs: 120000,
+  partContinuationTimeoutMs: 15 * 60 * 1000,
   finishTimeoutMs: 120000
 });
 
@@ -26,6 +29,8 @@ figma.ui.onmessage = async (msg) => {
     await startExport(msg);
   } else if (msg.type === 'page-ack') {
     await acknowledgePage(msg);
+  } else if (msg.type === 'part-ready') {
+    pauseForSavedPart(msg);
   } else if (msg.type === 'export-cancel') {
     const job = matchingJob(msg.jobId);
     if (job) terminateJob(job, 'export-cancelled');
@@ -452,10 +457,34 @@ function validateRasterSize(frame, scale) {
   const width = Math.ceil(frame.width * scale);
   const height = Math.ceil(frame.height * scale);
   if (!Number.isFinite(width) || !Number.isFinite(height) ||
+      width < 1 || height < 1 ||
       width > EXPORT_LIMITS.maxRasterSide || height > EXPORT_LIMITS.maxRasterSide ||
       width * height > EXPORT_LIMITS.maxRasterPixels) {
-    throw new Error(`“${frame.name}” would render at ${width}×${height} pixels. Raster export is limited to 32 million pixels and 16,384 pixels per side. Lower the quality or reduce this frame’s size.`);
+    throw new Error(`“${frame.name}” would render at ${width}×${height} pixels. Raster export is limited to 32 million pixels and 16,384 pixels per side. Lower the quality, enable Fit oversized pages, or reduce this frame’s size.`);
   }
+  return { scale, width, height };
+}
+
+function rasterPlan(frame, requestedScale, fitOversized) {
+  const fits = scale => {
+    const width = Math.ceil(frame.width * scale), height = Math.ceil(frame.height * scale);
+    return width >= 1 && height >= 1 && width <= EXPORT_LIMITS.maxRasterSide &&
+      height <= EXPORT_LIMITS.maxRasterSide && width * height <= EXPORT_LIMITS.maxRasterPixels;
+  };
+  if (!fitOversized || fits(requestedScale)) return validateRasterSize(frame, requestedScale);
+  // The continuous limit can round up to too many pixels. Search below it using
+  // the same integer dimensions as the guard, including extreme aspect ratios.
+  let high = Math.min(requestedScale, EXPORT_LIMITS.maxRasterSide / frame.width,
+    EXPORT_LIMITS.maxRasterSide / frame.height,
+    Math.sqrt(EXPORT_LIMITS.maxRasterPixels) / Math.sqrt(frame.width) / Math.sqrt(frame.height));
+  if (fits(high)) return validateRasterSize(frame, high);
+  let low = 0;
+  for (let i = 0; i < 64; i++) {
+    const middle = low + (high - low) / 2;
+    if (fits(middle)) low = middle;
+    else high = middle;
+  }
+  return validateRasterSize(frame, low);
 }
 
 function unsupportedPdfBlendMode(frame) {
@@ -509,7 +538,9 @@ async function startExport(msg) {
     styleWatcher: null,
     transferredBytes: 0,
     scale: msg.qualityScale === undefined ? 1.5 : msg.qualityScale,
-    exportType: msg.exportType || 'raster'
+    exportType: msg.exportType || 'raster',
+    rasterFormat: msg.rasterFormat === undefined ? 'PNG' : msg.rasterFormat,
+    fitOversized: msg.fitOversized === undefined ? false : msg.fitOversized
   };
   activeExportJob = job;
   usedJobIds.add(job.id);
@@ -529,6 +560,8 @@ async function startExport(msg) {
     watchSourcePage(job, figma.currentPage);
     if (!Number.isFinite(job.scale) || job.scale <= 0) throw new Error('Export quality must be a positive number.');
     if (job.exportType !== 'vector' && job.exportType !== 'raster') throw new Error('Choose Vector or Rasterized export.');
+    if (job.rasterFormat !== 'PNG' && job.rasterFormat !== 'JPG') throw new Error('Choose PNG or JPG for raster pages.');
+    if (typeof job.fitOversized !== 'boolean') throw new Error('Fit oversized pages must be enabled or disabled.');
     const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
     const selectedIds = new Set(ids);
     const liveFrames = [];
@@ -540,7 +573,7 @@ async function startExport(msg) {
       validateFrameSize(frame);
       const metadata = describeFrame(frame);
       validateFrameSize(metadata);
-      if (job.exportType === 'raster' || unsupportedPdfBlendMode(frame)) validateRasterSize(metadata, job.scale);
+      if (job.exportType === 'raster' || unsupportedPdfBlendMode(frame)) rasterPlan(metadata, job.scale, job.fitOversized);
       job.frames.push(metadata);
       liveFrames.push(frame);
     }
@@ -585,14 +618,14 @@ async function exportPage(job, index, options = {}) {
   assertUnchangedDimensions(frame, metadata);
   const warnings = [];
   const unsupportedMode = unsupportedPdfBlendMode(frame);
-  let format = job.exportType === 'raster' || options.forcePng || unsupportedMode ? 'PNG' : 'PDF';
+  let format = job.exportType === 'raster' || options.forceRaster || unsupportedMode ? job.rasterFormat : 'PDF';
   let data;
   let annotationPdfData = options.annotationPdfData;
   let nativeExportFailed = false;
   if (unsupportedMode && job.exportType === 'vector') {
     warnings.push(`“${metadata.name}” uses ${unsupportedMode === 'PLUS_DARKER' || unsupportedMode === 'LINEAR_BURN' ? 'Plus darker' : 'Plus lighter'}, which Figma does not support in PDF. This page is rasterized.`);
   }
-  if (options.forcePng) warnings.push(`“${metadata.name}” was rasterized because its native PDF could not be merged.`);
+  if (options.forceRaster) warnings.push(`“${metadata.name}” was rasterized because its native PDF could not be merged.`);
   if (format === 'PDF') {
     try {
       data = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true });
@@ -601,13 +634,19 @@ async function exportPage(job, index, options = {}) {
     } catch (error) {
       if (!jobIsRunning(job)) return;
       nativeExportFailed = true;
-      format = 'PNG';
+      format = job.rasterFormat;
       warnings.push(`“${metadata.name}” was rasterized because Figma could not export its PDF: ${error.message || error}`);
     }
   }
-  if (format === 'PNG') {
-    validateRasterSize(metadata, job.scale);
-    data = await frame.exportAsync({ format: 'PNG', useAbsoluteBounds: true, constraint: { type: 'SCALE', value: job.scale } });
+  if (format === 'PNG' || format === 'JPG') {
+    const plan = rasterPlan(metadata, job.scale, job.fitOversized);
+    if (plan.scale < job.scale) {
+      warnings.push(`“${metadata.name}” was fitted to ${plan.width}×${plan.height} pixels: requested ${Number(job.scale.toPrecision(4))}×, actual ${Number(plan.scale.toPrecision(4))}×. Its PDF page dimensions are unchanged.`);
+    }
+    const settings = { format, useAbsoluteBounds: true, constraint: { type: 'SCALE', value: plan.scale } };
+    // pdf-lib's JPEG embedding uses DeviceRGB rather than the source ICC profile.
+    if (format === 'JPG') settings.colorProfile = 'SRGB';
+    data = await frame.exportAsync(settings);
     if (!jobIsRunning(job)) return;
     data = checkedExportBytes(data, metadata.name);
     const hasTextLinks = job.connections.some(link => link.fromFrameId === metadata.id && link.source === 'text');
@@ -629,8 +668,8 @@ async function exportPage(job, index, options = {}) {
   if (!jobIsRunning(job)) return;
   assertUnchangedDimensions(frame, metadata);
   const transferBytes = data.byteLength + (annotationPdfData ? annotationPdfData.byteLength : 0);
-  if (job.transferredBytes + transferBytes > EXPORT_LIMITS.maxTransferBytes) {
-    throw new Error('This export exceeds the provisional 128 MiB transfer limit. Export fewer frames at once or reduce raster quality. No incomplete PDF has been downloaded.');
+  if (transferBytes > EXPORT_LIMITS.maxPageTransferBytes) {
+    throw new Error(`“${metadata.name}” exceeds the provisional 128 MiB per-page transfer limit, including its text-link data. Reduce raster quality or simplify this frame.`);
   }
   job.transferredBytes += transferBytes;
   const pending = { index, format, nativePdfData: format === 'PDF' ? data : null };
@@ -646,12 +685,28 @@ async function exportPage(job, index, options = {}) {
   figma.ui.postMessage(message);
 }
 
+function pauseForSavedPart(msg) {
+  const job = matchingJob(msg.jobId);
+  if (!jobIsRunning(job) || job.phase !== 'awaiting-ack' || !job.pending || job.pending.index !== msg.index) return;
+  clearJobTimer(job);
+  job.pending.nativePdfData = null;
+  job.phase = 'awaiting-part';
+  // The page has been accepted into a completed part. Keep its document snapshot
+  // guarded while the user saves/continues, without an unbounded reserved job.
+  job.timer = setTimeout(() => {
+    if (jobIsRunning(job) && job.phase === 'awaiting-part') {
+      terminateJob(job, 'export-error', 'Continuing the next PDF part did not start within 15 minutes. Start a new export to continue.');
+    }
+  }, EXPORT_LIMITS.partContinuationTimeoutMs);
+}
+
 async function acknowledgePage(msg) {
   const job = matchingJob(msg.jobId);
-  if (!jobIsRunning(job) || !job.pending || job.pending.index !== msg.index || job.phase !== 'awaiting-ack') return;
+  if (!jobIsRunning(job) || !job.pending || job.pending.index !== msg.index ||
+      (job.phase !== 'awaiting-ack' && job.phase !== 'awaiting-part')) return;
   const pending = job.pending;
-  // Ignore a duplicate PDF-fallback request after its PNG replacement arrived.
-  if (msg.fallback === true && pending.format !== 'PDF') return;
+  // A saved part cannot be rewritten, and raster replacements cannot retry.
+  if (msg.fallback === true && (job.phase === 'awaiting-part' || pending.format !== 'PDF')) return;
   const annotationPdfData = msg.fallback === true &&
     job.connections.some(link => link.fromFrameId === job.frames[msg.index].id && link.source === 'text')
     ? pending.nativePdfData : undefined;
@@ -660,7 +715,7 @@ async function acknowledgePage(msg) {
   job.pending = null;
   await runJobOperation(job, async () => {
     if (msg.fallback === true) {
-      await exportPage(job, msg.index, { forcePng: true, annotationPdfData });
+      await exportPage(job, msg.index, { forceRaster: true, annotationPdfData });
       return;
     }
     job.nextIndex = msg.index + 1;

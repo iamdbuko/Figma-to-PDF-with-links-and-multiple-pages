@@ -1,4 +1,6 @@
-// Opt-in benchmark: npm run build && node scripts/stress.mjs
+// Historical benchmark for the previous cumulative 128 MiB input limit.
+// Kept to explain docs/stress-results.json; current benchmark: stress-large.mjs.
+// Do not use this harness to evaluate the current retained-data budget.
 // Uses a new headless browser, never the user's browser or Figma account.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
