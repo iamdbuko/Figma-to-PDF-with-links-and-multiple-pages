@@ -1,0 +1,3365 @@
+{
+  "recordedAt": "2026-10-27T15:48:29.986Z",
+  "browser": "141.0.7390.37",
+  "platform": "darwin",
+  "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+  "productionRetainedDataBudgetBytes": 134217728,
+  "expectedSrgbSha256": "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8",
+  "scope": "Actual built plugin UI and bundled pdf-lib in isolated headless Chromium. The harness supplies synthetic raster export-page messages and performs the backend handshake. It does not run Figma exportAsync, document traversal, or the backend sandbox. Production retained-object checks run unchanged for single-file and production multipart scenarios. The optional small-budget multipart scenario changes only the default budget in the in-memory test document, explicitly recorded per scenario; it does not modify the built file or expose a production test setting.",
+  "memoryScope": "CDP Runtime.getHeapUsage sampled after page acknowledgements, before/after part downloads, and after final download. V8 usedSize and backingStorageSize are separate values, not whole-browser, native decoder, GPU, Figma, or peak resident memory. Samples can miss transient peaks. The renderer also contains the deterministic fixture canvas and one encoded input; no forced garbage collection is used. Node-side PDF validation is outside these renderer samples.",
+  "rasterSource": "The same deterministic full-resolution gradients, twelve curved terrain layers, and smoothly enlarged 192x108 seeded noise field as the earlier detailed PNG benchmark. Every page differs. Both encodings start from identical canvas pixels, checked by a full-pixel FNV-1a fingerprint for corresponding pages. This is a synthetic compressible landscape, not a photo corpus or worst-case entropy workload.",
+  "jpegEncoding": "Browser canvas.toBlob(image/jpeg, 0.9), at the same 5760x3240 pixels as PNG. Lossy compression; no claim that this matches Figma native JPG quality or file sizes. The PDF must retain the exact supplied JPEG bytes as a DCT stream.",
+  "historicalBaseline": "docs/stress-results.json remains the historical result: the prior cumulative 128 MiB input rule stopped the detailed PNG workload after 10 pages. This benchmark does not enforce that obsolete input-total rule.",
+  "linkScope": "Every page combines eight expected annotations: one external prototype URL, two wrapped external text rectangles, three forward/back/jump prototype destinations, and two exact native text NODE destinations. Small synthetic annotation PDFs model Figma URI annotations; they are not Figma-generated geometry. Duplicate scanner inputs must not create duplicates. Exact URLs, rectangles, local page refs and cross-part filenames/page indexes are checked after reloading every saved PDF. Remote destinations are structurally validated; PDF viewer navigation/security behavior is outside this test.",
+  "scenarios": [
+    {
+      "name": "30 identical-content 5760x3240 JPEG pages, one PDF",
+      "format": "JPG",
+      "requestedPages": 30,
+      "pagesPerPart": 30,
+      "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+      "retainedDataBudgetBytes": 134217728,
+      "testOnlyBudgetOverride": false,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5
+      },
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 375869,
+          "sourcePixelFingerprint": "51a0d7d2",
+          "encodedFingerprint": "4975b447",
+          "generationMs": 746,
+          "assemblyMs": 27,
+          "acknowledged": true
+        },
+        {
+          "index": 1,
+          "inputBytes": 376105,
+          "sourcePixelFingerprint": "3c9e89c2",
+          "encodedFingerprint": "f18aac8b",
+          "generationMs": 700,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 2,
+          "inputBytes": 377837,
+          "sourcePixelFingerprint": "a0220314",
+          "encodedFingerprint": "ba4ea521",
+          "generationMs": 714,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 3,
+          "inputBytes": 377182,
+          "sourcePixelFingerprint": "aeec262f",
+          "encodedFingerprint": "1372111b",
+          "generationMs": 709,
+          "assemblyMs": 22,
+          "acknowledged": true
+        },
+        {
+          "index": 4,
+          "inputBytes": 377186,
+          "sourcePixelFingerprint": "61ab2225",
+          "encodedFingerprint": "7ab78f5d",
+          "generationMs": 696,
+          "assemblyMs": 19,
+          "acknowledged": true
+        },
+        {
+          "index": 5,
+          "inputBytes": 377430,
+          "sourcePixelFingerprint": "6e1ddf60",
+          "encodedFingerprint": "b64530c8",
+          "generationMs": 710,
+          "assemblyMs": 23,
+          "acknowledged": true
+        },
+        {
+          "index": 6,
+          "inputBytes": 380297,
+          "sourcePixelFingerprint": "40c2c996",
+          "encodedFingerprint": "3e1fa22b",
+          "generationMs": 697,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 7,
+          "inputBytes": 379579,
+          "sourcePixelFingerprint": "2f617e40",
+          "encodedFingerprint": "bce0bbe1",
+          "generationMs": 697,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 8,
+          "inputBytes": 379686,
+          "sourcePixelFingerprint": "783f7eda",
+          "encodedFingerprint": "ec463200",
+          "generationMs": 701,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 9,
+          "inputBytes": 378316,
+          "sourcePixelFingerprint": "4dcefa8b",
+          "encodedFingerprint": "945d7840",
+          "generationMs": 707,
+          "assemblyMs": 8,
+          "acknowledged": true
+        },
+        {
+          "index": 10,
+          "inputBytes": 378462,
+          "sourcePixelFingerprint": "0d91989b",
+          "encodedFingerprint": "fd99f1b8",
+          "generationMs": 703,
+          "assemblyMs": 12,
+          "acknowledged": true
+        },
+        {
+          "index": 11,
+          "inputBytes": 380836,
+          "sourcePixelFingerprint": "d09b7523",
+          "encodedFingerprint": "00716286",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 12,
+          "inputBytes": 376980,
+          "sourcePixelFingerprint": "533881b1",
+          "encodedFingerprint": "d83e6470",
+          "generationMs": 704,
+          "assemblyMs": 12,
+          "acknowledged": true
+        },
+        {
+          "index": 13,
+          "inputBytes": 381507,
+          "sourcePixelFingerprint": "39cbfe74",
+          "encodedFingerprint": "185110d8",
+          "generationMs": 700,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 14,
+          "inputBytes": 381878,
+          "sourcePixelFingerprint": "7d1db99e",
+          "encodedFingerprint": "8823816b",
+          "generationMs": 698,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 15,
+          "inputBytes": 386694,
+          "sourcePixelFingerprint": "31a5e345",
+          "encodedFingerprint": "0538fe82",
+          "generationMs": 698,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 16,
+          "inputBytes": 386420,
+          "sourcePixelFingerprint": "4fbb66b1",
+          "encodedFingerprint": "64661ab7",
+          "generationMs": 704,
+          "assemblyMs": 11,
+          "acknowledged": true
+        },
+        {
+          "index": 17,
+          "inputBytes": 385450,
+          "sourcePixelFingerprint": "2b8bcf4a",
+          "encodedFingerprint": "4c23360c",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 18,
+          "inputBytes": 383573,
+          "sourcePixelFingerprint": "0b43ed9c",
+          "encodedFingerprint": "c403e092",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 19,
+          "inputBytes": 381931,
+          "sourcePixelFingerprint": "852362a0",
+          "encodedFingerprint": "af50b143",
+          "generationMs": 698,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 20,
+          "inputBytes": 379618,
+          "sourcePixelFingerprint": "1054959b",
+          "encodedFingerprint": "9ce3bdea",
+          "generationMs": 698,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 21,
+          "inputBytes": 378851,
+          "sourcePixelFingerprint": "3969c3d3",
+          "encodedFingerprint": "165f265c",
+          "generationMs": 696,
+          "assemblyMs": 19,
+          "acknowledged": true
+        },
+        {
+          "index": 22,
+          "inputBytes": 381855,
+          "sourcePixelFingerprint": "80a723b7",
+          "encodedFingerprint": "bcbb89e0",
+          "generationMs": 701,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 23,
+          "inputBytes": 379454,
+          "sourcePixelFingerprint": "39a386e3",
+          "encodedFingerprint": "b311e484",
+          "generationMs": 700,
+          "assemblyMs": 16,
+          "acknowledged": true
+        },
+        {
+          "index": 24,
+          "inputBytes": 383049,
+          "sourcePixelFingerprint": "74dffbd9",
+          "encodedFingerprint": "073bb762",
+          "generationMs": 702,
+          "assemblyMs": 13,
+          "acknowledged": true
+        },
+        {
+          "index": 25,
+          "inputBytes": 383014,
+          "sourcePixelFingerprint": "dafd163e",
+          "encodedFingerprint": "3efeef4a",
+          "generationMs": 695,
+          "assemblyMs": 22,
+          "acknowledged": true
+        },
+        {
+          "index": 26,
+          "inputBytes": 381015,
+          "sourcePixelFingerprint": "aaaa2f3f",
+          "encodedFingerprint": "42f53af0",
+          "generationMs": 692,
+          "assemblyMs": 7,
+          "acknowledged": true
+        },
+        {
+          "index": 27,
+          "inputBytes": 380124,
+          "sourcePixelFingerprint": "0920e0f5",
+          "encodedFingerprint": "330d64cd",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 28,
+          "inputBytes": 380207,
+          "sourcePixelFingerprint": "2003954c",
+          "encodedFingerprint": "fdfe9152",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 29,
+          "inputBytes": 380324,
+          "sourcePixelFingerprint": "b18954e8",
+          "encodedFingerprint": "a63d6dc8",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "filename": "figma-export-2026-10-27-mvqukq56-5e76475b.pdf",
+          "artifact": "test-results/combined-large/rgb/jpg-30-pages-per-part/figma-export-2026-10-27-mvqukq56-5e76475b.pdf",
+          "startPage": 0,
+          "endPageExclusive": 30,
+          "outputBytes": 11427450,
+          "sha256": "cb7c196722266c6f2c104046cf5dfd15531e17f24b4ea92f1e4238be4a139040",
+          "validation": {
+            "pages": 30,
+            "exactPageDimensions": true,
+            "exactRasterDimensions": true,
+            "externalLinks": 90,
+            "wrappedTextLinkRectangles": 60,
+            "internalTextLinks": 60,
+            "localLinks": 150,
+            "remoteLinks": 0,
+            "forwardLinks": 60,
+            "backwardLinks": 60,
+            "jumpLinks": 30,
+            "remoteForwardLinks": 0,
+            "remoteBackwardLinks": 0,
+            "remoteJumpLinks": 0,
+            "exactLinkRectangles": true,
+            "exactUrlsAndDestinations": true,
+            "noDuplicateAnnotations": true,
+            "originalJpegStreams": 30,
+            "sharedRgbProfiles": 1
+          }
+        }
+      ],
+      "compressedInputBytes": 11410729,
+      "budgetSamples": [
+        {
+          "bytes": 382552,
+          "pages": 1,
+          "partIndex": 0
+        },
+        {
+          "bytes": 760284,
+          "pages": 2,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1139748,
+          "pages": 3,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1518557,
+          "pages": 4,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1897370,
+          "pages": 5,
+          "partIndex": 0
+        },
+        {
+          "bytes": 2276427,
+          "pages": 6,
+          "partIndex": 0
+        },
+        {
+          "bytes": 2658351,
+          "pages": 7,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3039557,
+          "pages": 8,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3420871,
+          "pages": 9,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3800818,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4180909,
+          "pages": 11,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4563376,
+          "pages": 12,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4941987,
+          "pages": 13,
+          "partIndex": 0
+        },
+        {
+          "bytes": 5325129,
+          "pages": 14,
+          "partIndex": 0
+        },
+        {
+          "bytes": 5708651,
+          "pages": 15,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6096990,
+          "pages": 16,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6485053,
+          "pages": 17,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6872148,
+          "pages": 18,
+          "partIndex": 0
+        },
+        {
+          "bytes": 7257366,
+          "pages": 19,
+          "partIndex": 0
+        },
+        {
+          "bytes": 7640942,
+          "pages": 20,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8022205,
+          "pages": 21,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8402701,
+          "pages": 22,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8786201,
+          "pages": 23,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9167299,
+          "pages": 24,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9551993,
+          "pages": 25,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9936651,
+          "pages": 26,
+          "partIndex": 0
+        },
+        {
+          "bytes": 10319310,
+          "pages": 27,
+          "partIndex": 0
+        },
+        {
+          "bytes": 10701077,
+          "pages": 28,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11082929,
+          "pages": 29,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11464897,
+          "pages": 30,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11464897,
+          "pages": 30,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11480971,
+          "pages": 30,
+          "partIndex": 0
+        }
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 11973056,
+          "totalSize": 16498688,
+          "embedderHeapUsedSize": 3457760,
+          "backingStorageSize": 8483364
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 9032876,
+          "totalSize": 18087936,
+          "embedderHeapUsedSize": 2165024,
+          "backingStorageSize": 84544063
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 9109752,
+          "totalSize": 16515072,
+          "embedderHeapUsedSize": 1708608,
+          "backingStorageSize": 84636887
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 9221356,
+          "totalSize": 16777216,
+          "embedderHeapUsedSize": 1659912,
+          "backingStorageSize": 85016456
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 9229364,
+          "totalSize": 16777216,
+          "embedderHeapUsedSize": 1704176,
+          "backingStorageSize": 85392983
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 9276376,
+          "totalSize": 16777216,
+          "embedderHeapUsedSize": 1655184,
+          "backingStorageSize": 85770173
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 8955176,
+          "totalSize": 16760832,
+          "embedderHeapUsedSize": 1699448,
+          "backingStorageSize": 81170371
+        },
+        {
+          "label": "page-7-page-ack",
+          "usedSize": 6101044,
+          "totalSize": 14254080,
+          "embedderHeapUsedSize": 1650384,
+          "backingStorageSize": 81553535
+        },
+        {
+          "label": "page-8-page-ack",
+          "usedSize": 6068800,
+          "totalSize": 14254080,
+          "embedderHeapUsedSize": 1694648,
+          "backingStorageSize": 81932393
+        },
+        {
+          "label": "page-9-page-ack",
+          "usedSize": 6256668,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1645656,
+          "backingStorageSize": 82312319
+        },
+        {
+          "label": "page-10-page-ack",
+          "usedSize": 6276204,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1689920,
+          "backingStorageSize": 82689268
+        },
+        {
+          "label": "page-11-page-ack",
+          "usedSize": 6497184,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1640936,
+          "backingStorageSize": 83067877
+        },
+        {
+          "label": "page-12-page-ack",
+          "usedSize": 6198544,
+          "totalSize": 14778368,
+          "embedderHeapUsedSize": 1685200,
+          "backingStorageSize": 83451088
+        },
+        {
+          "label": "page-13-page-ack",
+          "usedSize": 6202100,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1636456,
+          "backingStorageSize": 83824215
+        },
+        {
+          "label": "page-14-page-ack",
+          "usedSize": 6405044,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1697032,
+          "backingStorageSize": 84210248
+        },
+        {
+          "label": "page-15-page-ack",
+          "usedSize": 6402408,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1639664,
+          "backingStorageSize": 84592626
+        },
+        {
+          "label": "page-16-page-ack",
+          "usedSize": 6590756,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1683928,
+          "backingStorageSize": 84984005
+        },
+        {
+          "label": "page-17-page-ack",
+          "usedSize": 6656460,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1634936,
+          "backingStorageSize": 85370150
+        },
+        {
+          "label": "page-18-page-ack",
+          "usedSize": 6906276,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1679128,
+          "backingStorageSize": 85754762
+        },
+        {
+          "label": "page-19-page-ack",
+          "usedSize": 6483996,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1630136,
+          "backingStorageSize": 86136461
+        },
+        {
+          "label": "page-20-page-ack",
+          "usedSize": 6641196,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1674400,
+          "backingStorageSize": 86516750
+        },
+        {
+          "label": "page-21-page-ack",
+          "usedSize": 6551092,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1625408,
+          "backingStorageSize": 86894052
+        },
+        {
+          "label": "page-22-page-ack",
+          "usedSize": 6377012,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1669672,
+          "backingStorageSize": 87272008
+        },
+        {
+          "label": "page-23-page-ack",
+          "usedSize": 6531800,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1620608,
+          "backingStorageSize": 87656995
+        },
+        {
+          "label": "page-24-page-ack",
+          "usedSize": 6495660,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1665120,
+          "backingStorageSize": 88034048
+        },
+        {
+          "label": "page-25-page-ack",
+          "usedSize": 6546296,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1632512,
+          "backingStorageSize": 88420689
+        },
+        {
+          "label": "page-26-page-ack",
+          "usedSize": 6625184,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1676704,
+          "backingStorageSize": 88803671
+        },
+        {
+          "label": "page-27-page-ack",
+          "usedSize": 6646928,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1627712,
+          "backingStorageSize": 89182559
+        },
+        {
+          "label": "page-28-page-ack",
+          "usedSize": 6638064,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1671976,
+          "backingStorageSize": 89561919
+        },
+        {
+          "label": "page-29-page-ack",
+          "usedSize": 6573448,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1622984,
+          "backingStorageSize": 89942210
+        },
+        {
+          "label": "page-30-page-ack",
+          "usedSize": 6679684,
+          "totalSize": 14516224,
+          "embedderHeapUsedSize": 1673344,
+          "backingStorageSize": 90322646
+        },
+        {
+          "label": "after-final-download",
+          "usedSize": 6195508,
+          "totalSize": 15040512,
+          "embedderHeapUsedSize": 2313640,
+          "backingStorageSize": 103509065
+        }
+      ],
+      "frames": [
+        {
+          "id": "large-raster-0",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-1",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-2",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-3",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-4",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-5",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-6",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-7",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-8",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-9",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-10",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-11",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-12",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-13",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-14",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-15",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-16",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-17",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-18",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-19",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-20",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-21",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-22",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-23",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-24",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-25",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-26",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-27",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-28",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-29",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "exportRequest": {
+        "exportType": "raster",
+        "rasterFormat": "JPG",
+        "qualityScale": 1.5,
+        "colorProfile": "SRGB"
+      },
+      "auxiliaryAnnotationBytes": 24641,
+      "finalizeAndDownloadMs": 67,
+      "outputBytes": 11427450,
+      "validation": {
+        "outputPages": 30,
+        "exactPageDimensions": true,
+        "exactRasterPixelDimensions": true,
+        "externalLinks": 90,
+        "wrappedTextLinkRectangles": 60,
+        "internalTextLinks": 60,
+        "localLinks": 150,
+        "remoteLinks": 0,
+        "forwardLinks": 60,
+        "backwardLinks": 60,
+        "jumpLinks": 30,
+        "remoteForwardLinks": 0,
+        "remoteBackwardLinks": 0,
+        "remoteJumpLinks": 0,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true,
+        "originalJpegStreams": 30,
+        "repeatedNamesResolvedByFrameId": true,
+        "automaticContinue": false,
+        "browserErrors": []
+      },
+      "durationMs": 22638,
+      "acknowledgedPages": 30,
+      "acknowledgedCompressedInputBytes": 11410729,
+      "generationMs": 21051,
+      "pageAssemblyMs": 510,
+      "peakMeasuredRetainedPdfBytes": 11480971,
+      "peakSampledJsHeapBytes": 11973056,
+      "peakSampledBackingStorageBytes": 103509065,
+      "inputExceededHistorical128MiBLimit": false,
+      "fixtureSchemaVersion": "large-raster-combined-links-v1"
+    },
+    {
+      "name": "30 detailed PNG pages, ten pages per part, production 128 MiB budget",
+      "format": "PNG",
+      "requestedPages": 30,
+      "pagesPerPart": 10,
+      "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+      "retainedDataBudgetBytes": 134217728,
+      "testOnlyBudgetOverride": false,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5
+      },
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 13158686,
+          "sourcePixelFingerprint": "51a0d7d2",
+          "encodedFingerprint": "99c17485",
+          "generationMs": 1064,
+          "assemblyMs": 2885,
+          "acknowledged": true
+        },
+        {
+          "index": 1,
+          "inputBytes": 13234094,
+          "sourcePixelFingerprint": "3c9e89c2",
+          "encodedFingerprint": "a9eed964",
+          "generationMs": 1057,
+          "assemblyMs": 2937,
+          "acknowledged": true
+        },
+        {
+          "index": 2,
+          "inputBytes": 13216260,
+          "sourcePixelFingerprint": "a0220314",
+          "encodedFingerprint": "4a62138e",
+          "generationMs": 1049,
+          "assemblyMs": 3055,
+          "acknowledged": true
+        },
+        {
+          "index": 3,
+          "inputBytes": 13192174,
+          "sourcePixelFingerprint": "aeec262f",
+          "encodedFingerprint": "9ba11045",
+          "generationMs": 1053,
+          "assemblyMs": 2944,
+          "acknowledged": true
+        },
+        {
+          "index": 4,
+          "inputBytes": 13149354,
+          "sourcePixelFingerprint": "61ab2225",
+          "encodedFingerprint": "b183ca3f",
+          "generationMs": 1110,
+          "assemblyMs": 2904,
+          "acknowledged": true
+        },
+        {
+          "index": 5,
+          "inputBytes": 13095673,
+          "sourcePixelFingerprint": "6e1ddf60",
+          "encodedFingerprint": "0fc75043",
+          "generationMs": 1032,
+          "assemblyMs": 2783,
+          "acknowledged": true
+        },
+        {
+          "index": 6,
+          "inputBytes": 13048749,
+          "sourcePixelFingerprint": "40c2c996",
+          "encodedFingerprint": "3f30c6fd",
+          "generationMs": 1036,
+          "assemblyMs": 2747,
+          "acknowledged": true
+        },
+        {
+          "index": 7,
+          "inputBytes": 12943374,
+          "sourcePixelFingerprint": "2f617e40",
+          "encodedFingerprint": "2b9e7a14",
+          "generationMs": 1093,
+          "assemblyMs": 2988,
+          "acknowledged": true
+        },
+        {
+          "index": 8,
+          "inputBytes": 12883586,
+          "sourcePixelFingerprint": "783f7eda",
+          "encodedFingerprint": "e9425756",
+          "generationMs": 1062,
+          "assemblyMs": 2788,
+          "acknowledged": true
+        },
+        {
+          "index": 9,
+          "inputBytes": 12773428,
+          "sourcePixelFingerprint": "4dcefa8b",
+          "encodedFingerprint": "0fe00968",
+          "generationMs": 1023,
+          "assemblyMs": 3080,
+          "acknowledged": true
+        },
+        {
+          "index": 10,
+          "inputBytes": 12680749,
+          "sourcePixelFingerprint": "0d91989b",
+          "encodedFingerprint": "036bbee9",
+          "generationMs": 1078,
+          "assemblyMs": 2888,
+          "acknowledged": true
+        },
+        {
+          "index": 11,
+          "inputBytes": 12585778,
+          "sourcePixelFingerprint": "d09b7523",
+          "encodedFingerprint": "7dad0f4c",
+          "generationMs": 1024,
+          "assemblyMs": 2708,
+          "acknowledged": true
+        },
+        {
+          "index": 12,
+          "inputBytes": 12550143,
+          "sourcePixelFingerprint": "533881b1",
+          "encodedFingerprint": "17cd00ec",
+          "generationMs": 1026,
+          "assemblyMs": 2671,
+          "acknowledged": true
+        },
+        {
+          "index": 13,
+          "inputBytes": 12747487,
+          "sourcePixelFingerprint": "39cbfe74",
+          "encodedFingerprint": "e5281212",
+          "generationMs": 1031,
+          "assemblyMs": 2736,
+          "acknowledged": true
+        },
+        {
+          "index": 14,
+          "inputBytes": 12893204,
+          "sourcePixelFingerprint": "7d1db99e",
+          "encodedFingerprint": "6b43bf44",
+          "generationMs": 1024,
+          "assemblyMs": 2741,
+          "acknowledged": true
+        },
+        {
+          "index": 15,
+          "inputBytes": 13010223,
+          "sourcePixelFingerprint": "31a5e345",
+          "encodedFingerprint": "eaeca11c",
+          "generationMs": 1032,
+          "assemblyMs": 2800,
+          "acknowledged": true
+        },
+        {
+          "index": 16,
+          "inputBytes": 13158866,
+          "sourcePixelFingerprint": "4fbb66b1",
+          "encodedFingerprint": "433a746f",
+          "generationMs": 1036,
+          "assemblyMs": 2863,
+          "acknowledged": true
+        },
+        {
+          "index": 17,
+          "inputBytes": 13251605,
+          "sourcePixelFingerprint": "2b8bcf4a",
+          "encodedFingerprint": "03338a41",
+          "generationMs": 1036,
+          "assemblyMs": 2879,
+          "acknowledged": true
+        },
+        {
+          "index": 18,
+          "inputBytes": 13270209,
+          "sourcePixelFingerprint": "0b43ed9c",
+          "encodedFingerprint": "b353576e",
+          "generationMs": 1034,
+          "assemblyMs": 2881,
+          "acknowledged": true
+        },
+        {
+          "index": 19,
+          "inputBytes": 13290178,
+          "sourcePixelFingerprint": "852362a0",
+          "encodedFingerprint": "16bfe446",
+          "generationMs": 1041,
+          "assemblyMs": 2978,
+          "acknowledged": true
+        },
+        {
+          "index": 20,
+          "inputBytes": 13280063,
+          "sourcePixelFingerprint": "1054959b",
+          "encodedFingerprint": "5496b16e",
+          "generationMs": 1077,
+          "assemblyMs": 2888,
+          "acknowledged": true
+        },
+        {
+          "index": 21,
+          "inputBytes": 13229100,
+          "sourcePixelFingerprint": "3969c3d3",
+          "encodedFingerprint": "95a75df3",
+          "generationMs": 1044,
+          "assemblyMs": 2838,
+          "acknowledged": true
+        },
+        {
+          "index": 22,
+          "inputBytes": 13171237,
+          "sourcePixelFingerprint": "80a723b7",
+          "encodedFingerprint": "b090f178",
+          "generationMs": 1039,
+          "assemblyMs": 2776,
+          "acknowledged": true
+        },
+        {
+          "index": 23,
+          "inputBytes": 13130023,
+          "sourcePixelFingerprint": "39a386e3",
+          "encodedFingerprint": "f0336795",
+          "generationMs": 1032,
+          "assemblyMs": 2767,
+          "acknowledged": true
+        },
+        {
+          "index": 24,
+          "inputBytes": 13046360,
+          "sourcePixelFingerprint": "74dffbd9",
+          "encodedFingerprint": "94bcad86",
+          "generationMs": 1022,
+          "assemblyMs": 2761,
+          "acknowledged": true
+        },
+        {
+          "index": 25,
+          "inputBytes": 12957104,
+          "sourcePixelFingerprint": "dafd163e",
+          "encodedFingerprint": "849a04c4",
+          "generationMs": 1129,
+          "assemblyMs": 2787,
+          "acknowledged": true
+        },
+        {
+          "index": 26,
+          "inputBytes": 12833943,
+          "sourcePixelFingerprint": "aaaa2f3f",
+          "encodedFingerprint": "67355d6f",
+          "generationMs": 1028,
+          "assemblyMs": 2720,
+          "acknowledged": true
+        },
+        {
+          "index": 27,
+          "inputBytes": 12700657,
+          "sourcePixelFingerprint": "0920e0f5",
+          "encodedFingerprint": "be29d8f5",
+          "generationMs": 1031,
+          "assemblyMs": 2685,
+          "acknowledged": true
+        },
+        {
+          "index": 28,
+          "inputBytes": 12600512,
+          "sourcePixelFingerprint": "2003954c",
+          "encodedFingerprint": "23b664a4",
+          "generationMs": 1021,
+          "assemblyMs": 2661,
+          "acknowledged": true
+        },
+        {
+          "index": 29,
+          "inputBytes": 12543425,
+          "sourcePixelFingerprint": "b18954e8",
+          "encodedFingerprint": "606bff68",
+          "generationMs": 1019,
+          "assemblyMs": 2681,
+          "acknowledged": true
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "filename": "figma-export-2026-10-27-mvqul7gq-02d62a3e-part-1-of-3.pdf",
+          "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-1-of-3.pdf",
+          "startPage": 0,
+          "endPageExclusive": 10,
+          "outputBytes": 82338103,
+          "sha256": "822bb6f7f7626121358c14586ff6728d26345b45e04bc8f2319a1fe2af299153",
+          "validation": {
+            "pages": 10,
+            "exactPageDimensions": true,
+            "exactRasterDimensions": true,
+            "externalLinks": 30,
+            "wrappedTextLinkRectangles": 20,
+            "internalTextLinks": 20,
+            "localLinks": 36,
+            "remoteLinks": 14,
+            "forwardLinks": 20,
+            "backwardLinks": 20,
+            "jumpLinks": 10,
+            "remoteForwardLinks": 2,
+            "remoteBackwardLinks": 2,
+            "remoteJumpLinks": 10,
+            "exactLinkRectangles": true,
+            "exactUrlsAndDestinations": true,
+            "noDuplicateAnnotations": true,
+            "originalJpegStreams": 0,
+            "sharedRgbProfiles": 1
+          },
+          "appendFinalizeAndDownloadMs": 3202,
+          "pausedState": {
+            "pdfReleased": true,
+            "pageObjects": 0,
+            "liveUrls": 1,
+            "nextIndex": 10
+          }
+        },
+        {
+          "index": 1,
+          "filename": "figma-export-2026-10-27-mvqul7gq-02d62a3e-part-2-of-3.pdf",
+          "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-2-of-3.pdf",
+          "startPage": 10,
+          "endPageExclusive": 20,
+          "outputBytes": 81470637,
+          "sha256": "97276072e4908b97bff7f47a1ad71b36ea70b5847758a353f93d98781e908719",
+          "validation": {
+            "pages": 10,
+            "exactPageDimensions": true,
+            "exactRasterDimensions": true,
+            "externalLinks": 30,
+            "wrappedTextLinkRectangles": 20,
+            "internalTextLinks": 20,
+            "localLinks": 36,
+            "remoteLinks": 14,
+            "forwardLinks": 20,
+            "backwardLinks": 20,
+            "jumpLinks": 10,
+            "remoteForwardLinks": 2,
+            "remoteBackwardLinks": 2,
+            "remoteJumpLinks": 10,
+            "exactLinkRectangles": true,
+            "exactUrlsAndDestinations": true,
+            "noDuplicateAnnotations": true,
+            "originalJpegStreams": 0,
+            "sharedRgbProfiles": 1
+          },
+          "appendFinalizeAndDownloadMs": 3102,
+          "pausedState": {
+            "pdfReleased": true,
+            "pageObjects": 0,
+            "liveUrls": 1,
+            "nextIndex": 20
+          }
+        },
+        {
+          "index": 2,
+          "filename": "figma-export-2026-10-27-mvqul7gq-02d62a3e-part-3-of-3.pdf",
+          "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-3-of-3.pdf",
+          "startPage": 20,
+          "endPageExclusive": 30,
+          "outputBytes": 81981672,
+          "sha256": "25dd7617cbc8b3d56f11bf3ed9bd860081e17d8df894cc231a5eca6cd8c17301",
+          "validation": {
+            "pages": 10,
+            "exactPageDimensions": true,
+            "exactRasterDimensions": true,
+            "externalLinks": 30,
+            "wrappedTextLinkRectangles": 20,
+            "internalTextLinks": 20,
+            "localLinks": 36,
+            "remoteLinks": 14,
+            "forwardLinks": 20,
+            "backwardLinks": 20,
+            "jumpLinks": 10,
+            "remoteForwardLinks": 2,
+            "remoteBackwardLinks": 2,
+            "remoteJumpLinks": 10,
+            "exactLinkRectangles": true,
+            "exactUrlsAndDestinations": true,
+            "noDuplicateAnnotations": true,
+            "originalJpegStreams": 0,
+            "sharedRgbProfiles": 1
+          }
+        }
+      ],
+      "compressedInputBytes": 389626244,
+      "budgetSamples": [
+        {
+          "bytes": 8340889,
+          "pages": 1,
+          "partIndex": 0
+        },
+        {
+          "bytes": 16688712,
+          "pages": 2,
+          "partIndex": 0
+        },
+        {
+          "bytes": 25039414,
+          "pages": 3,
+          "partIndex": 0
+        },
+        {
+          "bytes": 33258366,
+          "pages": 4,
+          "partIndex": 0
+        },
+        {
+          "bytes": 41448883,
+          "pages": 5,
+          "partIndex": 0
+        },
+        {
+          "bytes": 49656765,
+          "pages": 6,
+          "partIndex": 0
+        },
+        {
+          "bytes": 57876595,
+          "pages": 7,
+          "partIndex": 0
+        },
+        {
+          "bytes": 66065139,
+          "pages": 8,
+          "partIndex": 0
+        },
+        {
+          "bytes": 74240266,
+          "pages": 9,
+          "partIndex": 0
+        },
+        {
+          "bytes": 82353154,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 82353154,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 82359700,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8041484,
+          "pages": 1,
+          "partIndex": 1
+        },
+        {
+          "bytes": 16004687,
+          "pages": 2,
+          "partIndex": 1
+        },
+        {
+          "bytes": 23924603,
+          "pages": 3,
+          "partIndex": 1
+        },
+        {
+          "bytes": 31945629,
+          "pages": 4,
+          "partIndex": 1
+        },
+        {
+          "bytes": 40026322,
+          "pages": 5,
+          "partIndex": 1
+        },
+        {
+          "bytes": 48212843,
+          "pages": 6,
+          "partIndex": 1
+        },
+        {
+          "bytes": 56468248,
+          "pages": 7,
+          "partIndex": 1
+        },
+        {
+          "bytes": 64820890,
+          "pages": 8,
+          "partIndex": 1
+        },
+        {
+          "bytes": 73166003,
+          "pages": 9,
+          "partIndex": 1
+        },
+        {
+          "bytes": 81485728,
+          "pages": 10,
+          "partIndex": 1
+        },
+        {
+          "bytes": 81485728,
+          "pages": 10,
+          "partIndex": 1
+        },
+        {
+          "bytes": 81492266,
+          "pages": 10,
+          "partIndex": 1
+        },
+        {
+          "bytes": 8277077,
+          "pages": 1,
+          "partIndex": 2
+        },
+        {
+          "bytes": 16543540,
+          "pages": 2,
+          "partIndex": 2
+        },
+        {
+          "bytes": 24783414,
+          "pages": 3,
+          "partIndex": 2
+        },
+        {
+          "bytes": 33062837,
+          "pages": 4,
+          "partIndex": 2
+        },
+        {
+          "bytes": 41350423,
+          "pages": 5,
+          "partIndex": 2
+        },
+        {
+          "bytes": 49616602,
+          "pages": 6,
+          "partIndex": 2
+        },
+        {
+          "bytes": 57821531,
+          "pages": 7,
+          "partIndex": 2
+        },
+        {
+          "bytes": 65968246,
+          "pages": 8,
+          "partIndex": 2
+        },
+        {
+          "bytes": 73993140,
+          "pages": 9,
+          "partIndex": 2
+        },
+        {
+          "bytes": 81996764,
+          "pages": 10,
+          "partIndex": 2
+        },
+        {
+          "bytes": 81996764,
+          "pages": 10,
+          "partIndex": 2
+        },
+        {
+          "bytes": 82003303,
+          "pages": 10,
+          "partIndex": 2
+        }
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 12103628,
+          "totalSize": 16498688,
+          "embedderHeapUsedSize": 3567848,
+          "backingStorageSize": 8483258
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 4354080,
+          "totalSize": 9011200,
+          "embedderHeapUsedSize": 2101064,
+          "backingStorageSize": 239470227
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 4333752,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2040872,
+          "backingStorageSize": 247624734
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 4395936,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2064944,
+          "backingStorageSize": 255955840
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 4405216,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2065664,
+          "backingStorageSize": 264018006
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 4449380,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2018840,
+          "backingStorageSize": 272131307
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 4446556,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2047032,
+          "backingStorageSize": 280300390
+        },
+        {
+          "label": "page-7-page-ack",
+          "usedSize": 4484748,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2016752,
+          "backingStorageSize": 288488050
+        },
+        {
+          "label": "page-8-page-ack",
+          "usedSize": 4507224,
+          "totalSize": 6914048,
+          "embedderHeapUsedSize": 2032848,
+          "backingStorageSize": 296536821
+        },
+        {
+          "label": "page-9-page-ack",
+          "usedSize": 4698412,
+          "totalSize": 7176192,
+          "embedderHeapUsedSize": 1950352,
+          "backingStorageSize": 304634149
+        },
+        {
+          "label": "page-10-part-ready",
+          "usedSize": 4652004,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1948840,
+          "backingStorageSize": 387115757
+        },
+        {
+          "label": "part-1-released",
+          "usedSize": 4824464,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 2393720,
+          "backingStorageSize": 180955281
+        },
+        {
+          "label": "page-11-page-ack",
+          "usedSize": 5475712,
+          "totalSize": 8224768,
+          "embedderHeapUsedSize": 2020688,
+          "backingStorageSize": 238400772
+        },
+        {
+          "label": "page-12-page-ack",
+          "usedSize": 5434496,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 2025520,
+          "backingStorageSize": 245901977
+        },
+        {
+          "label": "page-13-page-ack",
+          "usedSize": 5452236,
+          "totalSize": 8224768,
+          "embedderHeapUsedSize": 2008960,
+          "backingStorageSize": 253751856
+        },
+        {
+          "label": "page-14-page-ack",
+          "usedSize": 5457232,
+          "totalSize": 8224768,
+          "embedderHeapUsedSize": 2027208,
+          "backingStorageSize": 262066896
+        },
+        {
+          "label": "page-15-page-ack",
+          "usedSize": 5507116,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1989264,
+          "backingStorageSize": 270357208
+        },
+        {
+          "label": "page-16-page-ack",
+          "usedSize": 5501228,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 2008072,
+          "backingStorageSize": 278757288
+        },
+        {
+          "label": "page-17-page-ack",
+          "usedSize": 5564896,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1985576,
+          "backingStorageSize": 287225238
+        },
+        {
+          "label": "page-18-page-ack",
+          "usedSize": 5539832,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 2016576,
+          "backingStorageSize": 295767419
+        },
+        {
+          "label": "page-19-page-ack",
+          "usedSize": 5559992,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 2018528,
+          "backingStorageSize": 304129502
+        },
+        {
+          "label": "page-20-part-ready",
+          "usedSize": 4667308,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 2007744,
+          "backingStorageSize": 385900503
+        },
+        {
+          "label": "part-2-released",
+          "usedSize": 4850628,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 2323528,
+          "backingStorageSize": 179739626
+        },
+        {
+          "label": "page-21-page-ack",
+          "usedSize": 5511780,
+          "totalSize": 9011200,
+          "embedderHeapUsedSize": 2041200,
+          "backingStorageSize": 239467700
+        },
+        {
+          "label": "page-22-page-ack",
+          "usedSize": 5470664,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 2036472,
+          "backingStorageSize": 247397835
+        },
+        {
+          "label": "page-23-page-ack",
+          "usedSize": 5475728,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 2020856,
+          "backingStorageSize": 255545444
+        },
+        {
+          "label": "page-24-page-ack",
+          "usedSize": 5508488,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1993880,
+          "backingStorageSize": 263831173
+        },
+        {
+          "label": "page-25-page-ack",
+          "usedSize": 5534728,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1965848,
+          "backingStorageSize": 272033590
+        },
+        {
+          "label": "page-26-page-ack",
+          "usedSize": 5534372,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1965160,
+          "backingStorageSize": 280192365
+        },
+        {
+          "label": "page-27-page-ack",
+          "usedSize": 5547572,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1982600,
+          "backingStorageSize": 288207093
+        },
+        {
+          "label": "page-28-page-ack",
+          "usedSize": 5620404,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1991784,
+          "backingStorageSize": 296169606
+        },
+        {
+          "label": "page-29-page-ack",
+          "usedSize": 5629704,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1954816,
+          "backingStorageSize": 303961781
+        },
+        {
+          "label": "page-30-page-ack",
+          "usedSize": 5608760,
+          "totalSize": 8224768,
+          "embedderHeapUsedSize": 1947664,
+          "backingStorageSize": 311890296
+        },
+        {
+          "label": "after-final-download",
+          "usedSize": 4676384,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 2952736,
+          "backingStorageSize": 386178612
+        }
+      ],
+      "frames": [
+        {
+          "id": "large-raster-0",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-1",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-2",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-3",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-4",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-5",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-6",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-7",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-8",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-9",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-10",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-11",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-12",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-13",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-14",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-15",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-16",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-17",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-18",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-19",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-20",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-21",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-22",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-23",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-24",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-25",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-26",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-27",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-28",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-29",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "exportRequest": {
+        "exportType": "raster",
+        "rasterFormat": "PNG",
+        "qualityScale": 1.5,
+        "colorProfile": "SRGB"
+      },
+      "auxiliaryAnnotationBytes": 24641,
+      "finalizeAndDownloadMs": 154,
+      "outputBytes": 245790412,
+      "validation": {
+        "outputPages": 30,
+        "exactPageDimensions": true,
+        "exactRasterPixelDimensions": true,
+        "externalLinks": 90,
+        "wrappedTextLinkRectangles": 60,
+        "internalTextLinks": 60,
+        "localLinks": 108,
+        "remoteLinks": 42,
+        "forwardLinks": 60,
+        "backwardLinks": 60,
+        "jumpLinks": 30,
+        "remoteForwardLinks": 6,
+        "remoteBackwardLinks": 6,
+        "remoteJumpLinks": 30,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true,
+        "originalJpegStreams": 0,
+        "repeatedNamesResolvedByFrameId": true,
+        "automaticContinue": false,
+        "browserErrors": []
+      },
+      "durationMs": 117759,
+      "acknowledgedPages": 30,
+      "acknowledgedCompressedInputBytes": 389626244,
+      "generationMs": 31383,
+      "pageAssemblyMs": 84820,
+      "peakMeasuredRetainedPdfBytes": 82359700,
+      "peakSampledJsHeapBytes": 12103628,
+      "peakSampledBackingStorageBytes": 387115757,
+      "inputExceededHistorical128MiBLimit": true,
+      "fixtureSchemaVersion": "large-raster-combined-links-v1"
+    },
+    {
+      "name": "30 detailed 5760x3240 PNG pages, one PDF",
+      "format": "PNG",
+      "requestedPages": 30,
+      "pagesPerPart": 30,
+      "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+      "retainedDataBudgetBytes": 134217728,
+      "testOnlyBudgetOverride": false,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5
+      },
+      "status": "retained-budget-stop",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 13158686,
+          "sourcePixelFingerprint": "51a0d7d2",
+          "encodedFingerprint": "99c17485",
+          "generationMs": 1085,
+          "assemblyMs": 2894,
+          "acknowledged": true
+        },
+        {
+          "index": 1,
+          "inputBytes": 13234094,
+          "sourcePixelFingerprint": "3c9e89c2",
+          "encodedFingerprint": "a9eed964",
+          "generationMs": 1024,
+          "assemblyMs": 2925,
+          "acknowledged": true
+        },
+        {
+          "index": 2,
+          "inputBytes": 13216260,
+          "sourcePixelFingerprint": "a0220314",
+          "encodedFingerprint": "4a62138e",
+          "generationMs": 1036,
+          "assemblyMs": 2896,
+          "acknowledged": true
+        },
+        {
+          "index": 3,
+          "inputBytes": 13192174,
+          "sourcePixelFingerprint": "aeec262f",
+          "encodedFingerprint": "9ba11045",
+          "generationMs": 1036,
+          "assemblyMs": 2880,
+          "acknowledged": true
+        },
+        {
+          "index": 4,
+          "inputBytes": 13149354,
+          "sourcePixelFingerprint": "61ab2225",
+          "encodedFingerprint": "b183ca3f",
+          "generationMs": 1034,
+          "assemblyMs": 2815,
+          "acknowledged": true
+        },
+        {
+          "index": 5,
+          "inputBytes": 13095673,
+          "sourcePixelFingerprint": "6e1ddf60",
+          "encodedFingerprint": "0fc75043",
+          "generationMs": 1028,
+          "assemblyMs": 2772,
+          "acknowledged": true
+        },
+        {
+          "index": 6,
+          "inputBytes": 13048749,
+          "sourcePixelFingerprint": "40c2c996",
+          "encodedFingerprint": "3f30c6fd",
+          "generationMs": 1029,
+          "assemblyMs": 2736,
+          "acknowledged": true
+        },
+        {
+          "index": 7,
+          "inputBytes": 12943374,
+          "sourcePixelFingerprint": "2f617e40",
+          "encodedFingerprint": "2b9e7a14",
+          "generationMs": 1025,
+          "assemblyMs": 2739,
+          "acknowledged": true
+        },
+        {
+          "index": 8,
+          "inputBytes": 12883586,
+          "sourcePixelFingerprint": "783f7eda",
+          "encodedFingerprint": "e9425756",
+          "generationMs": 1023,
+          "assemblyMs": 2760,
+          "acknowledged": true
+        },
+        {
+          "index": 9,
+          "inputBytes": 12773428,
+          "sourcePixelFingerprint": "4dcefa8b",
+          "encodedFingerprint": "0fe00968",
+          "generationMs": 1030,
+          "assemblyMs": 2736,
+          "acknowledged": true
+        },
+        {
+          "index": 10,
+          "inputBytes": 12680749,
+          "sourcePixelFingerprint": "0d91989b",
+          "encodedFingerprint": "036bbee9",
+          "generationMs": 1024,
+          "assemblyMs": 2726,
+          "acknowledged": true
+        },
+        {
+          "index": 11,
+          "inputBytes": 12585778,
+          "sourcePixelFingerprint": "d09b7523",
+          "encodedFingerprint": "7dad0f4c",
+          "generationMs": 1019,
+          "assemblyMs": 2696,
+          "acknowledged": true
+        },
+        {
+          "index": 12,
+          "inputBytes": 12550143,
+          "sourcePixelFingerprint": "533881b1",
+          "encodedFingerprint": "17cd00ec",
+          "generationMs": 1021,
+          "assemblyMs": 2678,
+          "acknowledged": true
+        },
+        {
+          "index": 13,
+          "inputBytes": 12747487,
+          "sourcePixelFingerprint": "39cbfe74",
+          "encodedFingerprint": "e5281212",
+          "generationMs": 1020,
+          "assemblyMs": 2730,
+          "acknowledged": true
+        },
+        {
+          "index": 14,
+          "inputBytes": 12893204,
+          "sourcePixelFingerprint": "7d1db99e",
+          "encodedFingerprint": "6b43bf44",
+          "generationMs": 1028,
+          "assemblyMs": 2771,
+          "acknowledged": true
+        },
+        {
+          "index": 15,
+          "inputBytes": 13010223,
+          "sourcePixelFingerprint": "31a5e345",
+          "encodedFingerprint": "eaeca11c",
+          "generationMs": 1029,
+          "assemblyMs": 2871,
+          "acknowledged": true
+        },
+        {
+          "index": 16,
+          "inputBytes": 13158866,
+          "sourcePixelFingerprint": "4fbb66b1",
+          "encodedFingerprint": "433a746f",
+          "generationMs": 1033,
+          "assemblyMs": 2835,
+          "acknowledged": false
+        }
+      ],
+      "parts": [],
+      "compressedInputBytes": 220321828,
+      "budgetSamples": [
+        {
+          "bytes": 8340889,
+          "pages": 1,
+          "partIndex": 0
+        },
+        {
+          "bytes": 16688712,
+          "pages": 2,
+          "partIndex": 0
+        },
+        {
+          "bytes": 25039414,
+          "pages": 3,
+          "partIndex": 0
+        },
+        {
+          "bytes": 33258366,
+          "pages": 4,
+          "partIndex": 0
+        },
+        {
+          "bytes": 41448883,
+          "pages": 5,
+          "partIndex": 0
+        },
+        {
+          "bytes": 49656765,
+          "pages": 6,
+          "partIndex": 0
+        },
+        {
+          "bytes": 57876595,
+          "pages": 7,
+          "partIndex": 0
+        },
+        {
+          "bytes": 66065139,
+          "pages": 8,
+          "partIndex": 0
+        },
+        {
+          "bytes": 74240266,
+          "pages": 9,
+          "partIndex": 0
+        },
+        {
+          "bytes": 82353154,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 90389473,
+          "pages": 11,
+          "partIndex": 0
+        },
+        {
+          "bytes": 98352676,
+          "pages": 12,
+          "partIndex": 0
+        },
+        {
+          "bytes": 106272592,
+          "pages": 13,
+          "partIndex": 0
+        },
+        {
+          "bytes": 114293622,
+          "pages": 14,
+          "partIndex": 0
+        },
+        {
+          "bytes": 122374328,
+          "pages": 15,
+          "partIndex": 0
+        },
+        {
+          "bytes": 130560863,
+          "pages": 16,
+          "partIndex": 0
+        },
+        {
+          "bytes": 138816280,
+          "pages": 17,
+          "partIndex": 0
+        }
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 11987960,
+          "totalSize": 16236544,
+          "embedderHeapUsedSize": 3472976,
+          "backingStorageSize": 8483177
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 4146624,
+          "totalSize": 7176192,
+          "embedderHeapUsedSize": 1746736,
+          "backingStorageSize": 239470219
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 5072340,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1801728,
+          "backingStorageSize": 247624587
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 4336176,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1757312,
+          "backingStorageSize": 255955825
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 4405796,
+          "totalSize": 7176192,
+          "embedderHeapUsedSize": 1755568,
+          "backingStorageSize": 264017989
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 4441788,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1726440,
+          "backingStorageSize": 272131418
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 4442940,
+          "totalSize": 7176192,
+          "embedderHeapUsedSize": 1719656,
+          "backingStorageSize": 280300373
+        },
+        {
+          "label": "page-7-page-ack",
+          "usedSize": 4458324,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1744856,
+          "backingStorageSize": 288488033
+        },
+        {
+          "label": "page-8-page-ack",
+          "usedSize": 4487904,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1737744,
+          "backingStorageSize": 296536804
+        },
+        {
+          "label": "page-9-page-ack",
+          "usedSize": 4565724,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1718184,
+          "backingStorageSize": 304634132
+        },
+        {
+          "label": "page-10-page-ack",
+          "usedSize": 4655752,
+          "totalSize": 7962624,
+          "embedderHeapUsedSize": 1728400,
+          "backingStorageSize": 312586077
+        },
+        {
+          "label": "page-11-page-ack",
+          "usedSize": 5434272,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1709376,
+          "backingStorageSize": 320446296
+        },
+        {
+          "label": "page-12-page-ack",
+          "usedSize": 5469296,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1725472,
+          "backingStorageSize": 328230973
+        },
+        {
+          "label": "page-13-page-ack",
+          "usedSize": 5470180,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1704368,
+          "backingStorageSize": 336080852
+        },
+        {
+          "label": "page-14-page-ack",
+          "usedSize": 4693276,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1722720,
+          "backingStorageSize": 344395763
+        },
+        {
+          "label": "page-15-page-ack",
+          "usedSize": 4715388,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1686840,
+          "backingStorageSize": 352686206
+        },
+        {
+          "label": "page-16-page-ack",
+          "usedSize": 4616792,
+          "totalSize": 8486912,
+          "embedderHeapUsedSize": 1780096,
+          "backingStorageSize": 361086288
+        },
+        {
+          "label": "page-17-export-failed",
+          "usedSize": 4762440,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1887080,
+          "backingStorageSize": 369554242
+        }
+      ],
+      "frames": [
+        {
+          "id": "large-raster-0",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-1",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-2",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-3",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-4",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-5",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-6",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-7",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-8",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-9",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-10",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-11",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-12",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-13",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-14",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-15",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-16",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-17",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-18",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-19",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-20",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-21",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-22",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-23",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-24",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-25",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-26",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-27",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-28",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-29",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "exportRequest": {
+        "exportType": "raster",
+        "rasterFormat": "PNG",
+        "qualityScale": 1.5,
+        "colorProfile": "SRGB"
+      },
+      "auxiliaryAnnotationBytes": 13958,
+      "guardMessage": "This PDF exceeds the 128 MiB retained-data allowance. Lower raster quality or split the export into fewer pages per part.",
+      "durationMs": 65871,
+      "acknowledgedPages": 16,
+      "acknowledgedCompressedInputBytes": 207162962,
+      "generationMs": 17524,
+      "pageAssemblyMs": 47460,
+      "peakMeasuredRetainedPdfBytes": 138816280,
+      "peakSampledJsHeapBytes": 11987960,
+      "peakSampledBackingStorageBytes": 369554242,
+      "inputExceededHistorical128MiBLimit": true,
+      "fixtureSchemaVersion": "large-raster-combined-links-v1"
+    },
+    {
+      "name": "30 detailed 5760x3240 PNG pages, one PDF",
+      "format": "PNG",
+      "requestedPages": 30,
+      "pagesPerPart": 30,
+      "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+      "retainedDataBudgetBytes": 134217728,
+      "testOnlyBudgetOverride": false,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5
+      },
+      "status": "retained-budget-stop",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 13158686,
+          "sourcePixelFingerprint": "51a0d7d2",
+          "encodedFingerprint": "99c17485",
+          "generationMs": 1081,
+          "assemblyMs": 2888,
+          "acknowledged": true
+        },
+        {
+          "index": 1,
+          "inputBytes": 13234094,
+          "sourcePixelFingerprint": "3c9e89c2",
+          "encodedFingerprint": "a9eed964",
+          "generationMs": 1035,
+          "assemblyMs": 2897,
+          "acknowledged": true
+        },
+        {
+          "index": 2,
+          "inputBytes": 13216260,
+          "sourcePixelFingerprint": "a0220314",
+          "encodedFingerprint": "4a62138e",
+          "generationMs": 1033,
+          "assemblyMs": 2899,
+          "acknowledged": true
+        },
+        {
+          "index": 3,
+          "inputBytes": 13192174,
+          "sourcePixelFingerprint": "aeec262f",
+          "encodedFingerprint": "9ba11045",
+          "generationMs": 1030,
+          "assemblyMs": 2869,
+          "acknowledged": true
+        },
+        {
+          "index": 4,
+          "inputBytes": 13149354,
+          "sourcePixelFingerprint": "61ab2225",
+          "encodedFingerprint": "b183ca3f",
+          "generationMs": 1028,
+          "assemblyMs": 2819,
+          "acknowledged": true
+        },
+        {
+          "index": 5,
+          "inputBytes": 13095673,
+          "sourcePixelFingerprint": "6e1ddf60",
+          "encodedFingerprint": "0fc75043",
+          "generationMs": 1029,
+          "assemblyMs": 2770,
+          "acknowledged": true
+        },
+        {
+          "index": 6,
+          "inputBytes": 13048749,
+          "sourcePixelFingerprint": "40c2c996",
+          "encodedFingerprint": "3f30c6fd",
+          "generationMs": 1044,
+          "assemblyMs": 2739,
+          "acknowledged": true
+        },
+        {
+          "index": 7,
+          "inputBytes": 12943374,
+          "sourcePixelFingerprint": "2f617e40",
+          "encodedFingerprint": "2b9e7a14",
+          "generationMs": 1034,
+          "assemblyMs": 2747,
+          "acknowledged": true
+        },
+        {
+          "index": 8,
+          "inputBytes": 12883586,
+          "sourcePixelFingerprint": "783f7eda",
+          "encodedFingerprint": "e9425756",
+          "generationMs": 1030,
+          "assemblyMs": 2754,
+          "acknowledged": true
+        },
+        {
+          "index": 9,
+          "inputBytes": 12773428,
+          "sourcePixelFingerprint": "4dcefa8b",
+          "encodedFingerprint": "0fe00968",
+          "generationMs": 1037,
+          "assemblyMs": 2760,
+          "acknowledged": true
+        },
+        {
+          "index": 10,
+          "inputBytes": 12680749,
+          "sourcePixelFingerprint": "0d91989b",
+          "encodedFingerprint": "036bbee9",
+          "generationMs": 1022,
+          "assemblyMs": 2710,
+          "acknowledged": true
+        },
+        {
+          "index": 11,
+          "inputBytes": 12585778,
+          "sourcePixelFingerprint": "d09b7523",
+          "encodedFingerprint": "7dad0f4c",
+          "generationMs": 1020,
+          "assemblyMs": 2678,
+          "acknowledged": true
+        },
+        {
+          "index": 12,
+          "inputBytes": 12550143,
+          "sourcePixelFingerprint": "533881b1",
+          "encodedFingerprint": "17cd00ec",
+          "generationMs": 1016,
+          "assemblyMs": 2918,
+          "acknowledged": true
+        },
+        {
+          "index": 13,
+          "inputBytes": 12747487,
+          "sourcePixelFingerprint": "39cbfe74",
+          "encodedFingerprint": "e5281212",
+          "generationMs": 1049,
+          "assemblyMs": 3098,
+          "acknowledged": true
+        },
+        {
+          "index": 14,
+          "inputBytes": 12893204,
+          "sourcePixelFingerprint": "7d1db99e",
+          "encodedFingerprint": "6b43bf44",
+          "generationMs": 1022,
+          "assemblyMs": 2726,
+          "acknowledged": true
+        },
+        {
+          "index": 15,
+          "inputBytes": 13010223,
+          "sourcePixelFingerprint": "31a5e345",
+          "encodedFingerprint": "eaeca11c",
+          "generationMs": 1018,
+          "assemblyMs": 3317,
+          "acknowledged": true
+        },
+        {
+          "index": 16,
+          "inputBytes": 13158866,
+          "sourcePixelFingerprint": "4fbb66b1",
+          "encodedFingerprint": "433a746f",
+          "generationMs": 1048,
+          "assemblyMs": 2884,
+          "acknowledged": false
+        }
+      ],
+      "parts": [],
+      "compressedInputBytes": 220321828,
+      "budgetSamples": [
+        {
+          "bytes": 8340889,
+          "pages": 1,
+          "partIndex": 0
+        },
+        {
+          "bytes": 16688712,
+          "pages": 2,
+          "partIndex": 0
+        },
+        {
+          "bytes": 25039414,
+          "pages": 3,
+          "partIndex": 0
+        },
+        {
+          "bytes": 33258366,
+          "pages": 4,
+          "partIndex": 0
+        },
+        {
+          "bytes": 41448883,
+          "pages": 5,
+          "partIndex": 0
+        },
+        {
+          "bytes": 49656765,
+          "pages": 6,
+          "partIndex": 0
+        },
+        {
+          "bytes": 57876595,
+          "pages": 7,
+          "partIndex": 0
+        },
+        {
+          "bytes": 66065139,
+          "pages": 8,
+          "partIndex": 0
+        },
+        {
+          "bytes": 74240266,
+          "pages": 9,
+          "partIndex": 0
+        },
+        {
+          "bytes": 82353154,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 90389473,
+          "pages": 11,
+          "partIndex": 0
+        },
+        {
+          "bytes": 98352676,
+          "pages": 12,
+          "partIndex": 0
+        },
+        {
+          "bytes": 106272592,
+          "pages": 13,
+          "partIndex": 0
+        },
+        {
+          "bytes": 114293622,
+          "pages": 14,
+          "partIndex": 0
+        },
+        {
+          "bytes": 122374328,
+          "pages": 15,
+          "partIndex": 0
+        },
+        {
+          "bytes": 130560863,
+          "pages": 16,
+          "partIndex": 0
+        },
+        {
+          "bytes": 138816280,
+          "pages": 17,
+          "partIndex": 0
+        }
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 12026788,
+          "totalSize": 16498688,
+          "embedderHeapUsedSize": 3490472,
+          "backingStorageSize": 8483197
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 7062352,
+          "totalSize": 11517952,
+          "embedderHeapUsedSize": 1617144,
+          "backingStorageSize": 239470111
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 4337456,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1652896,
+          "backingStorageSize": 247624607
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 4383600,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1656376,
+          "backingStorageSize": 255955845
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 4400108,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1669920,
+          "backingStorageSize": 264018009
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 4433592,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1631552,
+          "backingStorageSize": 272131308
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 4442680,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1638248,
+          "backingStorageSize": 280300263
+        },
+        {
+          "label": "page-7-page-ack",
+          "usedSize": 4454264,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1604784,
+          "backingStorageSize": 288487925
+        },
+        {
+          "label": "page-8-page-ack",
+          "usedSize": 4489532,
+          "totalSize": 7438336,
+          "embedderHeapUsedSize": 1628696,
+          "backingStorageSize": 296536696
+        },
+        {
+          "label": "page-9-page-ack",
+          "usedSize": 4630264,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1623656,
+          "backingStorageSize": 304634022
+        },
+        {
+          "label": "page-10-page-ack",
+          "usedSize": 4655044,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1619672,
+          "backingStorageSize": 312586097
+        },
+        {
+          "label": "page-11-page-ack",
+          "usedSize": 5440752,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1603552,
+          "backingStorageSize": 320446186
+        },
+        {
+          "label": "page-12-page-ack",
+          "usedSize": 5483248,
+          "totalSize": 9011200,
+          "embedderHeapUsedSize": 1617400,
+          "backingStorageSize": 328230865
+        },
+        {
+          "label": "page-13-page-ack",
+          "usedSize": 5485240,
+          "totalSize": 8749056,
+          "embedderHeapUsedSize": 1600592,
+          "backingStorageSize": 336080744
+        },
+        {
+          "label": "page-14-page-ack",
+          "usedSize": 4698484,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1603192,
+          "backingStorageSize": 344395783
+        },
+        {
+          "label": "page-15-page-ack",
+          "usedSize": 4737444,
+          "totalSize": 7700480,
+          "embedderHeapUsedSize": 1582784,
+          "backingStorageSize": 352686226
+        },
+        {
+          "label": "page-16-page-ack",
+          "usedSize": 5553224,
+          "totalSize": 10846208,
+          "embedderHeapUsedSize": 1618296,
+          "backingStorageSize": 361086434
+        },
+        {
+          "label": "page-17-export-failed",
+          "usedSize": 4758816,
+          "totalSize": 7962624,
+          "embedderHeapUsedSize": 1885560,
+          "backingStorageSize": 369554392
+        }
+      ],
+      "frames": [
+        {
+          "id": "large-raster-0",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-1",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-2",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-3",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-4",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-5",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-6",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-7",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-8",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-9",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-10",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-11",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-12",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-13",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-14",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-15",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-16",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-17",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-18",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-19",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-20",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-21",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-22",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-23",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-24",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-25",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-26",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-27",
+          "name": "Repeated name 0",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-28",
+          "name": "Repeated name 1",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        },
+        {
+          "id": "large-raster-29",
+          "name": "Repeated name 2",
+          "parent": "Stress fixture",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "exportRequest": {
+        "exportType": "raster",
+        "rasterFormat": "PNG",
+        "qualityScale": 1.5,
+        "colorProfile": "SRGB"
+      },
+      "auxiliaryAnnotationBytes": 13954,
+      "guardMessage": "This PDF exceeds the 128 MiB retained-data allowance. Lower raster quality or split the export into fewer pages per part.",
+      "refusalCleanup": {
+        "activeJobReleased": true,
+        "liveBlobUrls": 0,
+        "anchorDownloadStarts": 0,
+        "downloads": 0,
+        "exportFinished": false
+      },
+      "durationMs": 67012,
+      "acknowledgedPages": 16,
+      "acknowledgedCompressedInputBytes": 207162962,
+      "generationMs": 17576,
+      "pageAssemblyMs": 48473,
+      "peakMeasuredRetainedPdfBytes": 138816280,
+      "peakSampledJsHeapBytes": 12026788,
+      "peakSampledBackingStorageBytes": 369554392,
+      "inputExceededHistorical128MiBLimit": true,
+      "fixtureSchemaVersion": "large-raster-combined-links-v1"
+    }
+  ],
+  "previousRecordedAt": "2026-10-27T15:35:37.769Z",
+  "supplementalSrgbVerification": {
+    "recordedAt": "2026-10-27T15:43:58.550Z",
+    "scope": "Offline validation of the previously saved exact PDF bytes; no additional image generation or browser stress run. PNG uses the canonical LittleCMS sRGB ICC; JPEG retains Chromium canvas encoder embedded sRGB ICC byte-for-byte, rather than replacing it with another profile.",
+    "canonicalSrgbSha256": "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8",
+    "pdfCount": 4,
+    "imageCount": 60,
+    "checked": [
+      {
+        "artifact": "test-results/combined-large/rgb/jpg-30-pages-per-part/figma-export-2026-10-27-mvqukq56-5e76475b.pdf",
+        "sha256": "cb7c196722266c6f2c104046cf5dfd15531e17f24b4ea92f1e4238be4a139040",
+        "images": 30,
+        "verification": "Exact independently reassembled source JPEG APP2 ICC bytes",
+        "rgbProfileSha256s": [
+          "12afb4d9953adee0607d347daee5b78b18d6b3cab2d572b88970703f5edb37bc"
+        ],
+        "passed": true
+      },
+      {
+        "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-1-of-3.pdf",
+        "sha256": "822bb6f7f7626121358c14586ff6728d26345b45e04bc8f2319a1fe2af299153",
+        "images": 10,
+        "verification": "Exact canonical sRGB ICC SHA-256",
+        "rgbProfileSha256s": [
+          "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8"
+        ],
+        "passed": true
+      },
+      {
+        "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-2-of-3.pdf",
+        "sha256": "97276072e4908b97bff7f47a1ad71b36ea70b5847758a353f93d98781e908719",
+        "images": 10,
+        "verification": "Exact canonical sRGB ICC SHA-256",
+        "rgbProfileSha256s": [
+          "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8"
+        ],
+        "passed": true
+      },
+      {
+        "artifact": "test-results/combined-large/rgb/png-10-pages-per-part/figma-export-2026-10-27-mvqul7gq-02d62a3e-part-3-of-3.pdf",
+        "sha256": "25dd7617cbc8b3d56f11bf3ed9bd860081e17d8df894cc231a5eca6cd8c17301",
+        "images": 10,
+        "verification": "Exact canonical sRGB ICC SHA-256",
+        "rgbProfileSha256s": [
+          "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8"
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "comparison": {
+    "pairedSourcePages": 30,
+    "identicalSourcePixelFingerprints": true,
+    "pairedPngInputBytes": 389626244,
+    "pairedJpegInputBytes": 11410729,
+    "completePngOutputBytes": null,
+    "completePngPartsOutputBytes": 245790412,
+    "completeJpegOutputBytes": 11427450
+  },
+  "fixtureSchemaVersion": "large-raster-combined-links-v1"
+}

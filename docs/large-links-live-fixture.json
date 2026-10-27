@@ -1,0 +1,432 @@
+{
+  "fileKey": "yKf6bZSYBB3tZoWz5qMmen",
+  "createdNodeIds": [
+    "30:2",
+    "30:3",
+    "30:4",
+    "30:15",
+    "30:5",
+    "30:6",
+    "30:17",
+    "30:7",
+    "30:8",
+    "30:19",
+    "30:9",
+    "30:10",
+    "30:21",
+    "30:11",
+    "30:12",
+    "30:23",
+    "30:13",
+    "30:14",
+    "30:25"
+  ],
+  "pageId": "30:2",
+  "frames": [
+    {
+      "id": "30:3",
+      "name": "Combined report 1",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:4",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 1\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:5"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:13"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:15",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:5"
+      }
+    },
+    {
+      "id": "30:5",
+      "name": "Combined report 2",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:6",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 2\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:7"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:3"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:17",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:7"
+      }
+    },
+    {
+      "id": "30:7",
+      "name": "Combined report 1",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:8",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 3\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:9"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:5"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:19",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:9"
+      }
+    },
+    {
+      "id": "30:9",
+      "name": "Combined report 2",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:10",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 4\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:11"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:7"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:21",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:11"
+      }
+    },
+    {
+      "id": "30:11",
+      "name": "Combined report 1",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:12",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 5\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:13"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:9"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:23",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:13"
+      }
+    },
+    {
+      "id": "30:13",
+      "name": "Combined report 2",
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:14",
+        "width": 1600,
+        "height": 540,
+        "x": 100,
+        "y": 120,
+        "characters": "Large report page 6\nWebsite \u00b7 Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page \u00b7 Previous page",
+        "links": [
+          {
+            "label": "Website",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/web"
+            }
+          },
+          {
+            "label": "Documentation",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/docs"
+            }
+          },
+          {
+            "label": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.",
+            "target": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/wrapped"
+            }
+          },
+          {
+            "label": "Next page",
+            "target": {
+              "type": "NODE",
+              "value": "30:3"
+            }
+          },
+          {
+            "label": "Previous page",
+            "target": {
+              "type": "NODE",
+              "value": "30:11"
+            }
+          }
+        ],
+        "textAutoResize": "HEIGHT"
+      },
+      "prototype": {
+        "id": "30:25",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "destination": "30:3"
+      }
+    }
+  ],
+  "readabilityPanels": [
+    "33:2",
+    "33:3",
+    "33:4",
+    "33:5",
+    "33:6",
+    "33:7"
+  ],
+  "sourceImageNote": "The six Figma frames reuse the same synthetic color-chart image fill. The automated workload uses distinct synthetic detailed landscapes, not a real-photo corpus."
+}

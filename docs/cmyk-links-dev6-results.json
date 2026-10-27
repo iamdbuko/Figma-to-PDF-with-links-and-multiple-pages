@@ -1,0 +1,538 @@
+{
+  "recordedAt": "2026-10-27T15:39:12.425Z",
+  "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+  "platform": "darwin",
+  "profile": {
+    "file": "assets/color-profiles/ISOcoated_v2_300_bas.ICC",
+    "source": "BUNDLED",
+    "bytes": 1052612,
+    "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "purpose": "Built-in basICColor ISO Coated v2 300%, FOGRA39 coated printing. No physical print validation."
+  },
+  "scope": "Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uses the indicated profile source, sends one PNG page at a time, honors part-ready/page-ack, and clicks Continue only after validating each downloaded part. Representative PDFs are saved only under ignored test-results/combined-large/. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.",
+  "linkScope": "Every page combines eight expected annotations: one external prototype URL, two wrapped external text rectangles, three forward/back/jump prototype destinations, and two exact native text NODE destinations. Small synthetic annotation PDFs model Figma URI annotations; they are not Figma-generated geometry. Duplicate scanner inputs must not create duplicates. Exact URLs, rectangles, local page refs and cross-part filenames/page indexes are checked after reloading every saved PDF. Remote destinations are structurally validated; PDF viewer navigation/security behavior is outside this test.",
+  "memoryScope": "CDP Runtime.getHeapUsage samples V8 usedSize and backingStorageSize separately. Samples are not total browser/Figma/native decoder/GPU resident memory and can miss transient peaks. The renderer includes a reusable fixture canvas and one encoded PNG. No forced garbage collection is used. Node-side PDF inspection is outside renderer samples. WASM heap length is reported separately and must not be added to backingStorageSize as if disjoint.",
+  "rasterSource": "Eight distinct 2800x2800 synthetic landscapes: layered gradients and curved terrain plus smoothly enlarged seeded low-resolution noise. Small transparent and translucent regions exercise white compositing. These are compressible photo-like fixtures, not a real photograph corpus or worst-case random entropy workload. Pages are generated sequentially, only after the prior page/part is acknowledged.",
+  "requestedPages": 8,
+  "pagesPerPart": 2,
+  "pageDimensions": {
+    "width": 1400,
+    "height": 1400
+  },
+  "rasterDimensions": {
+    "width": 2800,
+    "height": 2800
+  },
+  "pixelsPerPage": 7840000,
+  "cmykPixelLimit": 8000000,
+  "retainedDataBudgetBytes": 134217728,
+  "status": "passed",
+  "pages": [
+    {
+      "index": 0,
+      "inputBytes": 8875041,
+      "generationMs": 473,
+      "assemblyToHandshakeMs": 2807
+    },
+    {
+      "index": 1,
+      "inputBytes": 8957547,
+      "generationMs": 447,
+      "assemblyToHandshakeMs": 2678
+    },
+    {
+      "index": 2,
+      "inputBytes": 9006785,
+      "generationMs": 452,
+      "assemblyToHandshakeMs": 2748
+    },
+    {
+      "index": 3,
+      "inputBytes": 8920997,
+      "generationMs": 448,
+      "assemblyToHandshakeMs": 2599
+    },
+    {
+      "index": 4,
+      "inputBytes": 8901897,
+      "generationMs": 444,
+      "assemblyToHandshakeMs": 2638
+    },
+    {
+      "index": 5,
+      "inputBytes": 8891221,
+      "generationMs": 450,
+      "assemblyToHandshakeMs": 2579
+    },
+    {
+      "index": 6,
+      "inputBytes": 8871042,
+      "generationMs": 452,
+      "assemblyToHandshakeMs": 2680
+    },
+    {
+      "index": 7,
+      "inputBytes": 8858262,
+      "generationMs": 446,
+      "assemblyToHandshakeMs": 2586
+    }
+  ],
+  "parts": [
+    {
+      "index": 0,
+      "filename": "figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-1-of-4.pdf",
+      "artifact": "test-results/combined-large/cmyk/bundled/figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-1-of-4.pdf",
+      "outputBytes": 13878936,
+      "sha256": "0d9735e844c1b318395178f0170530490ab7b4c1cc128a978a022d6589d9e8d1",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "externalLinks": 6,
+        "wrappedTextLinkRectangles": 4,
+        "internalTextLinks": 4,
+        "localLinks": 4,
+        "remoteLinks": 6,
+        "forwardLinks": 4,
+        "backwardLinks": 4,
+        "jumpLinks": 2,
+        "remoteForwardLinks": 2,
+        "remoteBackwardLinks": 2,
+        "remoteJumpLinks": 2,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 3021
+    },
+    {
+      "index": 1,
+      "filename": "figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-2-of-4.pdf",
+      "artifact": "test-results/combined-large/cmyk/bundled/figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-2-of-4.pdf",
+      "outputBytes": 14163213,
+      "sha256": "5be5356d917c19fe9052512f390f403c0f6d2a6a52929c1067010bf9b8450f5b",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "externalLinks": 6,
+        "wrappedTextLinkRectangles": 4,
+        "internalTextLinks": 4,
+        "localLinks": 4,
+        "remoteLinks": 6,
+        "forwardLinks": 4,
+        "backwardLinks": 4,
+        "jumpLinks": 2,
+        "remoteForwardLinks": 2,
+        "remoteBackwardLinks": 2,
+        "remoteJumpLinks": 2,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 2951
+    },
+    {
+      "index": 2,
+      "filename": "figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-3-of-4.pdf",
+      "artifact": "test-results/combined-large/cmyk/bundled/figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-3-of-4.pdf",
+      "outputBytes": 13939684,
+      "sha256": "b8a69db154df6162cf513bf6bb53887a5eb12231729edf9ee7b2b026156f2d47",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "externalLinks": 6,
+        "wrappedTextLinkRectangles": 4,
+        "internalTextLinks": 4,
+        "localLinks": 4,
+        "remoteLinks": 6,
+        "forwardLinks": 4,
+        "backwardLinks": 4,
+        "jumpLinks": 2,
+        "remoteForwardLinks": 2,
+        "remoteBackwardLinks": 2,
+        "remoteJumpLinks": 2,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 2915
+    },
+    {
+      "index": 3,
+      "filename": "figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-4-of-4.pdf",
+      "artifact": "test-results/combined-large/cmyk/bundled/figma-export-2026-10-27-mvqupbvz-cb2a0bd9-part-4-of-4.pdf",
+      "outputBytes": 13997981,
+      "sha256": "7aa4018494e90717f67895ff047131a9aa8aa483ece467b79dc1ccd66f12e381",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "externalLinks": 6,
+        "wrappedTextLinkRectangles": 4,
+        "internalTextLinks": 4,
+        "localLinks": 4,
+        "remoteLinks": 6,
+        "forwardLinks": 4,
+        "backwardLinks": 4,
+        "jumpLinks": 2,
+        "remoteForwardLinks": 2,
+        "remoteBackwardLinks": 2,
+        "remoteJumpLinks": 2,
+        "exactLinkRectangles": true,
+        "exactUrlsAndDestinations": true,
+        "noDuplicateAnnotations": true
+      }
+    }
+  ],
+  "compressedInputBytes": 71282792,
+  "memorySamples": [
+    {
+      "label": "before-pages",
+      "usedSize": 6479328,
+      "totalSize": 23887872,
+      "embedderHeapUsedSize": 1934640,
+      "backingStorageSize": 32914119,
+      "wasmHeapBytes": 20185088
+    },
+    {
+      "label": "page-1-page-ack",
+      "usedSize": 4207528,
+      "totalSize": 9551872,
+      "embedderHeapUsedSize": 1473888,
+      "backingStorageSize": 117557704,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-2-part-ready",
+      "usedSize": 4597208,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1705880,
+      "backingStorageSize": 68167564,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-1-paused",
+      "usedSize": 4633516,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1733248,
+      "backingStorageSize": 68167809,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-1-released",
+      "usedSize": 4776664,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1984008,
+      "backingStorageSize": 68168256,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-3-page-ack",
+      "usedSize": 5220688,
+      "totalSize": 6668288,
+      "embedderHeapUsedSize": 1552256,
+      "backingStorageSize": 118178383,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-4-part-ready",
+      "usedSize": 5169388,
+      "totalSize": 6668288,
+      "embedderHeapUsedSize": 1726128,
+      "backingStorageSize": 123627926,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-2-paused",
+      "usedSize": 5384424,
+      "totalSize": 6930432,
+      "embedderHeapUsedSize": 1779200,
+      "backingStorageSize": 138363657,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-2-released",
+      "usedSize": 4699296,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 2027136,
+      "backingStorageSize": 130568239,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-5-page-ack",
+      "usedSize": 5243572,
+      "totalSize": 6930432,
+      "embedderHeapUsedSize": 1557184,
+      "backingStorageSize": 117816894,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-6-part-ready",
+      "usedSize": 5352480,
+      "totalSize": 6668288,
+      "embedderHeapUsedSize": 1745912,
+      "backingStorageSize": 123277313,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-3-paused",
+      "usedSize": 4707492,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1823312,
+      "backingStorageSize": 137789062,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-3-released",
+      "usedSize": 4824780,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1971240,
+      "backingStorageSize": 130091948,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-7-page-ack",
+      "usedSize": 5321420,
+      "totalSize": 6930432,
+      "embedderHeapUsedSize": 1540768,
+      "backingStorageSize": 117786166,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-8-page-ack",
+      "usedSize": 5311288,
+      "totalSize": 6668288,
+      "embedderHeapUsedSize": 1483784,
+      "backingStorageSize": 123351179,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "after-final-download",
+      "usedSize": 4743296,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 2819384,
+      "backingStorageSize": 137922389,
+      "wasmHeapBytes": 24248320
+    }
+  ],
+  "retainedBudgetSamples": [
+    {
+      "bytes": 7271598,
+      "pages": 1,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13885014,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13885014,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13886604,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 7513952,
+      "pages": 1,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14169296,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14169296,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14170886,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 7387880,
+      "pages": 1,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13945767,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13945767,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13947357,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 7387466,
+      "pages": 1,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14004061,
+      "pages": 2,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14004061,
+      "pages": 2,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14005651,
+      "pages": 2,
+      "partIndex": 3
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "frames": [
+    {
+      "id": "cmyk-0",
+      "name": "Repeated page 0",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-1",
+      "name": "Repeated page 1",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-2",
+      "name": "Repeated page 0",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-3",
+      "name": "Repeated page 1",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-4",
+      "name": "Repeated page 0",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-5",
+      "name": "Repeated page 1",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-6",
+      "name": "Repeated page 0",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    },
+    {
+      "id": "cmyk-7",
+      "name": "Repeated page 1",
+      "parent": "CMYK stress fixture",
+      "width": 1400,
+      "height": 1400
+    }
+  ],
+  "exportRequest": {
+    "exportType": "raster",
+    "rasterFormat": "PNG",
+    "qualityScale": 2,
+    "colorProfile": "CMYK"
+  },
+  "auxiliaryAnnotationBytes": 6525,
+  "validation": {
+    "outputPages": 8,
+    "outputParts": 4,
+    "exactUploadedIccOncePerPart": true,
+    "exactPageAndPixelDimensions": true,
+    "noSoftMasks": true,
+    "actualFourChannelPixels": 62720000,
+    "externalLinks": 24,
+    "wrappedTextLinkRectangles": 16,
+    "internalTextLinks": 16,
+    "localLinks": 16,
+    "remoteLinks": 24,
+    "forwardLinks": 16,
+    "backwardLinks": 16,
+    "jumpLinks": 8,
+    "remoteForwardLinks": 8,
+    "remoteBackwardLinks": 8,
+    "remoteJumpLinks": 8,
+    "exactLinkRectangles": true,
+    "exactUrlsAndDestinations": true,
+    "noDuplicateAnnotations": true,
+    "repeatedNamesResolvedByFrameId": true,
+    "intermediatePartMemoryReleased": true,
+    "conversionSessionPreparedOnceClosedOnce": true,
+    "browserErrors": []
+  },
+  "durationMs": 27359,
+  "outputBytes": 55979814,
+  "generationMs": 3612,
+  "peakSampledJsHeapBytes": 6479328,
+  "peakSampledBackingStorageBytes": 138363657,
+  "peakSampledWasmHeapBytes": 24248320,
+  "peakMeasuredRetainedPdfBytes": 14170886
+}

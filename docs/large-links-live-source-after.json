@@ -1,0 +1,881 @@
+{
+  "pageId": "30:2",
+  "frames": [
+    {
+      "id": "30:3",
+      "name": "Combined report 1",
+      "x": 100,
+      "y": 100,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:4",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 1\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 1\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/1/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:5"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:13"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:15",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:5",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:5",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:2",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:4",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:15",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "30:5",
+      "name": "Combined report 2",
+      "x": 4200,
+      "y": 100,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:6",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 2\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 2\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/2/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:7"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:3"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:17",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:7",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:7",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:3",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:6",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:17",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "30:7",
+      "name": "Combined report 1",
+      "x": 8300,
+      "y": 100,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:8",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 3\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 3\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/3/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:9"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:5"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:19",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:9",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:9",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:4",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:8",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:19",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "30:9",
+      "name": "Combined report 2",
+      "x": 100,
+      "y": 3200,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:10",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 4\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 4\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/4/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:11"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:7"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:21",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:11",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:11",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:5",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:10",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:21",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "30:11",
+      "name": "Combined report 1",
+      "x": 4200,
+      "y": 3200,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:12",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 5\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 5\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/5/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:13"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:9"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:23",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:13",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:13",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:6",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:12",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:23",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    },
+    {
+      "id": "30:13",
+      "name": "Combined report 2",
+      "x": 8300,
+      "y": 3200,
+      "width": 3840,
+      "height": 2880,
+      "imageFills": [
+        {
+          "hash": "2b975509173e447089a7bbb207fd5d933447c250",
+          "scaleMode": "FILL"
+        }
+      ],
+      "text": {
+        "id": "30:14",
+        "x": 100,
+        "y": 120,
+        "width": 1600,
+        "height": 540,
+        "characters": "Large report page 6\nWebsite · Documentation\nThis linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\nNext page · Previous page",
+        "textAutoResize": "HEIGHT",
+        "segments": [
+          {
+            "start": 0,
+            "end": 20,
+            "characters": "Large report page 6\n",
+            "hyperlink": null
+          },
+          {
+            "start": 20,
+            "end": 27,
+            "characters": "Website",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/web"
+            }
+          },
+          {
+            "start": 27,
+            "end": 30,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 30,
+            "end": 44,
+            "characters": "Documentation\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/docs"
+            }
+          },
+          {
+            "start": 44,
+            "end": 168,
+            "characters": "This linked sentence wraps across several lines so every line must keep its own precise clickable area in the exported PDF.\n",
+            "hyperlink": {
+              "type": "URL",
+              "value": "https://example.com/combined/6/wrapped"
+            }
+          },
+          {
+            "start": 168,
+            "end": 177,
+            "characters": "Next page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:3"
+            }
+          },
+          {
+            "start": 177,
+            "end": 180,
+            "characters": " · ",
+            "hyperlink": null
+          },
+          {
+            "start": 180,
+            "end": 193,
+            "characters": "Previous page",
+            "hyperlink": {
+              "type": "NODE",
+              "value": "30:11"
+            }
+          }
+        ]
+      },
+      "prototype": {
+        "id": "30:25",
+        "x": 100,
+        "y": 2400,
+        "width": 300,
+        "height": 120,
+        "reactions": [
+          {
+            "action": {
+              "type": "NODE",
+              "destinationId": "30:3",
+              "navigation": "NAVIGATE",
+              "transition": null,
+              "resetVideoPosition": false,
+              "resetScrollPosition": true
+            },
+            "actions": [
+              {
+                "type": "NODE",
+                "destinationId": "30:3",
+                "navigation": "NAVIGATE",
+                "transition": null,
+                "resetVideoPosition": false,
+                "resetScrollPosition": true
+              }
+            ],
+            "trigger": {
+              "type": "ON_CLICK"
+            }
+          }
+        ]
+      },
+      "children": [
+        {
+          "id": "33:7",
+          "type": "RECTANGLE",
+          "x": 80,
+          "y": 100,
+          "width": 1640,
+          "height": 800
+        },
+        {
+          "id": "30:14",
+          "type": "TEXT",
+          "x": 100,
+          "y": 120,
+          "width": 1600,
+          "height": 540
+        },
+        {
+          "id": "30:25",
+          "type": "RECTANGLE",
+          "x": 100,
+          "y": 2400,
+          "width": 300,
+          "height": 120
+        }
+      ]
+    }
+  ]
+}

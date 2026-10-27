@@ -1,0 +1,1942 @@
+{
+  "recordedAt": "2026-10-27",
+  "version": "9.0.0-dev.6",
+  "builtUiSha256": "b1bf36eb43cb92fe5c39b739106af2f58e8e4150bf89f83fd7e6a37a65e0fabe",
+  "fileKey": "yKf6bZSYBB3tZoWz5qMmen",
+  "pageId": "30:2",
+  "sourceCheck": {
+    "status": "passed",
+    "checks": [
+      "frame IDs, names, positions and dimensions",
+      "image fill hashes and scale modes",
+      "text content, geometry, resize mode and all five hyperlink targets",
+      "prototype geometry and destination"
+    ]
+  },
+  "scenarios": [
+    {
+      "status": "passed",
+      "mode": "vector",
+      "pages": [
+        {
+          "page": 0,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 0,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        },
+        {
+          "page": 1,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 1,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        },
+        {
+          "page": 2,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 2,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        },
+        {
+          "page": 3,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 3,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        },
+        {
+          "page": 4,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 4,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        },
+        {
+          "page": 5,
+          "file": "combined-dev6-vector.pdf",
+          "localPage": 5,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 3,
+          "textOperators": 10
+        }
+      ],
+      "files": [
+        {
+          "name": "combined-dev6-vector.pdf",
+          "bytes": 2427930,
+          "sha256": "09843304c98b120be96dcf9f8b7ba1095bb8cc726fe5e52d4862382807d9c472"
+        }
+      ],
+      "exactOracleRectangles": false,
+      "oracleKind": null,
+      "tolerance": 0.01,
+      "limitations": [
+        "No native annotation oracle was supplied; exact text rectangles were not compared."
+      ],
+      "totalBytes": 2427930
+    },
+    {
+      "status": "passed",
+      "mode": "raster",
+      "pages": [
+        {
+          "page": 0,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 0,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        },
+        {
+          "page": 1,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 1,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        },
+        {
+          "page": 2,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 2,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        },
+        {
+          "page": 3,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 3,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        },
+        {
+          "page": 4,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 4,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        },
+        {
+          "page": 5,
+          "file": "combined-dev6-jpeg.pdf",
+          "localPage": 5,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3840,
+            2880
+          ]
+        }
+      ],
+      "files": [
+        {
+          "name": "combined-dev6-jpeg.pdf",
+          "bytes": 13483376,
+          "sha256": "5864502cd2864a54d7cafa4078195fa150fbc12a404687a68d1636326ef1e55b"
+        }
+      ],
+      "exactOracleRectangles": true,
+      "oracleKind": "vector",
+      "tolerance": 0.01,
+      "limitations": [
+        "Annotation rectangles were compared to the plugin vector export, not an independently captured native source PDF."
+      ],
+      "totalBytes": 13483376
+    },
+    {
+      "status": "passed",
+      "mode": "cmyk",
+      "pages": [
+        {
+          "page": 0,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+          "localPage": 0,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/1/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+              "localPage": 1
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        },
+        {
+          "page": 1,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+          "localPage": 1,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/2/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+              "localPage": 0
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+              "localPage": 0
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        },
+        {
+          "page": 2,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+          "localPage": 0,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727264
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/3/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727234
+              ],
+              "kind": "internal",
+              "targetPage": 1,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+              "localPage": 1
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        },
+        {
+          "page": 3,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+          "localPage": 1,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272736,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704529,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636353,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/4/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647736,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+              "localPage": 0
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772705,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 2,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+              "localPage": 0
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        },
+        {
+          "page": 4,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+          "localPage": 0,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272949,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.70459,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.63623,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/5/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647949,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 3,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+              "localPage": 1
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 5,
+              "transport": "local"
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        },
+        {
+          "page": 5,
+          "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+          "localPage": 1,
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "links": [
+            {
+              "rect": [
+                100.0,
+                2586.272705,
+                343.272461,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/web"
+            },
+            {
+              "rect": [
+                396.875,
+                2586.272705,
+                857.704102,
+                2663.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/docs"
+            },
+            {
+              "rect": [
+                100.0,
+                2496.272705,
+                1638.75,
+                2573.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2406.272705,
+                1717.75,
+                2483.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2316.272705,
+                648.636719,
+                2393.727295
+              ],
+              "kind": "external",
+              "uri": "https://example.com/combined/6/wrapped"
+            },
+            {
+              "rect": [
+                100.0,
+                2226.272705,
+                411.647461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+              "localPage": 0
+            },
+            {
+              "rect": [
+                465.25,
+                2226.272705,
+                893.772461,
+                2303.727295
+              ],
+              "kind": "internal",
+              "targetPage": 4,
+              "transport": "local"
+            },
+            {
+              "rect": [
+                100.0,
+                360.0,
+                400.0,
+                480.0
+              ],
+              "kind": "internal",
+              "targetPage": 0,
+              "transport": "remote",
+              "file": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+              "localPage": 0
+            }
+          ],
+          "imageCount": 1,
+          "pathPaints": 0,
+          "textOperators": 0,
+          "pixels": [
+            3266,
+            2449
+          ],
+          "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ],
+      "files": [
+        {
+          "name": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-1-of-3.pdf",
+          "bytes": 4400012,
+          "sha256": "887f8fc06b042c3852858cc0f8f723cde2c05da90e6d4bba0146c2846a9a23ec"
+        },
+        {
+          "name": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+          "bytes": 4400249,
+          "sha256": "68f2c92be0a038c44ed4e1f3dcac1e2522bac9fdca358de867389fb06fd6045a"
+        },
+        {
+          "name": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-3-of-3.pdf",
+          "bytes": 4400352,
+          "sha256": "0d7187ce74e996f33509ac8aa63b798ec4f99e5a901c73c72a417e5a4e38ed2d"
+        }
+      ],
+      "exactOracleRectangles": true,
+      "oracleKind": "vector",
+      "tolerance": 0.01,
+      "limitations": [
+        "Annotation rectangles were compared to the plugin vector export, not an independently captured native source PDF."
+      ],
+      "totalBytes": 13200613
+    }
+  ],
+  "oversizedCmykPreflight": {
+    "status": "expected-refusal",
+    "requestedPixels": [
+      3840,
+      2880
+    ],
+    "fitEnabled": false,
+    "downloadStarted": false
+  },
+  "fitEnabledCmyk": {
+    "actualPixels": [
+      3266,
+      2449
+    ],
+    "requestedScale": 1,
+    "reportedActualScale": 0.8503,
+    "pageDimensionsUnchanged": true
+  },
+  "visualChecks": [
+    "vector first page rendered and visually reviewed",
+    "JPEG first page rendered and visually reviewed",
+    "CMYK last page rendered and visually reviewed"
+  ],
+  "limitations": [
+    "Source uses a repeated synthetic color-chart image, not a photo corpus.",
+    "Raster and CMYK annotation geometry compared to plugin vector PDF, not independent raw native export.",
+    "No printer, Windows or Acrobat validation."
+  ],
+  "viewerCheck": {
+    "viewer": "macOS Preview",
+    "sameFileTextLink": "passed: part 1 page 1 Next page displayed page 2",
+    "crossPartTextLink": "blocked by viewer file-access permission error",
+    "attemptedFile": "figma-export-2026-10-27-mvquuf03-032ec9fe-part-2-of-3.pdf",
+    "allPartsPresentWithOriginalNames": true,
+    "permissionsChanged": false
+  }
+}
