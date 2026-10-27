@@ -1,6 +1,6 @@
-# CMYK beta — v9.0.0-dev.5
+# CMYK beta — v9.0.0-dev.6
 
-Choose **CMYK (beta)** and export immediately with **Built-in profile**. No file upload is required. This uses basICColor’s ISO Coated v2 300% profile for FOGRA39 coated-paper printing. It is a specific, established printing condition, not a universal printer profile or the latest coated-paper standard. If your printer supplies a profile, select **Custom printer profile** and load its `.icc` or `.icm` file. The normal color default remains **Same as Figma file**.
+Choose **Rasterized**, then **CMYK (beta)** under **Color profile**, and export with **Built-in profile**. No file upload is required. This uses basICColor’s ISO Coated v2 300% profile for FOGRA39 coated-paper printing. It is a specific, established printing condition, not a universal printer profile or the latest coated-paper standard. If your printer supplies a profile, select **Custom printer profile** and load its `.icc` or `.icm` file. The normal color default remains **Same as Figma file**. Vector / Rasterized stays visible above Color profile. Changing color profiles never changes the selected format; Vector + CMYK shows a short explanation and disables Export until you choose Rasterized or an RGB profile.
 
 The **Where can I find ICC profiles?** link inside the plugin opens offline instructions for Mac and Windows. The same instructions are in [Finding a printer ICC profile](ICC-PROFILES.md). Profiles can be selected directly from Downloads; OS installation is unnecessary. No design or profile is uploaded to a conversion service.
 
@@ -21,6 +21,8 @@ The built-in production profile is redistributed unchanged under its basICColor 
 - This is not PDF/X or a certified press-ready workflow. It does not add an output-intent declaration or claim print conformance. Check the resulting PDF with the printer before production use.
 
 ## Validation
+
+Dev.6 restores the always-visible **Vector / Rasterized** selector, followed by **Color profile**. The 130-test suite passes, including rejection of Vector + CMYK before rendering and explicit format selection in the CMYK lifecycle tests. After the final layout/accessibility adjustment, all 28 browser lifecycle tests passed again; hidden compatibility text is empty for supported settings. The build is reproducible. Native macOS Figma verified both controls, the inline incompatibility message, preserved format selection when switching profiles, and a successful Rasterized CMYK export with no upload: 844,158 bytes, 600×400 dimensions, exact built-in ICC, 960,000 decoded CMYK bytes, and the exact web-link rectangle. Poppler rendering preserved all fixture content. The conversion engine is unchanged; the larger workloads below are historical checkpoints, not dev.6 reruns.
 
 The [dev.5 built-in profile results](cmyk-default-results.json) record **128 passing automated tests**, including no-upload export, exact profile embedding, custom-file races, and keyboard-operated offline help. Independent native LittleCMS produces byte-identical CMYK samples for the built-in profile. Live macOS Figma exported a 600×400 CMYK page without a profile upload; the exact built-in ICC and web-link rectangle survived, and Poppler rendering preserved all fixture content. The help disclosure also opened successfully inside Figma.
 

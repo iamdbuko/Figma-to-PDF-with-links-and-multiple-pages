@@ -435,6 +435,8 @@
       color: #fff;
     }
 
+    .export-type-option input[type="radio"]:focus-visible + label { outline: 2px solid var(--text-primary); outline-offset: -3px; }
+
     /* Quality selector styles */
     .quality-selector {
       display: flex;
@@ -725,9 +727,12 @@
   <div id="selection-info" class="selection-info" hidden></div>
   <div class="export-panel">
     <div class="export-type-selector"><div class="export-type-options">
-      <div class="export-type-option"><input type="radio" id="export-vector" name="export-type" value="vector" checked><label for="export-vector">Vector</label></div>
-      <div class="export-type-option"><input type="radio" id="export-raster" name="export-type" value="raster"><label for="export-raster">Rasterized</label></div>
+      <div class="export-type-option"><input type="radio" id="export-vector" name="export-type" aria-describedby="color-profile-compatibility" value="vector" checked><label for="export-vector">Vector</label></div>
+      <div class="export-type-option"><input type="radio" id="export-raster" name="export-type" aria-describedby="color-profile-compatibility" value="raster"><label for="export-raster">Rasterized</label></div>
     </div></div>
+    <label class="export-setting" for="color-profile">Color profile <select id="color-profile" aria-describedby="color-profile-help color-profile-compatibility"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></label>
+    <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
+    <p id="color-profile-compatibility" class="export-help" role="status" aria-live="polite" hidden></p>
     <div class="controls">
       <div class="quality-selector">
         <label class="quality-label" for="quality-select" id="quality-label">Fallback quality:</label>
@@ -736,13 +741,11 @@
           <optgroup label="Print"><option value="print-low">Low (2x, 144 DPI)</option><option value="print-medium">Medium (3x, 216 DPI)</option><option value="print-high">High (4x, 288 DPI)</option><option value="print-highest">Highest (4.17x, 300 DPI)</option></optgroup>
         </select>
       </div>
-      <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
+      <button id="export-btn" class="btn btn-primary" aria-describedby="color-profile-compatibility" disabled>Export PDF</button>
     </div>
     <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
     <label class="export-setting" id="raster-format-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
     <p id="compression-help" class="export-help">Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.</p>
-    <label class="export-setting" for="color-profile">Color profile <select id="color-profile"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></label>
-    <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
     <div id="cmyk-settings" hidden>
       <label class="export-setting" for="cmyk-profile-source">CMYK profile <select id="cmyk-profile-source"><option value="BUNDLED" selected>Built-in profile</option><option value="CUSTOM">Custom printer profile</option></select></label>
       <p id="cmyk-bundled-description" class="export-help"></p>
@@ -1227,6 +1230,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { createCm
 </script>
   <script>
     'use strict';
+    const CMYK_VECTOR_MESSAGE = 'CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.';
     const QUALITY_SETTINGS = {
       'screen-low': { scale: 0.5 }, 'screen-medium': { scale: 1 }, 'screen-high': { scale: 1.5 },
       'print-low': { scale: 2 }, 'print-medium': { scale: 3 }, 'print-high': { scale: 4 }, 'print-highest': { scale: 4.17 }
@@ -1618,11 +1622,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { createCm
 
     function updateExportTypeInfo() {
       const cmyk = $('color-profile').value === 'CMYK';
-      const vector = !cmyk && $('export-vector').checked;
-      document.querySelector('.export-type-selector').hidden = cmyk;
+      const vector = $('export-vector').checked;
+      $('color-profile-compatibility').hidden = !(cmyk && vector);
+      $('color-profile-compatibility').textContent = cmyk && vector ? CMYK_VECTOR_MESSAGE : '';
+      $('color-profile-help').hidden = cmyk && vector;
       $('raster-format-setting').hidden = cmyk;
       $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
-      $('export-help').textContent = cmyk
+      $('export-help').textContent = cmyk && !vector
         ? 'CMYK rasterizes every page at the selected resolution and converts colors using the selected profile. Transparent areas become white.'
         : vector
         ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
@@ -1653,10 +1659,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { createCm
       const cmykProfileReady = $('cmyk-profile-source').value === 'BUNDLED'
         ? Boolean(bundledCmykProfile && !bundledCmykProfileError)
         : $('cmyk-profile-source').value === 'CUSTOM' && !readingCmykProfile && Boolean(selectedCmykProfile);
-      for (const id of ['export-vector', 'export-raster', 'raster-format']) $(id).disabled = busy || cmyk;
+      $('raster-format').disabled = busy || cmyk;
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
-      $('export-btn').disabled = busy || !count || (cmyk && !cmykProfileReady);
+      $('export-btn').disabled = busy || !count || (cmyk && ($('export-vector').checked || !cmykProfileReady));
       $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
       $('cancel-btn').hidden = !busy;
       $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
@@ -1786,6 +1792,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { createCm
       const requestedColorProfile = $('color-profile').value;
       if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
       const cmyk = requestedColorProfile === 'CMYK';
+      const exportType = $('export-vector').checked ? 'vector' : 'raster';
+      if (cmyk && exportType === 'vector') { showStatus(CMYK_VECTOR_MESSAGE, 'error'); return; }
       let cmykProfile = null;
       const cmykProfileSource = cmyk ? $('cmyk-profile-source').value : null;
       if (cmykProfileSource === 'CUSTOM') {
@@ -1801,7 +1809,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { createCm
       const id = `${Date.now()}-${++jobSequence}`;
       const unique = globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(16).slice(2, 10);
       const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
-      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: cmyk ? 'raster' : $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileSource, cmykProfileName: cmykProfile?.name || null, cmykProfileBytes: cmykProfile ? cmykProfile.bytes.slice() : null };
+      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType, pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileSource, cmykProfileName: cmykProfile?.name || null, cmykProfileBytes: cmykProfile ? cmykProfile.bytes.slice() : null };
       Object.defineProperty(job, 'outputColorMode', { value: cmyk ? 'CMYK' : 'RGB', writable: false, configurable: false, enumerable: true });
       // Snapshot every setting before asynchronous profile preparation or page work.
       const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };

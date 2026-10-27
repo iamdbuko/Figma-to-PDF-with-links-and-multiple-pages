@@ -166,6 +166,7 @@ try {
   const frames = Array.from({ length: count }, (_, index) => ({ id: `cmyk-${index}`, name: `Repeated page ${index % 2}`, parent: 'CMYK stress fixture', ...dimensions }));
   const connections = frames.map((frame, index) => ({ source: 'prototype', type: 'internal', fromFrameId: frame.id, toFrameId: frames[(index + 1) % count].id, elementBounds: { x: 10, y: 10, width: 40, height: 20 } }));
   await post({ type: 'frames-updated', frames, connections });
+  await frame.locator('label[for="export-raster"]').click();
   await frame.locator('#color-profile').selectOption('CMYK');
   if (bundled) {
     assert.equal(await frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');

@@ -55,6 +55,7 @@ async function harness(t) {
     }
     if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat);
     if (options.fitOversized) await frame.locator('#fit-oversized').check();
+    if (options.exportType) await frame.locator(`label[for="export-${options.exportType}"]`).click();
     if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile);
     if (options.iccBuffer) {
       await frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
@@ -448,9 +449,50 @@ test('export initialization rejects unsupported or contradictory color profiles'
   }
 });
 
+test('format stays visible above color profile and unsupported Vector CMYK never starts an export', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
+  assert.equal(await h.frame.locator('#color-profile').inputValue(), 'DOCUMENT');
+  assert.equal(await h.frame.locator('.export-type-selector').evaluate(element => element.nextElementSibling.htmlFor), 'color-profile');
+  const help = h.frame.locator('#color-profile-compatibility');
+  assert.equal(await help.isVisible(), false);
+  assert.equal(await help.textContent(), '', 'compatible settings have no hidden warning for assistive technology');
+  await h.frame.locator('#color-profile').selectOption('CMYK');
+  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
+  for (const id of ['export-vector', 'export-raster']) assert.equal(await h.frame.locator(`#${id}`).isEnabled(), true);
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), true, 'choosing CMYK does not switch the format');
+  assert.equal(await help.isVisible(), true);
+  assert.equal(await help.textContent(), 'CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.');
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+  await h.frame.evaluate(() => startExport());
+  assert.equal(await h.frame.evaluate(() => activeJob), null);
+  assert.equal((await h.messages('export-pdf')).length, 0);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  await h.frame.locator('label[for="export-raster"]').click();
+  assert.equal(await h.frame.locator('#color-profile').inputValue(), 'CMYK');
+  assert.equal(await help.isVisible(), false);
+  assert.equal(await help.textContent(), '', 'compatible settings have no hidden warning for assistive technology');
+  assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
+  // Arrow keys must also update the compatibility state on these native radios.
+  await h.frame.locator('#export-raster').focus();
+  await h.page.keyboard.press('ArrowLeft');
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
+  assert.equal(await help.isVisible(), true);
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+  for (const profile of ['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT']) {
+    await h.frame.locator('#color-profile').selectOption(profile);
+    assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
+    assert.equal(await help.isVisible(), false);
+    assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
+  }
+  assert.deepEqual(h.errors, []);
+});
+
 test('custom CMYK requires a readable bounded ICC file and rejects an invalid profile before contacting Figma', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('label[for="export-raster"]').click();
   await h.frame.locator('#color-profile').selectOption('CMYK');
   assert.equal(await h.frame.locator('#cmyk-settings').isVisible(), true);
   assert.equal(await h.frame.locator('#export-btn').isEnabled(), true, 'the bundled default is ready without an upload');
@@ -481,6 +523,7 @@ test('custom CMYK requires a readable bounded ICC file and rejects an invalid pr
 test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and never starts the backend', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('label[for="export-raster"]').click();
   await h.frame.locator('#color-profile').selectOption('CMYK');
   await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
   await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
@@ -496,7 +539,7 @@ test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and
   await h.frame.waitForFunction(() => typeof window.finishPrepare === 'function');
   await h.frame.evaluate(() => { selectedCmykProfile.bytes[0] = 99; });
   assert.deepEqual(await h.frame.evaluate(() => [...window.preparingBytes]), [1, 2, 3], 'this job owns a snapshot of the uploaded profile');
-  for (const selector of ['#cmyk-profile', '#cmyk-profile-source', '#color-profile', '#output-mode', '#quality-select']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
+  for (const selector of ['#cmyk-profile', '#cmyk-profile-source', '#color-profile', '#output-mode', '#quality-select', '#export-vector', '#export-raster']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
   assert.equal((await h.messages('export-pdf')).length, 0, 'profile preparation precedes all backend export work');
   await h.frame.locator('#cancel-btn').click();
   assert.equal(await h.frame.locator('#export-btn').isDisabled(), true, 'preparation must finish before another job starts');
@@ -532,19 +575,20 @@ async function stubCmykSession(frame, { deferredEmbed = false } = {}) {
   }, deferredEmbed);
 }
 
-test('CMYK preserves RGB choices and uses one conversion session across parts until final download', { timeout: 20000 }, async t => {
+test('CMYK preserves format choices and uses one conversion session across parts until final download', { timeout: 20000 }, async t => {
   const h = await harness(t);
   await stubCmykSession(h.frame);
   const frames = [first, { ...first, id: 'second', name: 'Page 2' }];
   const links = [{ source: 'prototype', type: 'internal', fromFrameId: first.id, toFrameId: 'second', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
-  const request = await h.start(frames, { pagesPerPart: 1, rasterFormat: 'JPG', colorProfile: 'CMYK', iccBuffer: [1, 2, 3], links });
+  const request = await h.start(frames, { pagesPerPart: 1, rasterFormat: 'JPG', exportType: 'raster', colorProfile: 'CMYK', iccBuffer: [1, 2, 3], links });
   const { jobId } = request;
   assert.equal(request.colorProfile, 'CMYK');
   assert.equal(request.exportType, 'raster');
   assert.equal(request.rasterFormat, 'PNG');
-  assert.equal(await h.frame.locator('#export-vector').isChecked(), true, 'the saved RGB vector setting stays selected');
+  assert.equal(await h.frame.locator('#export-raster').isChecked(), true, 'the selected format matches the export');
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), false);
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
-  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), false);
+  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
   assert.equal(await h.frame.locator('#raster-format-setting').isVisible(), false);
   assert.deepEqual(await h.frame.evaluate(() => ({ mode: activeJob.outputColorMode, profile: activeJob.exportColorProfile, writable: Object.getOwnPropertyDescriptor(activeJob, 'outputColorMode').writable })), { mode: 'CMYK', profile: 'SRGB', writable: false });
   await h.post(h.pageMessage(jobId));
@@ -564,6 +608,8 @@ test('CMYK preserves RGB choices and uses one conversion session across parts un
   assert.equal(annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict).get(PDFLib.PDFName.of('S')).toString(), '/GoToR');
   await h.frame.locator('#color-profile').selectOption('DOCUMENT');
   assert.equal(await h.frame.locator('#export-vector').isEnabled(), true);
+  assert.equal(await h.frame.locator('#export-raster').isChecked(), true, 'changing profile keeps the chosen format');
+  await h.frame.locator('label[for="export-vector"]').click();
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
   assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
@@ -574,7 +620,7 @@ test('CMYK preserves RGB choices and uses one conversion session across parts un
 test('cancelling an in-flight CMYK conversion closes its session only after conversion settles', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await stubCmykSession(h.frame, { deferredEmbed: true });
-  const { jobId } = await h.start([first], { colorProfile: 'CMYK', iccBuffer: [1, 2, 3] });
+  const { jobId } = await h.start([first], { exportType: 'raster', colorProfile: 'CMYK', iccBuffer: [1, 2, 3] });
   await h.post(h.pageMessage(jobId));
   await h.frame.waitForFunction(() => typeof window.finishConversion === 'function');
   await h.frame.locator('#cancel-btn').click();
@@ -636,7 +682,7 @@ test('the bundled offline CMYK engine converts an uploaded printer profile and d
   const h = await harness(t);
   const iccBuffer = fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
   const links = [{ source: 'prototype', type: 'external', fromFrameId: first.id, toUrl: 'https://example.com', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
-  const { jobId } = await h.start([first], { colorProfile: 'CMYK', iccBuffer, links });
+  const { jobId } = await h.start([first], { exportType: 'raster', colorProfile: 'CMYK', iccBuffer, links });
   await h.post(h.pageMessage(jobId));
   await h.waitMessage('page-ack', { jobId });
   const downloaded = h.page.waitForEvent('download');
@@ -669,7 +715,7 @@ test('CMYK works offline with the bundled profile and no file upload', { timeout
     return { bytes: [...fresh.bytes], name: fresh.name };
   });
   const links = [{ source: 'prototype', type: 'external', fromFrameId: first.id, toUrl: 'https://example.com/bundled-cmyk', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
-  const { jobId } = await h.start([first], { colorProfile: 'CMYK', links });
+  const { jobId } = await h.start([first], { exportType: 'raster', colorProfile: 'CMYK', links });
   assert.equal(await h.frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
   assert.equal(await h.frame.locator('#cmyk-profile').isVisible(), false);
   assert.equal(await h.frame.locator('#cmyk-profile-source').isDisabled(), true);
@@ -700,6 +746,7 @@ test('CMYK works offline with the bundled profile and no file upload', { timeout
 test('switching back to bundled CMYK during a pending custom read cannot replace its profile', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('label[for="export-raster"]').click();
   await h.frame.locator('#color-profile').selectOption('CMYK');
   await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
   await h.frame.evaluate(() => {

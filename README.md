@@ -6,7 +6,7 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Development version
 
-This branch is **v9.0.0-dev.5**. The Community release is still v8. Importing or running this development copy does not publish an update.
+This branch is **v9.0.0-dev.6**. The Community release is still v8. Importing or running this development copy does not publish an update.
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
@@ -14,7 +14,7 @@ Other changes include cancellation, detection of edits during export, fresh fram
 
 **Color profile** defaults to **Same as Figma file**, including older files. Explicit sRGB and Display P3 remain available. The chosen profile applies to vector pages, raster pages, and fallbacks; raster profiles are embedded in the PDF, including compressed JPEGs. See [color-profile behavior and validation](docs/COLOR-PROFILES.md).
 
-**CMYK (beta)** works immediately using the built-in basICColor ISO Coated v2 300% profile (FOGRA39 coated paper). An optional custom printer ICC profile can replace it. Conversion stays entirely offline. Links and page dimensions remain intact; text becomes pixels and transparency is flattened onto white. This is not a vector CMYK or PDF/X exporter. See [CMYK setup, limits and validation](docs/CMYK.md), or [where to find profiles on Mac and Windows](docs/ICC-PROFILES.md).
+**Rasterized → CMYK (beta)** works immediately using the built-in basICColor ISO Coated v2 300% profile (FOGRA39 coated paper). An optional custom printer ICC profile can replace it. Conversion stays entirely offline. Links and page dimensions remain intact; text becomes pixels and transparency is flattened onto white. This is not a vector CMYK or PDF/X exporter. See [CMYK setup, limits and validation](docs/CMYK.md), or [where to find profiles on Mac and Windows](docs/ICC-PROFILES.md).
 
 ## Run and develop
 
@@ -28,7 +28,7 @@ npm run build
 1. Open a test design file in Figma Desktop using an account with editing access.
 2. Choose **Plugins → Development → Import plugin from manifest** and select `manifest.json`.
 3. Run **PDF Export with Links — v9 Dev**.
-4. Select frames, arrange the export order, choose Vector or Rasterized, then export.
+4. Select frames, arrange the export order, choose Vector or Rasterized, then a Color profile, and export. Same as Figma file is the default. CMYK currently requires Rasterized; the UI explains incompatible choices without changing your selected format.
 
 Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. Color helpers are in `src/color-profiles.js` and `src/cmyk.js`. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
 

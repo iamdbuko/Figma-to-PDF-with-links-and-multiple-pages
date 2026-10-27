@@ -621,11 +621,32 @@ test('source-profile changes and source events during a legacy JPEG probe abort 
   }
 });
 
-test('CMYK always renders explicit sRGB PNG, with separate output mode and native link metadata', async () => {
+test('Vector with CMYK fails before exporting and releases the job for a corrected request', async () => {
+  for (const rasterFormat of ['PNG', 'JPG']) {
+    const h = harness(); h.frame('a'); h.frame('b');
+    await h.start(['a', 'b'], { colorProfile: 'CMYK', exportType: 'vector', rasterFormat });
+    assert.equal(h.messagesOf('export-error')[0].error, 'CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.');
+    assert.equal(h.messagesOf('export-start').length, 0);
+    assert.equal(h.messagesOf('export-page').length, 0);
+    assert.equal(h.exports.length, 0);
+    assert.equal(h.pageEvents.size, 0);
+    assert.equal(h.events.has('stylechange'), false);
+    assert.equal(h.timers.size, 0);
+    assert.equal(vm.runInContext('activeExportJob', h.context), null);
+    await h.ack(0);
+    assert.equal(h.exports.length, 0);
+    await h.start(['a'], { jobId: 'corrected-raster', colorProfile: 'CMYK', exportType: 'raster', rasterFormat });
+    assert.equal(h.messagesOf('export-error').length, 1);
+    assert.equal(h.messagesOf('export-page')[0].format, 'PNG');
+    assert.equal(h.messagesOf('export-page')[0].outputColorMode, 'CMYK');
+  }
+});
+
+test('Rasterized CMYK renders explicit sRGB PNG, with separate output mode and native link metadata', async () => {
   for (const documentColorProfile of ['SRGB', 'DISPLAY_P3', 'LEGACY']) {
     const h = harness({ documentColorProfile }), frame = h.frame('a'); textLink(h, frame);
     const original = { width: frame.width, height: frame.height, visible: frame.visible, profile: h.figma.root.documentColorProfile };
-    await h.start(['a'], { colorProfile: 'CMYK', exportType: 'vector', rasterFormat: 'JPG' });
+    await h.start(['a'], { colorProfile: 'CMYK', exportType: 'raster', rasterFormat: 'JPG' });
     assert.equal(h.messagesOf('export-error').length, 0);
     assert.deepEqual(h.exports.map(item => [item.format, item.colorProfile]), [['PNG', 'SRGB'], ['PDF', 'SRGB']]);
     const start = h.messagesOf('export-start')[0], page = h.messagesOf('export-page')[0];
@@ -642,7 +663,7 @@ test('CMYK always renders explicit sRGB PNG, with separate output mode and nativ
 
 test('CMYK rejects pages above 8 million pixels before rendering while RGB retains its 32 MP limit', async () => {
   const h = harness(); h.frame('a', { width: 3000, height: 3000 });
-  await h.start(['a'], { colorProfile: 'CMYK', exportType: 'vector' });
+  await h.start(['a'], { colorProfile: 'CMYK', exportType: 'raster' });
   assert.match(h.messagesOf('export-error')[0].error, /CMYK beta is limited to 8 million pixels/);
   assert.equal(h.exports.length, 0);
   assert.equal(h.messagesOf('export-start').length, 0);
@@ -654,7 +675,7 @@ test('CMYK rejects pages above 8 million pixels before rendering while RGB retai
 test('CMYK fitting respects rounded 8 MP and side limits without changing PDF page dimensions', async () => {
   for (const [width, height] of [[3000.1, 3000.3], [100000, 10], [2828.5, 2828.5]]) {
     const h = harness(); h.frame('a', { width, height });
-    await h.start(['a'], { colorProfile: 'CMYK', qualityScale: 2, fitOversized: true });
+    await h.start(['a'], { colorProfile: 'CMYK', exportType: 'raster', qualityScale: 2, fitOversized: true });
     assert.equal(h.messagesOf('export-error').length, 0);
     const scale = h.exports[0].constraint.value;
     const pixelsWide = Math.ceil(width * scale), pixelsHigh = Math.ceil(height * scale);

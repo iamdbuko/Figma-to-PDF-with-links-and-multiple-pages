@@ -612,9 +612,9 @@ async function startExport(msg) {
     if (job.rasterFormat !== 'PNG' && job.rasterFormat !== 'JPG') throw new Error('Choose PNG or JPG for raster pages.');
     if (typeof job.fitOversized !== 'boolean') throw new Error('Fit oversized pages must be enabled or disabled.');
     if (job.outputColorMode === 'CMYK') {
+      if (job.exportType !== 'raster') throw new Error('CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.');
       // The UI converts explicit sRGB samples with the chosen printer profile.
       // PNG avoids a lossy intermediate before that conversion.
-      job.exportType = 'raster';
       job.rasterFormat = 'PNG';
     }
     const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
