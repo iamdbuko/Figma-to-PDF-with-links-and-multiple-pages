@@ -1,7 +1,7 @@
 // Figma PDF export: whole-frame rendering, one acknowledged page at a time.
 // Keep output color mode separate from Figma's rendering profile. Legacy file
 // colors stay DOCUMENT; the assembler reads each page's actual color metadata.
-figma.showUI(__html__, { width: 400, height: 600 });
+figma.showUI(__html__, { width: 520, height: 650 });
 
 let frameData = [];
 let connections = [];

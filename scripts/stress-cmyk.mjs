@@ -14,18 +14,18 @@ const bundled = process.argv.includes('--bundled');
 const profileFile = bundled ? 'assets/color-profiles/ISOcoated_v2_300_bas.ICC' : 'tests/fixtures/color-profiles/synthetic-cmyk-test-only.icc';
 const profile = await fs.readFile(path.join(root, profileFile));
 const output = path.resolve(root, process.argv.find(value => value.startsWith('--output='))?.slice(9) || 'docs/cmyk-stress-results.json');
-const artifacts = path.join(root, 'test-results/combined-large/cmyk', bundled ? 'bundled' : 'custom');
+const artifacts = path.resolve(root, process.argv.find(value => value.startsWith('--artifacts='))?.slice('--artifacts='.length) || path.join('test-results/combined-large/cmyk', bundled ? 'bundled' : 'custom'));
 const hash = value => createHash('sha256').update(value).digest('hex');
 const count = 8, pagesPerPart = 2;
 const dimensions = { width: 1400, height: 1400 }, pixels = { width: 2800, height: 2800 };
 const report = {
   recordedAt: new Date().toISOString(), builtUiSha256: hash(html), platform: process.platform,
   profile: { file: profileFile, source: bundled ? 'BUNDLED' : 'CUSTOM', bytes: profile.length, sha256: hash(profile), purpose: bundled ? 'Built-in basICColor ISO Coated v2 300%, FOGRA39 coated printing. No physical print validation.' : 'Synthetic LittleCMS test-only profile; not a production press profile, print recommendation, or proof.' },
-  scope: 'Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uses the indicated profile source, sends one PNG page at a time, honors part-ready/page-ack, and clicks Continue only after validating each downloaded part. Representative PDFs are saved only under ignored test-results/combined-large/. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.',
+  scope: 'Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uses the indicated profile source, sends one PNG page at a time, honors part-ready/page-ack, and clicks Continue only after validating each downloaded part. Representative PDFs are saved under the indicated artifact directory. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.',
   linkScope: 'Every page combines eight expected annotations: one external prototype URL, two wrapped external text rectangles, three forward/back/jump prototype destinations, and two exact native text NODE destinations. Small synthetic annotation PDFs model Figma URI annotations; they are not Figma-generated geometry. Duplicate scanner inputs must not create duplicates. Exact URLs, rectangles, local page refs and cross-part filenames/page indexes are checked after reloading every saved PDF. Remote destinations are structurally validated; PDF viewer navigation/security behavior is outside this test.',
   memoryScope: 'CDP Runtime.getHeapUsage samples V8 usedSize and backingStorageSize separately. Samples are not total browser/Figma/native decoder/GPU resident memory and can miss transient peaks. The renderer includes a reusable fixture canvas and one encoded PNG. No forced garbage collection is used. Node-side PDF inspection is outside renderer samples. WASM heap length is reported separately and must not be added to backingStorageSize as if disjoint.',
   rasterSource: 'Eight distinct 2800x2800 synthetic landscapes: layered gradients and curved terrain plus smoothly enlarged seeded low-resolution noise. Small transparent and translucent regions exercise white compositing. These are compressible photo-like fixtures, not a real photograph corpus or worst-case random entropy workload. Pages are generated sequentially, only after the prior page/part is acknowledged.',
-  requestedPages: count, pagesPerPart, pageDimensions: dimensions, rasterDimensions: pixels,
+  requestedPages: count, pagesPerPart, pageDimensions: dimensions, rasterDimensions: pixels, artifactDirectory: path.relative(root, artifacts),
   pixelsPerPage: pixels.width * pixels.height, cmykPixelLimit: 8000000,
   retainedDataBudgetBytes: 128 * 1024 * 1024, status: 'running', pages: [], parts: [],
   compressedInputBytes: 0, memorySamples: [], retainedBudgetSamples: [],
@@ -256,18 +256,21 @@ try {
   const fixtures = frames.map((_, index) => pageLinkFixture(index, frames));
   const connections = fixtures.flatMap(item => item.connections);
   await post({ type: 'frames-updated', frames, connections });
+  await frame.locator('#open-settings-btn').click();
+  await frame.locator('#settings-screen').waitFor({ state: 'visible' });
   await frame.locator('label[for="export-raster"]').click();
-  await frame.locator('#color-profile').selectOption('CMYK');
+  await frame.locator('[data-setting="color-profile"][data-value="CMYK"]').click();
   if (bundled) {
     assert.equal(await frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
     assert.equal(await frame.evaluate(() => document.getElementById('cmyk-profile').files.length), 0);
   } else {
-    await frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+    await frame.locator('[data-setting="cmyk-profile-source"][data-value="CUSTOM"]').click();
     await frame.locator('#cmyk-profile').setInputFiles({ name: 'synthetic-test-only.icc', mimeType: 'application/vnd.iccprofile', buffer: profile });
     await frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
   }
-  await frame.locator('#quality-select').selectOption('print-low');
-  await frame.locator('#output-mode').selectOption('parts');
+  await frame.locator('#quality-more-btn').click();
+  await frame.locator('[data-dpi="144"]').click();
+  await frame.locator('[data-setting="output-mode"][data-value="parts"]').click();
   await frame.locator('#pages-per-part').fill(String(pagesPerPart));
   await frame.locator('#export-btn').click();
   const request = await waitMessage('export-pdf');

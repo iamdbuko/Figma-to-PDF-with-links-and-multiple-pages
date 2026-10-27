@@ -12,7 +12,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (key, fallback) => process.argv.find(value => value.startsWith(`--${key}=`))?.slice(key.length + 3) || fallback;
 const inputPath = path.resolve(root, arg('input', 'test-results/combined-large/live/combined-dev6-vector.pdf'));
 const outputPath = path.resolve(root, arg('output', 'docs/vector-cmyk-stress-results.json'));
-const artifacts = path.join(root, 'test-results/vector-cmyk/stress');
+const artifacts = path.resolve(root, arg('artifacts', 'test-results/vector-cmyk/stress'));
 const html = await fs.readFile(process.env.PDF_EXPORT_TEST_UI || path.join(root, 'ui.html'), 'utf8');
 const sourceBytes = await fs.readFile(inputPath);
 const profile = await fs.readFile(path.join(root, 'assets/color-profiles/ISOcoated_v2_300_bas.ICC'));
@@ -229,12 +229,21 @@ async function runScenario(name, pagesPerPart, cancel = false) {
       return message;
     };
     await post({ type: 'frames-updated', frames, connections });
-    await frame.locator('label[for="export-vector"]').click(); await frame.locator('#color-profile').selectOption('CMYK');
+    await frame.locator('#open-settings-btn').click();
+    await frame.locator('#settings-screen').waitFor({ state: 'visible' });
+    await frame.locator('label[for="export-vector"]').click();
+    await frame.locator('[data-setting="color-profile"][data-value="CMYK"]').click();
+    // This benchmark validates original native image pixels; 72 DPI would change its workload.
+    await frame.locator('#quality-more-btn').click();
+    await frame.locator('[data-dpi="original"]').click();
+    assert.equal(await frame.locator('#vector-image-dpi').inputValue(), 'original');
     assert.equal(await frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
-    if (pagesPerPart < count) { await frame.locator('#output-mode').selectOption('parts'); await frame.locator('#pages-per-part').fill(String(pagesPerPart)); }
+    if (pagesPerPart < count) { await frame.locator('[data-setting="output-mode"][data-value="parts"]').click(); await frame.locator('#pages-per-part').fill(String(pagesPerPart)); }
     await frame.locator('#export-btn').click();
     const request = await waitMessage('export-pdf'), { jobId } = request;
     assert.equal(request.exportType, 'vector'); assert.equal(request.colorProfile, 'CMYK');
+    assert.equal(request.qualityScale, 1);
+    assert.equal(await frame.evaluate(() => activeJob.imageDpi), null);
     assert.deepEqual(request.selectedFrames, frames.map(item => item.id));
     await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB', outputColorMode: 'CMYK' });
     await frame.waitForFunction(() => activeJob?.started);

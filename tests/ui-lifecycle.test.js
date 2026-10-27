@@ -46,19 +46,24 @@ async function harness(t) {
     await page.waitForFunction(({ type, fields }) => received.some(message => message.type === type && Object.entries(fields).every(([key, value]) => message[key] === value)), { type, fields }, { timeout: 5000 });
     return page.evaluate(({ type, fields }) => received.findLast(message => message.type === type && Object.entries(fields).every(([key, value]) => message[key] === value)), { type, fields });
   };
+  const openSettings = async () => {
+    if (await frame.locator('#frames-screen').isVisible()) await frame.locator('#open-settings-btn').click();
+    await frame.locator('#settings-screen').waitFor({ state: 'visible' });
+  };
   const start = async (frames = [first], options = {}) => {
     const previousRequests = (await messages('export-pdf')).length;
     await post({ type: 'frames-updated', frames, connections: options.links || [], justAdded: frames.map(item => item.id) });
+    await openSettings();
     if (options.pagesPerPart) {
-      await frame.locator('#output-mode').selectOption('parts');
+      await frame.locator('#output-mode').selectOption('parts', { force: true });
       await frame.locator('#pages-per-part').fill(String(options.pagesPerPart));
     }
-    if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat);
-    if (options.fitOversized) await frame.locator('#fit-oversized').check();
+    if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat, { force: true });
+    if (options.fitOversized) await frame.locator('#fit-oversized').evaluate(input => { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); });
     if (options.exportType) await frame.locator(`label[for="export-${options.exportType}"]`).click();
-    if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile);
+    if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile, { force: true });
     if (options.iccBuffer) {
-      await frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+      await frame.locator('#cmyk-profile-source').selectOption('CUSTOM', { force: true });
       await frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from(options.iccBuffer) });
       await frame.waitForFunction(() => !readingCmykProfile && selectedCmykProfile);
     }
@@ -78,7 +83,7 @@ async function harness(t) {
     const exportColorProfile = profilesByJob.get(jobId) || 'SRGB';
     return { type: 'export-page', jobId, index, frame: item, format, data: data ?? (exportColorProfile === 'DISPLAY_P3_V4' ? p3Png : png), exportColorProfile, outputColorMode: modesByJob.get(jobId) || 'RGB' };
   };
-  return { page, frame, post, messages, waitMessage, start, pageMessage, downloads, errors };
+  return { page, frame, post, messages, waitMessage, openSettings, start, pageMessage, downloads, errors };
 }
 
 test('cancelling during save waits for pending work and prevents any download', { timeout: 15000 }, async t => {
@@ -189,23 +194,24 @@ test('failed PNG reports failure, recovers controls, and never downloads a blank
   assert.deepEqual(h.errors, []);
 });
 
-test('selection updates preserve sorting and checks, render names safely, and never unlock an active export', { timeout: 15000 }, async t => {
+test('selection updates preserve sorting, export every listed frame, render names safely, and never unlock an active export', { timeout: 15000 }, async t => {
   const h = await harness(t);
   const frames = [{ ...first, id: 'ten', name: 'Page 10' }, { ...first, id: 'two', name: 'Page 2' }];
   await h.post({ type: 'frames-updated', frames, connections: [], justAdded: frames.map(item => item.id) });
-  await h.frame.locator('#sort-select').selectOption('az');
-  await h.frame.locator('[data-frame-id="two"] .frame-checkbox').uncheck();
+  await h.frame.locator('#sort-select').selectOption('az', { force: true });
   const malicious = { ...first, id: 'literal', name: '<img src=x onerror="window.injected=true">', parent: '<svg onload=alert(1)>' };
   await h.post({ type: 'frames-updated', frames: [...frames, malicious], connections: [], justAdded: ['literal'] });
   await h.frame.waitForFunction(() => allFrames.length === 3);
   assert.deepEqual(await h.frame.locator('.frame-item').evaluateAll(items => items.map(item => item.dataset.frameId)), ['two', 'ten', 'literal']);
-  assert.equal(await h.frame.locator('[data-frame-id="two"] .frame-checkbox').isChecked(), false);
-  assert.equal(await h.frame.locator('img, svg').count(), 0);
+  assert.equal(await h.frame.locator('.frame-checkbox').count(), 0, 'listed frames do not use inclusion toggles');
+  assert.equal(await h.frame.locator('.frame-name img, .frame-name svg').count(), 0);
+  assert.equal(await h.frame.evaluate(() => window.injected), undefined);
   assert.equal(await h.frame.locator('[data-frame-id="literal"] .frame-name').textContent(), malicious.name);
+  await h.openSettings();
   await h.frame.locator('#export-btn').click();
   const request = await h.waitMessage('export-pdf');
-  assert.deepEqual(request.selectedFrames, ['ten', 'literal']);
-  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[0], malicious], connections: [], exportColorProfile: 'SRGB', outputColorMode: 'RGB' });
+  assert.deepEqual(request.selectedFrames, ['two', 'ten', 'literal']);
+  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[1], frames[0], malicious], connections: [], exportColorProfile: 'SRGB', outputColorMode: 'RGB' });
   await h.frame.waitForFunction(() => activeJob?.started);
   await h.post({ type: 'frames-updated', frames: [...frames, malicious, { ...first, id: 'new' }], connections: [], justAdded: ['new'] });
   await h.post({ type: 'selection-changed', selectedFrameIds: ['ten'], selectedFrameNames: ['Page 10'] });
@@ -214,11 +220,11 @@ test('selection updates preserve sorting and checks, render names safely, and ne
   assert.equal(await h.frame.locator('#sort-select').isDisabled(), true);
   assert.equal(await h.frame.locator('#quality-select').isDisabled(), true);
   assert.equal(await h.frame.locator('#cancel-btn').isEnabled(), true);
-  assert.equal(await h.frame.locator('.frame-checkbox:enabled').count(), 0);
+  assert.equal(await h.frame.locator('#back-btn').isDisabled(), true);
   await h.post({ type: 'export-error', jobId: request.jobId, message: 'Test ended' });
   await h.frame.waitForFunction(() => activeJob === null);
   assert.deepEqual(await h.frame.locator('.frame-item').evaluateAll(items => items.map(item => item.dataset.frameId)), ['two', 'ten', 'literal', 'new']);
-  assert.equal(await h.frame.locator('[data-frame-id="two"] .frame-checkbox').isChecked(), false);
+  assert.equal(await h.frame.locator('.frame-checkbox').count(), 0, 'listed frames do not use inclusion toggles');
   assert.deepEqual(h.errors, []);
 });
 
@@ -434,7 +440,8 @@ test('export initialization rejects unsupported or contradictory color profiles'
   for (const [choice, resolved] of [['SRGB', 'DISPLAY_P3_V4'], ['SRGB', 'DOCUMENT'], ['DOCUMENT', 'LEGACY'], ['DOCUMENT', undefined]]) {
     const h = await harness(t);
     await h.post({ type: 'frames-updated', frames: [first], connections: [], justAdded: [first.id] });
-    await h.frame.locator('#color-profile').selectOption(choice);
+    await h.openSettings();
+    await h.frame.locator('#color-profile').selectOption(choice, { force: true });
     await h.frame.locator('#export-btn').click();
     const { jobId } = await h.waitMessage('export-pdf');
     await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: resolved, outputColorMode: 'RGB' });
@@ -452,19 +459,21 @@ test('export initialization rejects unsupported or contradictory color profiles'
 test('Vector CMYK retains image resolution controls and remembers separate raster settings', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.openSettings();
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
   assert.equal(await h.frame.locator('#color-profile').inputValue(), 'DOCUMENT');
-  assert.equal(await h.frame.locator('.export-type-selector').evaluate(element => element.nextElementSibling.htmlFor), 'color-profile');
-  assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), 'original');
-  assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), true);
-  await h.frame.locator('#vector-image-dpi').selectOption('144');
+  assert.equal(await h.frame.locator('[role="radiogroup"][aria-label="Type"]').evaluate(element => Boolean(element.compareDocumentPosition(document.getElementById('color-profile')) & Node.DOCUMENT_POSITION_FOLLOWING)), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), '72');
+  assert.equal(await h.frame.locator('#quality-row').isVisible(), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').isEnabled(), true);
+  await h.frame.locator('#vector-image-dpi').selectOption('144', { force: true });
   await h.frame.locator('label[for="export-raster"]').click();
-  await h.frame.locator('#raster-format').selectOption('JPG');
-  await h.frame.locator('#quality-select').selectOption('print-high');
-  await h.frame.locator('#fit-oversized').check();
+  await h.frame.locator('#raster-format').selectOption('JPG', { force: true });
+  await h.frame.locator('#quality-select').selectOption('print-high', { force: true });
+  await h.frame.locator('#fit-oversized').evaluate(input => { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); });
   await h.frame.locator('label[for="export-vector"]').click();
-  await h.frame.locator('#color-profile').selectOption('CMYK');
-  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
+  await h.frame.locator('#color-profile').selectOption('CMYK', { force: true });
+  assert.equal(await h.frame.locator('[role="radiogroup"][aria-label="Type"]').isVisible(), true);
   for (const id of ['export-vector', 'export-raster']) assert.equal(await h.frame.locator(`#${id}`).isEnabled(), true);
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true, 'choosing CMYK does not switch the format');
   assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
@@ -474,11 +483,13 @@ test('Vector CMYK retains image resolution controls and remembers separate raste
   for (const id of ['quality-setting', 'fit-oversized-setting', 'raster-format-setting', 'compression-help']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), false);
   for (const id of ['quality-select', 'fit-oversized', 'raster-format']) assert.equal(await h.frame.locator(`#${id}`).isDisabled(), true);
   assert.equal(await h.frame.locator('#vector-image-dpi').isEnabled(), true);
-  assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), true);
+  assert.equal(await h.frame.locator('#quality-row').isVisible(), true);
+  assert.equal(await h.frame.locator('#vector-image-dpi').isEnabled(), true);
   assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), '144');
   await h.frame.locator('label[for="export-raster"]').click();
   assert.equal(await h.frame.locator('#color-profile').inputValue(), 'CMYK');
-  assert.equal(await h.frame.locator('#quality-setting').isVisible(), true);
+  assert.equal(await h.frame.locator('#quality-row').isVisible(), true);
+  assert.equal(await h.frame.locator('#quality-select').isEnabled(), true);
   assert.equal(await h.frame.locator('#vector-resolution-setting').isVisible(), false);
   assert.equal(await h.frame.locator('#fit-oversized-setting').isVisible(), true);
   assert.match(await h.frame.locator('#cmyk-format-help').textContent(), /8 million pixels/);
@@ -487,12 +498,12 @@ test('Vector CMYK retains image resolution controls and remembers separate raste
   await h.frame.locator('#export-raster').focus(); await h.page.keyboard.press('ArrowLeft');
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
   assert.equal(await h.frame.locator('#quality-setting').isVisible(), false);
-  await h.frame.locator('#color-profile').selectOption('DOCUMENT');
+  await h.frame.locator('#color-profile').selectOption('DOCUMENT', { force: true });
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
   assert.equal(await h.frame.locator('#quality-select').inputValue(), 'print-high');
   assert.equal(await h.frame.locator('#fit-oversized').isChecked(), true);
   assert.equal(await h.frame.locator('#quality-setting').isVisible(), false);
-  for (const id of ['vector-resolution-setting', 'fit-oversized-setting', 'raster-format-setting']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), true);
+  for (const id of ['quality-row', 'fit-oversized-setting', 'raster-format-setting']) assert.equal(await h.frame.locator(`#${id}`).isVisible(), true);
   assert.equal(await h.frame.locator('#vector-image-dpi').inputValue(), '144');
   assert.deepEqual(h.errors, []);
 });
@@ -500,11 +511,12 @@ test('Vector CMYK retains image resolution controls and remembers separate raste
 test('custom CMYK requires a readable bounded ICC file and rejects an invalid profile before contacting Figma', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.openSettings();
   await h.frame.locator('label[for="export-raster"]').click();
-  await h.frame.locator('#color-profile').selectOption('CMYK');
+  await h.frame.locator('#color-profile').selectOption('CMYK', { force: true });
   assert.equal(await h.frame.locator('#cmyk-settings').isVisible(), true);
   assert.equal(await h.frame.locator('#export-btn').isEnabled(), true, 'the bundled default is ready without an upload');
-  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM', { force: true });
   assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
   await h.frame.evaluate(() => startExport());
   assert.match(await h.frame.locator('#status-title').textContent(), /CMYK ICC profile/);
@@ -531,9 +543,10 @@ test('custom CMYK requires a readable bounded ICC file and rejects an invalid pr
 test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and never starts the backend', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.openSettings();
   await h.frame.locator('label[for="export-raster"]').click();
-  await h.frame.locator('#color-profile').selectOption('CMYK');
-  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+  await h.frame.locator('#color-profile').selectOption('CMYK', { force: true });
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM', { force: true });
   await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
   await h.frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
   await h.frame.evaluate(() => {
@@ -656,7 +669,7 @@ test('CMYK preserves format choices and uses one conversion session across parts
   assert.equal(await h.frame.locator('#export-raster').isChecked(), true, 'the selected format matches the export');
   assert.equal(await h.frame.locator('#export-vector').isChecked(), false);
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
-  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
+  assert.equal(await h.frame.locator('[role="radiogroup"][aria-label="Type"]').isVisible(), true);
   assert.equal(await h.frame.locator('#raster-format-setting').isVisible(), false);
   assert.deepEqual(await h.frame.evaluate(() => ({ mode: activeJob.outputColorMode, profile: activeJob.exportColorProfile, writable: Object.getOwnPropertyDescriptor(activeJob, 'outputColorMode').writable })), { mode: 'CMYK', profile: 'SRGB', writable: false });
   await h.post(h.pageMessage(jobId));
@@ -674,13 +687,13 @@ test('CMYK preserves format choices and uses one conversion session across parts
   const firstPart = await PDFLib.PDFDocument.load(fs.readFileSync(await h.downloads[0].path()));
   const annotation = firstPart.getPage(0).node.lookup(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray).lookup(0, PDFLib.PDFDict);
   assert.equal(annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict).get(PDFLib.PDFName.of('S')).toString(), '/GoToR');
-  await h.frame.locator('#color-profile').selectOption('DOCUMENT');
+  await h.frame.locator('#color-profile').selectOption('DOCUMENT', { force: true });
   assert.equal(await h.frame.locator('#export-vector').isEnabled(), true);
   assert.equal(await h.frame.locator('#export-raster').isChecked(), true, 'changing profile keeps the chosen format');
   await h.frame.locator('label[for="export-vector"]').click();
   assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
   assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
-  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
+  assert.equal(await h.frame.locator('[role="radiogroup"][aria-label="Type"]').isVisible(), true);
   assert.equal(await h.frame.locator('#raster-format-setting').isVisible(), true);
   assert.deepEqual(h.errors, []);
 });
@@ -711,6 +724,7 @@ test('missing or inconsistent output color modes fail before page conversion', {
     let jobId;
     if (phase === 'start') {
       await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+      await h.openSettings();
       await h.frame.locator('#export-btn').click();
       ({ jobId } = await h.waitMessage('export-pdf'));
       await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: 'SRGB' });
@@ -927,16 +941,17 @@ test('two converted vector pages in one PDF share one exact built-in CMYK profil
 test('switching back to bundled CMYK during a pending custom read cannot replace its profile', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.openSettings();
   await h.frame.locator('label[for="export-raster"]').click();
-  await h.frame.locator('#color-profile').selectOption('CMYK');
-  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+  await h.frame.locator('#color-profile').selectOption('CMYK', { force: true });
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM', { force: true });
   await h.frame.evaluate(() => {
     File.prototype.arrayBuffer = function () { return new Promise(resolve => { window.finishProfileRead = () => resolve(Uint8Array.of(1, 2, 3).buffer); }); };
   });
   await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'slow.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
   await h.frame.waitForFunction(() => typeof window.finishProfileRead === 'function');
   assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
-  await h.frame.locator('#cmyk-profile-source').selectOption('BUNDLED');
+  await h.frame.locator('#cmyk-profile-source').selectOption('BUNDLED', { force: true });
   assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
   await h.frame.evaluate(() => window.finishProfileRead());
   await h.frame.waitForFunction(() => !readingCmykProfile);
@@ -965,19 +980,24 @@ test('profile help opens with keyboard and explains Mac and Windows locations of
   const h = await harness(t);
   const requests = [];
   h.page.on('request', request => requests.push(request.url()));
-  await h.frame.locator('#color-profile').selectOption('CMYK');
+  await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.openSettings();
+  await h.frame.locator('#color-profile').selectOption('CMYK', { force: true });
   const help = h.frame.locator('#cmyk-profile-help');
-  assert.equal(await help.evaluate(element => element.open), false);
-  await help.locator('summary').focus();
+  const dialog = h.frame.locator('#profile-help-dialog');
+  const toggle = h.frame.locator('#profile-help-toggle');
+  assert.equal(await dialog.isVisible(), false);
+  await toggle.focus();
   await h.page.keyboard.press('Enter');
-  assert.equal(await help.evaluate(element => element.open), true);
+  assert.equal(await dialog.evaluate(element => element.open), true);
+  assert.equal(await help.isVisible(), true);
   const text = await help.textContent();
   for (const location of ['/Library/ColorSync/Profiles', '~/Library/ColorSync/Profiles', '/System/Library/ColorSync/Profiles', '%WINDIR%\\System32\\spool\\drivers\\color']) assert.ok(text.includes(location), location);
   assert.match(text, /\.icc/); assert.match(text, /\.icm/);
   assert.match(text, /CMYK/); assert.match(text, /RGB/); assert.match(text, /Downloads/);
-  await help.locator('summary').focus();
-  await h.page.keyboard.press('Enter');
-  assert.equal(await help.evaluate(element => element.open), false);
+  await h.page.keyboard.press('Escape');
+  assert.equal(await dialog.isVisible(), false);
+  assert.equal(await toggle.evaluate(element => element === document.activeElement), true);
   assert.deepEqual(requests, []);
   assert.deepEqual(h.errors, []);
 });

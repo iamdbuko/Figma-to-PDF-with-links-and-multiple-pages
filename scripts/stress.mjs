@@ -11,10 +11,10 @@ import { chromium } from '@playwright/test';
 import { PDFDocument, PDFName, PDFArray, PDFDict } from 'pdf-lib';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const html = await fs.readFile(path.join(root, 'ui.html'), 'utf8');
+const html = await fs.readFile(process.env.PDF_EXPORT_TEST_UI || path.join(root, 'ui.html'), 'utf8');
 const nativePdf = await fs.readFile(path.join(root, 'tests/fixtures/native-links.pdf'));
 const transferLimit = 128 * 1024 * 1024;
-const output = path.join(root, 'docs/stress-results.json');
+const output = path.resolve(root, process.argv.find(value => value.startsWith('--output='))?.slice('--output='.length) || 'docs/stress-results.json');
 const hash = value => createHash('sha256').update(value).digest('hex');
 const browser = await chromium.launch({ headless: true });
 let report = {
@@ -76,9 +76,20 @@ async function runScenario(name, count, format, lowTexture = false) {
     // Duplicate names deliberately verify destination identity comes from frame IDs.
     const connections = frames.map((item, i) => ({ source: 'prototype', type: 'internal', fromFrameId: item.id, toFrameId: frames[(i + 1) % count].id, elementBounds: { x: 10, y: 10, width: 40, height: 20 } }));
     await post({ type: 'frames-updated', frames, connections, justAdded: frames.map(item => item.id) });
+    await frame.locator('#open-settings-btn').click();
+    await frame.locator('#settings-screen').waitFor({ state: 'visible' });
+    // Retain the historical harness's native/vector path and unmodified image pixels.
+    // Raster pages below remain injected fixture messages, not fresh Figma rendering.
+    await frame.locator('label[for="export-vector"]').click();
+    await frame.locator('#quality-more-btn').click();
+    await frame.locator('[data-dpi="original"]').click();
+    assert.equal(await frame.locator('#vector-image-dpi').inputValue(), 'original');
     await frame.locator('#export-btn').click();
     const request = await waitForMessage('export-pdf');
     assert.deepEqual(request.selectedFrames, frames.map(item => item.id));
+    assert.equal(request.exportType, 'vector');
+    assert.equal(request.qualityScale, 1);
+    assert.equal(await frame.evaluate(() => activeJob.imageDpi), null);
     const jobId = request.jobId;
     await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB', outputColorMode: 'RGB' });
     await frame.waitForFunction(() => activeJob?.started);

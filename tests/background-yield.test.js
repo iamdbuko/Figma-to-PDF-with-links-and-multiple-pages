@@ -40,9 +40,11 @@ async function harness(t, mode, dpi = '72') {
     return (await messages(type)).at(-1);
   };
   await post({ type: 'frames-updated', frames: [frameInfo], connections: [], justAdded: [frameInfo.id] });
+  await frame.locator('#open-settings-btn').click();
+  await frame.locator('#settings-screen').waitFor({ state: 'visible' });
   await frame.locator('label[for="export-vector"]').click();
-  await frame.locator('#vector-image-dpi').selectOption(dpi);
-  await frame.locator('#color-profile').selectOption(mode === 'CMYK' ? 'CMYK' : 'DOCUMENT');
+  await frame.locator('#vector-image-dpi').selectOption(dpi, { force: true });
+  await frame.locator('#color-profile').selectOption(mode === 'CMYK' ? 'CMYK' : 'DOCUMENT', { force: true });
   await frame.locator('#export-btn').click();
   const { jobId } = await wait('export-pdf');
   await post({ type: 'export-start', jobId, frames: [frameInfo], connections: [], exportColorProfile: 'SRGB', outputColorMode: mode });

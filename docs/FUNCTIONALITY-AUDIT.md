@@ -1,5 +1,7 @@
 # Published v8 → v9 functionality audit
 
+The table below records the dev.8 audit. **Dev.9 intentionally changes the interface** to two screens, exports every listed frame (remove unwanted rows via the context menu), defaults to 72 DPI, and moves static help to tooltips. It replaces the manual theme switch with the requested light design. Export-engine behavior remains covered by the existing tests. See [the interface update](INTERFACE.md).
+
 Audit baseline: recovered published `v8-recovered` and dev.7 commit `692e786813a1a677c6bbee6253eb4e266f199c6c`, with the current audit follow-ups identified below. This is a code/coverage comparison, not a claim that every option combination was exercised in native Figma. References such as `v8-recovered:code.js:1196` identify the baseline file and line; current entry-point names remain useful as line numbers change.
 
 | Feature | Published v8 | Dev.7 comparison / audit result |

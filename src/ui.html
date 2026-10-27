@@ -4,785 +4,127 @@
   <meta charset="utf-8">
   <title>PDF Export with Links</title>
   <style>
-    /* Light mode variables (default) */
-    :root {
-      --bg-primary: #fff;
-      --bg-secondary: #f8f9fa;
-      --bg-hover: #f8f8f8;
-      --bg-empty: #fff;
-
-      --text-primary: #333;
-      --text-secondary: #666;
-      --text-tertiary: #999;
-
-      --border-primary: #e0e0e0;
-      --border-secondary: #ddd;
-      --border-light: #f0f0f0;
-      --border-section: #e9ecef;
-
-      --accent-blue: #1976d2;
-      --accent-blue-hover: #1565c0;
-      --accent-blue-bg: #e3f2fd;
-      --accent-blue-border: #90caf9;
-
-      --accent-green-bg: #e8f5e8;
-      --accent-green-text: #2e7d2e;
-      --accent-green-border: #a5d6a5;
-      --accent-green: #4caf50;
-
-      --accent-red-bg: #ffe6e6;
-      --accent-red-text: #d32f2f;
-      --accent-red-border: #ffb3b3;
-      --accent-red: #ff4444;
-
-      --accent-purple-bg: #f3e5f5;
-      --accent-purple-text: #7b1fa2;
-      --accent-purple-border: #ce93d8;
-
-      --accent-orange-bg: #fff3e0;
-      --accent-orange-text: #e65100;
-      --accent-orange-border: #ffcc80;
-
-      --button-disabled: #ccc;
-      --button-secondary-bg: #f5f5f5;
-      --button-secondary-hover: #eeeeee;
-
-      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Dark mode variables */
-    [data-theme="dark"] {
-      --bg-primary: #1e1e1e;
-      --bg-secondary: #2a2a2a;
-      --bg-hover: #333;
-      --bg-empty: #252525;
-
-      --text-primary: #e0e0e0;
-      --text-secondary: #a0a0a0;
-      --text-tertiary: #707070;
-
-      --border-primary: #404040;
-      --border-secondary: #505050;
-      --border-light: #353535;
-      --border-section: #3a3a3a;
-
-      --accent-blue: #2196f3;
-      --accent-blue-hover: #1976d2;
-      --accent-blue-bg: #1e3a5f;
-      --accent-blue-border: #2c5282;
-
-      --accent-green-bg: #1b3a1b;
-      --accent-green-text: #66bb6a;
-      --accent-green-border: #2e7d32;
-      --accent-green: #4caf50;
-
-      --accent-red-bg: #3a1b1b;
-      --accent-red-text: #ef5350;
-      --accent-red-border: #7d2e2e;
-      --accent-red: #f44336;
-
-      --accent-purple-bg: #2e1a33;
-      --accent-purple-text: #ba68c8;
-      --accent-purple-border: #7b1fa2;
-
-      --accent-orange-bg: #3a2a1a;
-      --accent-orange-text: #ffb74d;
-      --accent-orange-border: #e65100;
-
-      --button-disabled: #555;
-      --button-secondary-bg: #333;
-      --button-secondary-hover: #404040;
-
-      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    * {
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    }
-
-    body {
-      margin: 0;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 14px;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-    }
-
-    .controls-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border-primary);
-    }
-
-    .controls-top .btn {
-      padding: 8px 12px;
-      font-size: 12px;
-    }
-
-    .controls-top .left-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sort-select {
-      padding: 8px 12px;
-      padding-right: 28px;
-      border: 1px solid var(--border-secondary);
-      border-radius: 4px;
-      font-size: 12px;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-    }
-
-    [data-theme="dark"] .sort-select {
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
-    }
-
-    /* Theme toggle switch */
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .theme-toggle-label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      user-select: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .theme-icon {
-      font-size: 14px;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--border-secondary);
-      transition: .3s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
-      background-color: var(--bg-primary);
-      transition: .3s;
-      border-radius: 50%;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    input:checked + .slider {
-      background-color: var(--accent-blue);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
-    .frame-list {
-      border: 1px solid var(--border-primary);
-      border-radius: 4px;
-      max-height: 360px;
-      overflow-y: auto;
-      background: var(--bg-primary);
-      margin-bottom: 16px;
-    }
-
-    .frame-item {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid var(--border-light);
-      cursor: move;
-      user-select: none;
-      transition: background 0.2s;
-      position: relative;
-    }
-
-    .frame-item:last-child {
-      border-bottom: none;
-    }
-
-    .frame-item:hover {
-      background: var(--bg-hover);
-    }
-
-    .frame-item.dragging {
-      opacity: 0.5;
-      background: var(--accent-blue-bg);
-    }
-
-    .frame-item.drag-over {
-      background: var(--accent-green-bg);
-      border-top: 2px solid var(--accent-green);
-    }
-
-    .frame-item.just-added {
-      animation: highlight 2s ease-out;
-    }
-
-    @keyframes highlight {
-      0% {
-        background: var(--accent-green-bg);
-        border-left: 3px solid var(--accent-green);
-      }
-      100% {
-        background: transparent;
-        border-left: none;
-      }
-    }
-
-    .frame-item.selected-in-figma {
-      background: var(--accent-blue-bg);
-      border-left: 3px solid var(--accent-blue);
-    }
-
-    .frame-checkbox {
-      margin-right: 12px;
-      accent-color: var(--accent-blue);
-    }
-
-    .frame-info {
-      flex: 1;
-    }
-
-    .frame-name {
-      font-weight: 500;
-      color: var(--text-primary);
-      margin-bottom: 2px;
-    }
-
-    .frame-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .connections-count {
-      font-size: 11px;
-      background: var(--accent-blue-bg);
-      color: var(--accent-blue);
-      padding: 2px 6px;
-      border-radius: 10px;
-      margin-left: 8px;
-    }
-
-    .no-links {
-      font-size: 11px;
-      background: var(--bg-secondary);
-      color: var(--text-secondary);
-      padding: 2px 6px;
-      border-radius: 10px;
-      margin-left: 8px;
-    }
-
-    .drag-handle {
-      color: var(--text-tertiary);
-      margin-left: 8px;
-      cursor: move;
-    }
-
-    .frame-item .remove-btn {
-      background: var(--accent-red);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
-      cursor: pointer;
-      margin-left: 8px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .frame-item:hover .remove-btn {
-      opacity: 1;
-    }
-
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 0;
-      align-items: center;
-    }
-
-    .btn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: var(--accent-blue);
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--accent-blue-hover);
-    }
-
-    .btn-primary:disabled {
-      background: var(--button-disabled);
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .btn-secondary {
-      background: var(--button-secondary-bg);
-      color: var(--text-primary);
-      border: 1px solid var(--border-secondary);
-    }
-
-    .btn-secondary:hover {
-      background: var(--button-secondary-hover);
-    }
-
-    /* Export panel */
-    .export-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 16px;
-      padding: 12px;
-      background: var(--bg-secondary);
-      border-radius: 6px;
-      border: 1px solid var(--border-primary);
-    }
-
-    .export-type-selector {
-      display: flex;
-      align-items: center;
-    }
-
-    .export-type-options {
-      display: inline-flex;
-      border: 1px solid var(--border-primary);
-      border-radius: 6px;
-      overflow: hidden;
-      background: var(--bg-primary);
-    }
-
-    .export-type-option {
-      display: flex;
-      align-items: center;
-      position: relative;
-    }
-
-    .export-type-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .export-type-option label {
-      padding: 6px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      user-select: none;
-      color: var(--text-secondary);
-      border-right: 1px solid var(--border-primary);
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .export-type-option:last-child label {
-      border-right: none;
-    }
-
-    .export-type-option input[type="radio"]:checked + label {
-      background: var(--accent-blue);
-      color: #fff;
-    }
-
-    .export-type-option input[type="radio"]:focus-visible + label { outline: 2px solid var(--text-primary); outline-offset: -3px; }
-
-    /* Quality selector styles */
-    .quality-selector {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .quality-label {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .quality-select {
-      padding: 8px 12px;
-      padding-right: 28px;
-      border: 1px solid var(--border-secondary);
-      border-radius: 4px;
-      font-size: 13px;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      min-width: 180px;
-    }
-
-    .quality-select:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background-color: var(--bg-secondary);
-    }
-
-    .quality-select optgroup {
-      font-weight: 600;
-      font-size: 12px;
-      color: var(--text-secondary);
-      padding: 4px 0;
-    }
-
-    .quality-select option {
-      padding: 6px 8px;
-      font-size: 13px;
-    }
-
-    [data-theme="dark"] .quality-select {
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
-    }
-
-    .quality-select:hover:not(:disabled) {
-      border-color: var(--text-tertiary);
-    }
-
-    .quality-select:focus {
-      outline: none;
-      border-color: var(--accent-blue);
-      box-shadow: 0 0 0 2px var(--accent-blue-bg);
-    }
-
-    .status {
-      margin-top: 0;
-      padding: 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      display: none;
-    }
-
-    .status-title {
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .status-log {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-height: 140px;
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .status-line {
-      font-size: 12px;
-      color: inherit;
-      opacity: 0.9;
-    }
-
-    .status.success {
-      background: var(--accent-green-bg);
-      color: var(--accent-green-text);
-      border: 1px solid var(--accent-green-border);
-    }
-
-    .status.error {
-      background: var(--accent-red-bg);
-      color: var(--accent-red-text);
-      border: 1px solid var(--accent-red-border);
-    }
-
-    .status.info {
-      background: var(--accent-blue-bg);
-      color: var(--accent-blue);
-      border: 1px solid var(--accent-blue-border);
-    }
-
-    .status.warning {
-      background: var(--accent-orange-bg);
-      color: var(--accent-orange-text);
-      border: 1px solid var(--accent-orange-border);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-      background: var(--bg-empty);
-      border-radius: 4px;
-      margin-bottom: 16px;
-    }
-
-    .empty-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .empty-state h3 {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-      color: var(--text-primary);
-    }
-
-    .empty-state p {
-      margin: 0;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .selection-info {
-      background: var(--accent-blue-bg);
-      border: 1px solid var(--accent-blue-border);
-      border-radius: 4px;
-      padding: 12px;
-      margin-bottom: 16px;
-      font-size: 12px;
-      color: var(--accent-blue);
-    }
-
-    /* Scrollbar styles for dark mode */
-    [data-theme="dark"] ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    [data-theme="dark"] ::-webkit-scrollbar-track {
-      background: var(--bg-secondary);
-    }
-
-    [data-theme="dark"] ::-webkit-scrollbar-thumb {
-      background: var(--border-secondary);
-      border-radius: 4px;
-    }
-
-    [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-tertiary);
-    }
-
-    /* Batch warning modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-overlay.show {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--bg-primary);
-      border-radius: 8px;
-      padding: 24px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border-primary);
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .modal-icon {
-      font-size: 24px;
-    }
-
-    .modal-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0;
-    }
-
-    .modal-content {
-      color: var(--text-secondary);
-      font-size: 13px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    .modal-content strong {
-      color: var(--text-primary);
-      font-weight: 600;
-    }
-
-    .batch-list {
-      background: var(--bg-secondary);
-      border-radius: 4px;
-      padding: 12px;
-      margin: 12px 0;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
-    .batch-item {
-      padding: 6px 0;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .modal-actions .btn {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-    .export-actions { display: flex; gap: 8px; }
-    #cancel-btn { margin-top: 8px; width: 100%; }
-    [hidden] { display: none !important; }
-    button:disabled, select:disabled, input:disabled { cursor: default; opacity: .6; }
-    .export-help { color: var(--text-secondary); font-size: 12px; line-height: 1.5; margin: 10px 0; }
-    .export-setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; font-size: 12px; }
-    .export-setting select, .export-setting input[type="number"] { max-width: 190px; padding: 6px; border: 1px solid var(--border-secondary); border-radius: 4px; color: var(--text-primary); background: var(--bg-primary); }
-    #pages-per-part { width: 65px; }
-    #continue-btn { width: 100%; margin-top: 8px; }
-    .frame-name { overflow-wrap: anywhere; }
-    #cmyk-profile-help summary, #cmyk-profile-help a { color: var(--accent-blue); text-decoration: underline; cursor: pointer; }
-    #cmyk-profile-help summary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
-    #cmyk-profile-help code { overflow-wrap: anywhere; }
-    #cmyk-bundled-description, #cmyk-profile-status { overflow-wrap: anywhere; }
-    .cmyk-profile-paths { margin: 6px 0; padding-left: 18px; }
+    :root { color-scheme: light; --bg:#fff; --ink:#171717; --muted:#969696; --soft:#f4f4f4; --hover:#f0f0f0; --line:#e4e4e4; --focus:#666; --error:#b3261e; }
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body { margin:0; padding:12px; background:var(--bg); color:var(--ink); font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+    button, input, select { font:inherit; color:inherit; }
+    button, select, label[for], summary { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button:disabled, input:disabled, select:disabled { cursor:default; opacity:.4; }
+    button, select { border:0; background:none; }
+    button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+    [hidden] { display:none !important; }
+    .screen { height:100%; min-height:0; display:flex; flex-direction:column; gap:10px; }
+    .frame-card { flex:1; min-height:0; border:1px solid var(--line); border-radius:6px; padding:7px 6px; display:flex; flex-direction:column; }
+    .list-toolbar { display:flex; align-items:center; min-height:30px; padding:0 4px; flex:none; }
+    .sort-select { appearance:none; padding:4px 7px; border-radius:6px; cursor:pointer; width:94px; background:transparent; }
+    .sort-select:hover { background:var(--soft); }
+    .frame-list { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#aaa transparent; }
+    .frame-item { display:flex; align-items:center; gap:16px; min-height:34px; padding:6px 10px; border-radius:8px; cursor:grab; user-select:none; position:relative; }
+    .frame-item:hover, .frame-item.context-open { background:var(--soft); }
+    .frame-item:active { cursor:grabbing; }
+    .frame-item.dragging { opacity:.35; }
+    .frame-item.drag-over { box-shadow:inset 0 2px var(--muted); }
+    .frame-info { flex:1; min-width:0; }
+    .frame-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .connections-count, .no-links { flex:none; padding-right:18px; white-space:nowrap; }
+    .no-links { color:var(--muted); }
+    .empty-state { flex:1; display:grid; place-content:center; text-align:center; color:var(--muted); font-size:14px; }
+    .empty-state p { margin:0; }
+    .footer { display:flex; gap:5px; flex:none; }
+    .footer .btn { width:50%; min-height:36px; padding:6px 12px; border-radius:9px; background:var(--soft); text-align:center; }
+    .footer .btn:hover:not(:disabled) { background:#eaeaea; }
+    .settings-content { flex:1; min-height:0; overflow:auto; padding:4px 7px 12px; scrollbar-width:thin; }
+    .setting-row { display:grid; grid-template-columns:145px minmax(0,1fr); gap:12px; align-items:start; min-height:50px; }
+    .setting-label { padding:8px 0; cursor:help; align-self:start; width:fit-content; border-radius:3px; }
+    .options { display:flex; gap:2px; flex-wrap:wrap; align-items:center; min-width:0; }
+    .pill, .type-choice label { display:inline-block; border-radius:9px; padding:8px 14px; min-height:34px; white-space:nowrap; background:transparent; cursor:pointer; }
+    .pill[aria-pressed="true"], .type-choice input:checked + label { background:var(--soft); }
+    .pill:hover:not(:disabled), .type-choice label:hover { background:var(--hover); }
+    .type-choice { position:relative; }
+    .type-choice input { position:absolute; opacity:0; width:1px; height:1px; }
+    .type-choice input:focus-visible + label { outline:2px solid var(--focus); outline-offset:2px; }
+    .type-choice input:disabled + label { opacity:.4; cursor:default; }
+    .quality-options { position:relative; }
+    .quality-more { display:inline-flex; align-items:center; gap:7px; }
+    .quality-more::after { content:''; width:5px; height:5px; border-right:1px solid; border-bottom:1px solid; transform:rotate(45deg) translateY(-2px); opacity:.55; }
+    .popover { position:fixed; z-index:30; min-width:130px; max-width:calc(100vw - 24px); border:1px solid var(--line); border-radius:9px; padding:5px; background:var(--bg); box-shadow:0 5px 20px #00000015; }
+    .popover button { display:block; width:100%; text-align:left; padding:7px 10px; border-radius:5px; white-space:nowrap; }
+    .popover button:hover, .popover button:focus-visible { background:var(--soft); }
+    .popover button[aria-checked="true"]::after { content:'✓'; margin-left:20px; float:right; }
+    .sub-setting { margin:0 0 8px; }
+    .number-input { width:68px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+    .help-icon { border-radius:50%; font-size:11px; border:1px solid #b7b7b7; color:#777; width:16px; height:16px; line-height:14px; padding:0; margin-left:6px; vertical-align:middle; }
+    .profile-choice { display:flex; align-items:center; min-width:0; width:100%; }
+    .file-label { display:block; min-width:0; max-width:100%; position:relative; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-label input { position:absolute; width:1px; height:1px; opacity:0; }
+    .file-label:focus-within { outline:2px solid var(--focus); outline-offset:2px; }
+    #cmyk-custom-profile { margin-bottom:10px; }
+    #cmyk-profile-status { font-size:12px; margin:0 0 8px 157px; color:var(--error); overflow-wrap:anywhere; }
+    .help-copy { display:none !important; }
+    .status { display:none; margin:14px 0 0; padding:12px; background:var(--soft); border-radius:9px; font-size:12px; overflow-wrap:anywhere; }
+    .status.error { color:var(--error); }
+    .status-title { font-weight:500; }
+    .status-log { margin-top:5px; max-height:150px; overflow:auto; }
+    .status-log:empty { display:none; }
+    .status-log-line + .status-log-line { margin-top:4px; }
+    #tooltip { position:fixed; z-index:50; max-width:min(320px,calc(100vw - 20px)); padding:9px 11px; font-size:12px; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere; color:#fff; background:#292929; border-radius:7px; box-shadow:0 3px 12px #0002; user-select:text; max-height:calc(100vh - 20px); overflow:auto; }
+    dialog { padding:20px; width:min(420px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; border:1px solid var(--line); border-radius:12px; color:var(--ink); font-size:13px; }
+    dialog::backdrop { background:#0004; }
+    dialog h2 { font-size:16px; margin:0 0 12px; font-weight:600; }
+    dialog p { margin:10px 0; }
+    dialog ul { padding-left:18px; }
+    dialog code { font-size:11px; overflow-wrap:anywhere; }
+    dialog a { color:inherit; }
+    dialog .btn { background:var(--soft); border-radius:8px; padding:7px 15px; float:right; }
+    @media (max-width:440px) { body { font-size:13px; } .setting-row { grid-template-columns:115px minmax(0,1fr); gap:7px; } .pill,.type-choice label { padding:8px 9px; } #cmyk-profile-status { margin-left:122px; } }
+    @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
   </style>
 </head>
-<body data-theme="dark">
-  <div class="controls-top">
-    <div class="left-controls">
-      <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
-      <select id="sort-select" class="sort-select" title="Sort frames" aria-label="Sort frames">
-        <option value="none" selected>Sort</option>
-        <option value="az">Name A–Z</option>
-        <option value="za">Name Z–A</option>
-      </select>
+<body>
+  <section id="frames-screen" class="screen" aria-label="Select frames">
+    <div class="frame-card">
+      <div class="list-toolbar"><select id="sort-select" class="sort-select" aria-label="Sort frames" data-tooltip="Sort frame names. You can also drag rows to set the page order."><option value="none" selected>Sort</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option></select></div>
+      <div id="frame-list" class="frame-list" aria-label="Frames to export" hidden></div>
+      <div id="empty-state" class="empty-state"><p>Select frames in Figma</p></div>
     </div>
-    <div class="theme-toggle">
-      <label class="theme-toggle-label" for="theme-switch"><span class="theme-icon">🌙</span><span id="theme-label">Dark</span></label>
-      <label class="switch"><input type="checkbox" id="theme-switch" checked aria-label="Dark theme"><span class="slider"></span></label>
+    <footer class="footer"><button id="clear-list-btn" class="btn" data-tooltip="Remove all frames from this list. Your Figma layers stay unchanged.">Clear list</button><button id="open-settings-btn" class="btn" disabled data-tooltip="Choose export settings for the listed frames.">Export</button></footer>
+  </section>
+  <section id="settings-screen" class="screen export-panel" aria-label="Export settings" hidden>
+    <div class="settings-content">
+      <div class="setting-row" data-help="export-help"><span class="setting-label" tabindex="0">Type</span><div class="options" role="radiogroup" aria-label="Type"><span class="type-choice"><input type="radio" id="export-vector" name="export-type" value="vector" checked><label for="export-vector" data-tooltip="Keep supported text and shapes vector. Quality controls embedded images; unsupported RGB pages can use a raster fallback.">Vector</label></span><span class="type-choice"><input type="radio" id="export-raster" name="export-type" value="raster"><label for="export-raster" data-tooltip="Turn each page into an image at the selected quality. Page and web links remain clickable.">Rasterized</label></span></div></div>
+      <div class="setting-row" data-help="color-profile-help cmyk-format-help"><span class="setting-label" tabindex="0">Color profile</span><div class="options" role="group" aria-label="Color profile"><button class="pill" data-setting="color-profile" data-value="DOCUMENT" data-tooltip="Preserve the Figma file’s exported color profile, including older files.">As file</button><button class="pill" data-setting="color-profile" data-value="SRGB" data-tooltip="Use sRGB for broad compatibility across screens and PDF viewers.">sRGB</button><button class="pill" data-setting="color-profile" data-value="DISPLAY_P3_V4" data-tooltip="Use Display P3 for a wider range of colors. Appearance depends on the screen and PDF viewer.">Display P3</button><button class="pill" data-setting="color-profile" data-value="CMYK" data-tooltip="Convert colors using a built-in or custom printer profile. CMYK is experimental; some effects require Rasterized. Review the exported PDF before printing.">CMYK</button></div><select id="color-profile" hidden aria-label="Color profile value"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></div>
+      <div class="setting-row" id="quality-row" data-help="vector-resolution-help export-help"><span class="setting-label" tabindex="0">Quality</span><div class="options quality-options" role="group" aria-label="Quality"><button class="pill" data-dpi="36">36 dpi</button><button class="pill" data-dpi="72">72 dpi</button><button class="pill" data-dpi="108">108 dpi</button><button id="quality-more-btn" class="pill quality-more" aria-haspopup="menu" aria-expanded="false" aria-controls="quality-more-menu">More</button></div></div>
+      <div id="vector-resolution-setting" hidden><select id="vector-image-dpi" aria-label="Image resolution"><option value="original">Original from Figma</option><option value="36">36 DPI</option><option value="72" selected>72 DPI</option><option value="108">108 DPI</option><option value="144">144 DPI</option><option value="216">216 DPI</option><option value="288">288 DPI</option><option value="300">300 DPI</option></select></div>
+      <div id="quality-setting" hidden><label id="quality-label" for="quality-select">Page resolution</label><select id="quality-select"><option value="screen-low">36 DPI</option><option value="screen-medium" selected>72 DPI</option><option value="screen-high">108 DPI</option><option value="print-low">144 DPI</option><option value="print-medium">216 DPI</option><option value="print-high">288 DPI</option><option value="print-highest">300 DPI</option></select></div>
+      <div class="setting-row" id="raster-format-setting" data-help="compression-help"><span class="setting-label" tabindex="0">Compression</span><div class="options" role="group" aria-label="Compression"><button class="pill" data-setting="raster-format" data-value="PNG">PNG</button><button class="pill" data-setting="raster-format" data-value="JPG">JPEG</button></div><select id="raster-format" hidden aria-label="Raster compression value"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></div>
+      <div id="cmyk-settings" hidden>
+        <div class="setting-row" data-help="cmyk-bundled-description cmyk-format-help"><span class="setting-label" tabindex="0">CMYK profile<button id="profile-help-toggle" class="help-icon" aria-label="Where can I find ICC profiles?" data-tooltip="Ask your printer or paper provider for the CMYK profile for your printer and paper. Choose the .icc or .icm file directly; no installation is needed.&#10;&#10;Mac: in Finder, press Shift–Command–G.&#10;/Library/ColorSync/Profiles&#10;~/Library/ColorSync/Profiles&#10;/System/Library/ColorSync/Profiles&#10;&#10;Windows: paste into File Explorer.&#10;%WINDIR%\System32\spool\drivers\color&#10;&#10;Display profiles may be RGB; choose a CMYK output profile. Click to open these instructions and the reference link.">?</button></span><div class="options" role="group" aria-label="CMYK profile"><button class="pill" data-setting="cmyk-profile-source" data-value="BUNDLED">Built-in</button><button class="pill" data-setting="cmyk-profile-source" data-value="CUSTOM">Custom</button></div><select id="cmyk-profile-source" hidden aria-label="CMYK profile value"><option value="BUNDLED">Built-in profile</option><option value="CUSTOM">Custom printer profile</option></select></div>
+        <p id="cmyk-load-error" class="status error" role="alert" hidden></p>
+        <div id="cmyk-custom-profile" hidden><div class="setting-row" data-help="cmyk-file-help"><span class="setting-label" tabindex="0">Profile file</span><div class="profile-choice"><label class="pill file-label" for="cmyk-profile"><span id="profile-file-label">Choose profile</span><input id="cmyk-profile" type="file" accept=".icc,.icm" aria-label="Printer ICC profile"></label></div></div><p id="cmyk-profile-status" role="status" aria-live="polite" hidden></p></div>
+      </div>
+      <div class="setting-row" id="fit-oversized-setting" data-help="fit-oversized-help"><span class="setting-label" tabindex="0">Lower resolution</span><div class="options" role="group" aria-label="Lower resolution"><button class="pill" data-setting="fit-oversized" data-value="false">Don’t allow</button><button class="pill" data-setting="fit-oversized" data-value="true">Allow</button></div><input type="checkbox" id="fit-oversized" hidden aria-label="Fit oversized raster pages"></div>
+      <div class="setting-row" data-help="parts-help budget-help"><span class="setting-label" tabindex="0">Output</span><div class="options" role="group" aria-label="Output"><button class="pill" data-setting="output-mode" data-value="single">Single PDF</button><button class="pill" data-setting="output-mode" data-value="parts">Split</button></div><select id="output-mode" hidden aria-label="Output value"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></div>
+      <label class="setting-row sub-setting" id="part-size-setting" for="pages-per-part" hidden data-help="parts-help"><span class="setting-label">Pages per part</span><input class="number-input" type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
+      <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
     </div>
+    <footer class="footer"><button id="back-btn" class="btn" data-tooltip="Return to your frame list. Your export settings are kept.">Cancel</button><button id="cancel-btn" class="btn" hidden>Cancel</button><button id="export-btn" class="btn" disabled data-tooltip="Create the PDF using these settings.">Export</button><button id="continue-btn" class="btn" hidden>Continue</button></footer>
+  </section>
+  <div id="quality-more-menu" class="popover" role="menu" aria-label="More resolutions" hidden><button role="menuitemradio" data-dpi="original">Original</button><button role="menuitemradio" data-dpi="144">144 dpi</button><button role="menuitemradio" data-dpi="216">216 dpi</button><button role="menuitemradio" data-dpi="288">288 dpi</button><button role="menuitemradio" data-dpi="300">300 dpi</button></div>
+  <div id="frame-context-menu" class="popover" role="menu" aria-label="Frame actions" hidden><button id="remove-frame-action" role="menuitem">Remove</button></div>
+  <div id="tooltip" role="tooltip" hidden></div>
+  <dialog id="profile-help-dialog" aria-labelledby="profile-help-title"><h2 id="profile-help-title">Find ICC profiles</h2><div id="cmyk-profile-help"><p>Ask your printer or paper provider for the CMYK output profile for your printer and paper. Choose its <code>.icc</code> or <code>.icm</code> file directly from Downloads; installing it is not required.</p><p><strong>Mac</strong> — in Finder, press Shift–Command–G and paste a path:</p><ul><li><code>/Library/ColorSync/Profiles</code></li><li><code>~/Library/ColorSync/Profiles</code></li><li><code>/System/Library/ColorSync/Profiles</code></li></ul><p><strong>Windows</strong> — paste into the File Explorer address bar:</p><p><code>%WINDIR%\System32\spool\drivers\color</code></p><p>Some folders may be empty. Display profiles are often RGB; choose a CMYK printer/output profile.</p><p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p></div><form method="dialog"><button class="btn">Close</button></form></dialog>
+  <div class="help-copy" aria-hidden="true">
+    <p id="selection-info"></p><p id="color-profile-help"></p><p id="color-profile-compatibility"></p>
+    <p id="vector-resolution-help">Lowers the resolution of supported images while keeping text and shapes vector. Never adds detail beyond Figma’s export. Unsupported images keep their original resolution with a warning. Choose Original in More to keep image resolution unchanged.</p>
+    <p id="export-help"></p><p id="compression-help"></p><p id="cmyk-bundled-description"></p><p id="cmyk-format-help"></p>
+    <p id="cmyk-file-help">Choose a CMYK printer profile (.icc or .icm, up to 16 MiB). The profile is validated before export and never uploaded.</p>
+    <p id="fit-oversized-help">Allow lowers resolution only for raster pages above the size limits, including RGB vector fallbacks. PDF page dimensions stay unchanged. Don’t allow stops the export when a page exceeds these limits.</p>
+    <p id="parts-help">Single PDF keeps all pages in one file. Split saves one PDF at a time. Save each part before continuing, within 15 minutes. Keep every part together with its original filename. Links between parts require a compatible desktop PDF viewer.</p>
+    <p id="budget-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. Processing also needs memory beyond the PDF size. JPEG can help RGB raster pages and vector fallbacks.</p>
   </div>
-  <div id="frame-list" class="frame-list" hidden></div>
-  <div id="empty-state" class="empty-state"><h3>Select frames in Figma</h3></div>
-  <div id="selection-info" class="selection-info" hidden></div>
-  <div class="export-panel">
-    <div class="export-type-selector"><div class="export-type-options">
-      <div class="export-type-option"><input type="radio" id="export-vector" name="export-type" aria-describedby="color-profile-compatibility" value="vector" checked><label for="export-vector">Vector</label></div>
-      <div class="export-type-option"><input type="radio" id="export-raster" name="export-type" aria-describedby="color-profile-compatibility" value="raster"><label for="export-raster">Rasterized</label></div>
-    </div></div>
-    <label class="export-setting" for="color-profile">Color profile <select id="color-profile" aria-describedby="color-profile-help color-profile-compatibility"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></label>
-    <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
-    <p id="color-profile-compatibility" class="export-help" role="status" aria-live="polite" hidden></p>
-    <div class="controls">
-      <div class="quality-selector" id="vector-resolution-setting">
-        <label class="quality-label" for="vector-image-dpi">Image resolution:</label>
-        <select id="vector-image-dpi" class="quality-select" aria-describedby="vector-resolution-help">
-          <option value="original" selected>Original from Figma</option>
-          <optgroup label="Screen"><option value="36">36 DPI</option><option value="72">72 DPI</option><option value="108">108 DPI</option></optgroup>
-          <optgroup label="Print"><option value="144">144 DPI</option><option value="216">216 DPI</option><option value="288">288 DPI</option><option value="300">300 DPI</option></optgroup>
-        </select>
-      </div>
-      <div class="quality-selector" id="quality-setting">
-        <label class="quality-label" for="quality-select" id="quality-label">Fallback quality:</label>
-        <select id="quality-select" class="quality-select">
-          <optgroup label="Screen"><option value="screen-low">Low (0.5x, 36 DPI)</option><option value="screen-medium" selected>Medium (1x, 72 DPI)</option><option value="screen-high">High (1.5x, 108 DPI)</option></optgroup>
-          <optgroup label="Print"><option value="print-low">Low (2x, 144 DPI)</option><option value="print-medium">Medium (3x, 216 DPI)</option><option value="print-high">High (4x, 288 DPI)</option><option value="print-highest">Highest (4.17x, 300 DPI)</option></optgroup>
-        </select>
-      </div>
-      <button id="export-btn" class="btn btn-primary" aria-describedby="color-profile-compatibility" disabled>Export PDF</button>
-    </div>
-    <p id="vector-resolution-help" class="export-help">Lowers the resolution of supported images inside the PDF while keeping text and shapes vector. Never adds detail beyond Figma’s export. Unsupported images keep their original resolution with a warning.</p>
-    <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
-    <label class="export-setting" id="raster-format-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
-    <p id="compression-help" class="export-help">Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.</p>
-    <div id="cmyk-settings" hidden>
-      <label class="export-setting" for="cmyk-profile-source">CMYK profile <select id="cmyk-profile-source"><option value="BUNDLED" selected>Built-in profile</option><option value="CUSTOM">Custom printer profile</option></select></label>
-      <p id="cmyk-bundled-description" class="export-help"></p>
-      <div id="cmyk-custom-profile" hidden>
-        <label class="export-setting" for="cmyk-profile">Printer ICC profile <input id="cmyk-profile" type="file" accept=".icc,.icm"></label>
-        <p id="cmyk-profile-status" class="export-help">Choose a CMYK printer profile (.icc or .icm, up to 16 MiB).</p>
-      </div>
-      <details id="cmyk-profile-help" class="export-help">
-        <summary>Where can I find ICC profiles?</summary>
-        <p>For a specific printer and paper, ask your printer or paper provider for a CMYK output profile. Choose its <code>.icc</code> or <code>.icm</code> file directly from Downloads or another folder; installing it in your operating system is not required.</p>
-        <p><strong>Mac:</strong> in Finder, choose Go → Go to Folder (Shift–Command–G), then paste one of these paths:</p>
-        <ul class="cmyk-profile-paths"><li><code>/Library/ColorSync/Profiles</code></li><li><code>~/Library/ColorSync/Profiles</code></li><li><code>/System/Library/ColorSync/Profiles</code></li></ul>
-        <p><strong>Windows:</strong> paste this into the File Explorer address bar:</p>
-        <p><code>%WINDIR%\System32\spool\drivers\color</code></p>
-        <p>Some folders may be empty or missing. Many display and device profiles are RGB; this plugin requires a CMYK printer/output profile.</p>
-        <p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p>
-      </details>
-      <p id="cmyk-format-help" class="export-help"></p>
-    </div>
-    <label class="export-setting" id="fit-oversized-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
-    <p id="fit-oversized-help" class="export-help">When enabled, lowers resolution only for pages above the raster size limits. PDF page dimensions stay unchanged.</p>
-    <label class="export-setting" for="output-mode">Output <select id="output-mode"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></label>
-    <label class="export-setting" id="part-size-setting" for="pages-per-part" hidden>Pages per part <input type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
-    <p id="parts-help" class="export-help" hidden>Save each part before continuing. Keep every PDF together with its original filename. Links between parts require a compatible desktop PDF viewer. The export pauses for up to 15 minutes between parts.</p>
-    <p class="export-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. For RGB raster pages and vector fallbacks, JPEG can help photo-heavy pages. Processing also needs memory beyond the PDF size.</p>
-    <button id="continue-btn" class="btn btn-primary" hidden>Continue to next part</button>
-    <button id="cancel-btn" class="btn btn-secondary" hidden>Cancel export</button>
-    <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
-  </div>
+
   <!-- Replaced with the pinned local library by the production build. -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="color-profiles.js"></script>
@@ -1191,6 +533,8 @@
       const custom = $('cmyk-profile-source').value === 'CUSTOM';
       $('cmyk-custom-profile').hidden = !custom;
       $('cmyk-bundled-description').hidden = custom;
+      if (custom) $('cmyk-bundled-description').textContent = 'Use a CMYK output profile supplied for your printer and paper. Choose its .icc or .icm file; no system installation is required.';
+      $('cmyk-load-error').hidden = true;
       if (!custom && $('color-profile').value === 'CMYK') {
         try {
           const profile = loadBundledCmykProfile();
@@ -1198,6 +542,9 @@
         } catch (error) {
           bundledCmykProfileError = error.message;
           $('cmyk-bundled-description').textContent = bundledCmykProfileError;
+          $('cmyk-load-error').textContent = bundledCmykProfileError;
+          $('cmyk-load-error').hidden = false;
+          $('cmyk-load-error').style.display = 'block';
         }
       }
     }
@@ -1208,6 +555,8 @@
       const file = $('cmyk-profile').files?.[0];
       selectedCmykProfile = null;
       readingCmykProfile = false;
+      $('profile-file-label').textContent = file?.name || 'Choose profile';
+      $('cmyk-profile-status').hidden = true;
       if (!file) {
         $('cmyk-profile-status').textContent = 'Choose a CMYK printer profile (.icc or .icm, up to 16 MiB).';
         updateControls();
@@ -1215,19 +564,22 @@
       }
       if (!/\.(icc|icm)$/i.test(file.name) || !file.size || file.size > CMYK_PROFILE_LIMIT) {
         $('cmyk-profile-status').textContent = 'Choose a non-empty .icc or .icm file no larger than 16 MiB.';
+        $('cmyk-profile-status').hidden = false;
         updateControls();
         return;
       }
       readingCmykProfile = true;
       $('cmyk-profile-status').textContent = 'Reading printer profile…';
+      $('cmyk-profile-status').hidden = false;
       updateControls();
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
         if (sequence !== cmykProfileReadSequence) return;
         selectedCmykProfile = { name: file.name, bytes };
         $('cmyk-profile-status').textContent = `${file.name} selected. The printer profile will be validated before export.`;
+        $('cmyk-profile-status').hidden = true;
       } catch (_) {
-        if (sequence === cmykProfileReadSequence) $('cmyk-profile-status').textContent = 'Could not read this profile. Choose the file again.';
+        if (sequence === cmykProfileReadSequence) { $('cmyk-profile-status').textContent = 'Could not read this profile. Choose the file again.'; $('cmyk-profile-status').hidden = false; }
       } finally {
         if (sequence === cmykProfileReadSequence) { readingCmykProfile = false; updateControls(); }
       }
@@ -1247,13 +599,203 @@
       }
     }
 
-    function setTheme(theme) {
-      document.body.dataset.theme = theme;
-      $('theme-switch').checked = theme === 'dark';
-      $('theme-label').textContent = theme === 'dark' ? 'Dark' : 'Light';
-      document.querySelector('.theme-icon').textContent = theme === 'dark' ? '🌙' : '☀️';
-      try { localStorage.setItem('pdf-export-theme', theme); } catch (_) { }
+    let currentScreen = 'frames';
+    let contextFrameId = null;
+    const dpiQuality = { '36':'screen-low', '72':'screen-medium', '108':'screen-high', '144':'print-low', '216':'print-medium', '288':'print-high', '300':'print-highest' };
+    let tooltipTarget = null;
+    let tooltipTimer = null;
+
+    function hideTooltip() {
+      clearTimeout(tooltipTimer);
+      if (tooltipTarget) {
+        const ids = (tooltipTarget.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== 'tooltip');
+        ids.length ? tooltipTarget.setAttribute('aria-describedby', ids.join(' ')) : tooltipTarget.removeAttribute('aria-describedby');
+      }
+      tooltipTarget = null;
+      $('tooltip').hidden = true;
     }
+
+    function tooltipText(target) {
+      if (target.dataset.tooltip) return target.dataset.tooltip;
+      return (target.dataset.help || target.closest('[data-help]')?.dataset.help || '').split(' ').map(id => $(id)?.textContent.trim()).filter(Boolean).join('\n\n');
+    }
+
+    function showTooltip(target, immediate = false) {
+      if (tooltipTarget === target && !$('tooltip').hidden) return;
+      hideTooltip();
+      const text = tooltipText(target);
+      if (!text) return;
+      tooltipTarget = target;
+      const show = () => {
+        if (tooltipTarget !== target || !target.isConnected) return;
+        const tip = $('tooltip');
+        tip.textContent = tooltipText(target); tip.hidden = false;
+        const anchor = target.getBoundingClientRect();
+        const box = tip.getBoundingClientRect();
+        const left = Math.max(10, Math.min(anchor.left, innerWidth - box.width - 10));
+        const top = anchor.bottom + box.height + 10 < innerHeight ? anchor.bottom + 7 : Math.max(10, anchor.top - box.height - 7);
+        tip.style.left = `${left}px`; tip.style.top = `${top}px`;
+        const ids = new Set((target.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+        ids.add('tooltip'); target.setAttribute('aria-describedby', [...ids].join(' '));
+      };
+      immediate ? show() : tooltipTimer = setTimeout(show, 400);
+    }
+
+    function closePopovers(restoreFocus = false) {
+      const qualityOpen = !$('quality-more-menu').hidden;
+      const contextRow = contextFrameId && [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === contextFrameId);
+      $('quality-more-menu').hidden = true; $('quality-more-btn').setAttribute('aria-expanded', 'false');
+      $('frame-context-menu').hidden = true;
+      document.querySelectorAll('.context-open').forEach(row => row.classList.remove('context-open'));
+      contextFrameId = null;
+      if (restoreFocus) (qualityOpen ? $('quality-more-btn') : contextRow)?.focus();
+    }
+
+    function positionPopover(menu, x, y) {
+      menu.hidden = false;
+      const box = menu.getBoundingClientRect();
+      menu.style.left = `${Math.max(8, Math.min(x, innerWidth - box.width - 8))}px`;
+      menu.style.top = `${Math.max(8, Math.min(y, innerHeight - box.height - 8))}px`;
+    }
+
+    function navigateScreen(screen) {
+      if (activeJob || (screen === 'settings' && !frameOrder.length)) return;
+      hideTooltip(); closePopovers();
+      currentScreen = screen;
+      $('frames-screen').hidden = screen !== 'frames';
+      $('settings-screen').hidden = screen !== 'settings';
+      if (screen === 'settings') document.querySelector('input[name="export-type"]:checked').focus();
+      else $('open-settings-btn').focus();
+    }
+
+    function selectDpi(dpi) {
+      if (activeJob) return;
+      const vector = $('export-vector').checked;
+      if (dpi === 'original' && !vector) return;
+      const select = vector ? $('vector-image-dpi') : $('quality-select');
+      select.value = vector ? dpi : dpiQuality[dpi];
+      select.dispatchEvent(new Event('change', { bubbles:true }));
+    }
+
+    function syncSettingButtons() {
+      for (const button of document.querySelectorAll('[data-setting]')) {
+        const input = $(button.dataset.setting);
+        const value = input.type === 'checkbox' ? String(input.checked) : input.value;
+        button.setAttribute('aria-pressed', String(value === button.dataset.value));
+        button.disabled = input.disabled;
+      }
+      const vector = $('export-vector').checked;
+      const dpi = vector ? $('vector-image-dpi').value : Object.keys(dpiQuality).find(dpi => dpiQuality[dpi] === $('quality-select').value);
+      for (const button of document.querySelectorAll('[data-dpi]')) {
+        button.setAttribute(button.getAttribute('role') === 'menuitemradio' ? 'aria-checked' : 'aria-pressed', String(button.dataset.dpi === dpi));
+        button.disabled = Boolean(activeJob);
+        button.hidden = button.dataset.dpi === 'original' && !vector;
+      }
+      const extra = !['36','72','108'].includes(dpi);
+      $('quality-more-btn').textContent = extra ? (dpi === 'original' ? 'Original' : `${dpi} dpi`) : 'More';
+      $('quality-more-btn').setAttribute('aria-pressed', String(extra));
+      $('quality-more-btn').disabled = Boolean(activeJob);
+      $('quality-row').dataset.help = vector ? 'vector-resolution-help' : 'export-help';
+      for (const row of document.querySelectorAll('.setting-row[data-help]')) {
+        const group = row.querySelector('[role="group"], [role="radiogroup"]');
+        group?.setAttribute('aria-describedby', row.dataset.help);
+      }
+    }
+
+    function removeListedFrame(id) {
+      if (activeJob || !frameOrder.includes(id)) return;
+      const index = frameOrder.indexOf(id);
+      hideTooltip(); closePopovers();
+      checkedFrames.delete(id); frameOrder = frameOrder.filter(value => value !== id); allFrames = allFrames.filter(value => value.id !== id);
+      connections = connections.filter(link => link.fromFrameId !== id && link.toFrameId !== id);
+      renderFrameList(); post({ type:'remove-frame', frameId:id });
+      const rows = [...document.querySelectorAll('.frame-item')];
+      (rows[Math.min(index, rows.length - 1)] || $('sort-select')).focus();
+    }
+
+    function openFrameMenu(id, x, y) {
+      if (activeJob) return;
+      hideTooltip(); closePopovers(); contextFrameId = id;
+      const row = [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === id);
+      row?.classList.add('context-open');
+      positionPopover($('frame-context-menu'), x, y);
+      $('remove-frame-action').focus();
+    }
+
+    function bindInterface() {
+      $('open-settings-btn').addEventListener('click', () => navigateScreen('settings'));
+      $('back-btn').addEventListener('click', () => navigateScreen('frames'));
+      for (const button of document.querySelectorAll('[data-setting]')) button.addEventListener('click', () => {
+        const input = $(button.dataset.setting);
+        if (activeJob || input.disabled) return;
+        hideTooltip(); closePopovers();
+        if (input.type === 'checkbox') input.checked = button.dataset.value === 'true';
+        else input.value = button.dataset.value;
+        input.dispatchEvent(new Event('change', { bubbles:true }));
+      });
+      for (const button of document.querySelectorAll('[data-dpi]')) button.addEventListener('click', () => {
+        const fromMenu = button.closest('[role="menu"]');
+        selectDpi(button.dataset.dpi); closePopovers(); hideTooltip();
+        if (fromMenu) $('quality-more-btn').focus();
+      });
+      $('quality-more-btn').addEventListener('click', () => {
+        const wasOpen = !$('quality-more-menu').hidden;
+        hideTooltip(); closePopovers();
+        if (wasOpen || activeJob) return;
+        const anchor = $('quality-more-btn').getBoundingClientRect();
+        positionPopover($('quality-more-menu'), anchor.left, anchor.bottom + 5);
+        $('quality-more-btn').setAttribute('aria-expanded', 'true');
+        const items = [...$('quality-more-menu').querySelectorAll('button:not([hidden])')];
+        (items.find(item => item.getAttribute('aria-checked') === 'true') || items[0]).focus();
+      });
+      $('remove-frame-action').addEventListener('click', () => { if (contextFrameId) removeListedFrame(contextFrameId); });
+      $('profile-help-toggle').addEventListener('click', () => { hideTooltip(); closePopovers(); $('profile-help-dialog').showModal(); });
+      document.addEventListener('pointerdown', event => {
+        hideTooltip();
+        if (!event.target.closest('.popover, #quality-more-btn')) closePopovers();
+      });
+      document.addEventListener('pointerover', event => {
+        const target = event.target.closest('[data-tooltip], [data-help]');
+        if (target && !event.target.closest('.popover') && $('profile-help-dialog').open === false) showTooltip(target);
+      });
+      document.addEventListener('pointerout', event => {
+        if (!tooltipTarget) return;
+        if (event.relatedTarget && (tooltipTarget.contains(event.relatedTarget) || $('tooltip').contains(event.relatedTarget))) return;
+        hideTooltip();
+      });
+      document.addEventListener('focusin', event => {
+        const target = event.target.closest('[data-tooltip], [data-help]');
+        if (target && event.target.matches(':focus-visible') && !event.target.closest('.popover')) showTooltip(event.target, true);
+      });
+      document.addEventListener('focusout', () => hideTooltip());
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          const handled = !$('tooltip').hidden || !$('quality-more-menu').hidden || !$('frame-context-menu').hidden;
+          closePopovers(true); hideTooltip();
+          if (handled && !$('profile-help-dialog').open) event.preventDefault();
+        }
+        const menu = event.target.closest('[role="menu"]');
+        if (!menu) return;
+        const items = [...menu.querySelectorAll('button:not([hidden]):not(:disabled)')];
+        const index = items.indexOf(document.activeElement);
+        let next;
+        if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+        if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = items.length - 1;
+        if (next !== undefined) { event.preventDefault(); items[next]?.focus(); }
+        if (event.key === 'Tab') {
+          const anchor = menu.id === 'quality-more-menu' ? $('quality-more-btn') : [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === contextFrameId);
+          const screen = currentScreen === 'settings' ? $('settings-screen') : $('frames-screen');
+          const focusable = [...screen.querySelectorAll('button, input, select, [tabindex]')].filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length);
+          const next = focusable[focusable.indexOf(anchor) + (event.shiftKey ? -1 : 1)];
+          event.preventDefault(); closePopovers(); (next || anchor)?.focus();
+        }
+      });
+      document.querySelectorAll('.settings-content, .frame-list').forEach(element => element.addEventListener('scroll', () => { hideTooltip(); closePopovers(); }));
+      window.addEventListener('resize', () => { hideTooltip(); closePopovers(); });
+    }
+
 
     function updateExportTypeInfo() {
       const cmyk = $('color-profile').value === 'CMYK';
@@ -1263,8 +805,8 @@
       $('color-profile-compatibility').textContent = '';
       $('color-profile-help').hidden = false;
       $('raster-format-setting').hidden = cmyk;
-      $('quality-setting').hidden = vector;
-      $('vector-resolution-setting').hidden = !vector;
+      $('quality-setting').hidden = true;
+      $('vector-resolution-setting').hidden = true;
       $('vector-resolution-help').hidden = !vector;
       $('fit-oversized-setting').hidden = vectorCmyk;
       $('fit-oversized-help').hidden = vectorCmyk;
@@ -1289,9 +831,9 @@
         CMYK: 'Use the built-in profile or choose a custom profile for your printer and paper. Conversion happens inside the plugin.'
       }[$('color-profile').value];
       $('cmyk-settings').hidden = !cmyk;
-      $('cmyk-format-help').textContent = vector
+      $('cmyk-format-help').textContent = !cmyk ? '' : vector
         ? 'Vector CMYK is experimental. Some effects require Rasterized. Transparency and gradients may look different; check the exported PDF. Links stay clickable. This is not a PDF/X export.'
-        : 'Raster CMYK uses a white background and keeps links clickable. Maximum 8 million pixels per page; enable Fit oversized raster pages to lower resolution when needed. This is not a PDF/X export.';
+        : 'Raster CMYK uses a white background and keeps links clickable. Maximum 8 million pixels per page; choose Lower resolution → Allow to lower resolution when needed. This is not a PDF/X export.';
       updateCmykProfileInfo();
       const parts = $('output-mode').value === 'parts';
       $('part-size-setting').hidden = !parts;
@@ -1313,10 +855,19 @@
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
       $('export-btn').disabled = busy || !count || (cmyk && !cmykProfileReady);
-      $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
+      $('export-btn').textContent = busy ? 'Exporting…' : 'Export';
+      $('open-settings-btn').disabled = busy || !count;
+      $('clear-list-btn').disabled = busy || !frameOrder.length;
+      $('open-settings-btn').setAttribute('aria-label', `Export — settings for ${count} frame${count === 1 ? '' : 's'}`);
+      $('export-btn').setAttribute('aria-label', `Export ${count} frame${count === 1 ? '' : 's'} to PDF`);
+      $('back-btn').hidden = busy; $('back-btn').disabled = busy;
+      $('export-btn').hidden = Boolean(activeJob?.awaitingContinue);
+      $('remove-frame-action').disabled = busy;
+      if (busy) { closePopovers(); hideTooltip(); }
+      syncSettingButtons();
       $('cancel-btn').hidden = !busy;
       $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
-      $('cancel-btn').textContent = activeJob?.cancelled ? 'Cancelling…' : 'Cancel export';
+      $('cancel-btn').textContent = activeJob?.cancelled ? 'Cancelling…' : 'Cancel';
       $('continue-btn').hidden = !activeJob?.awaitingContinue;
       $('continue-btn').disabled = !activeJob?.awaitingContinue || Boolean(activeJob?.cancelled || activeJob?.failed);
     }
@@ -1339,7 +890,10 @@
 
     function renderFrameList() {
       const list = $('frame-list');
+      if (tooltipTarget?.closest('.frame-item')) hideTooltip();
+      if (contextFrameId && !frameOrder.includes(contextFrameId)) closePopovers();
       list.replaceChildren();
+      list.setAttribute('role', 'list');
       const byId = new Map(allFrames.map(frame => [frame.id, frame]));
       const counts = new Map();
       for (const connection of connections) counts.set(connection.fromFrameId, (counts.get(connection.fromFrameId) || 0) + 1);
@@ -1347,36 +901,42 @@
         const frame = byId.get(id);
         if (!frame) continue;
         const item = document.createElement('div');
-        item.className = `frame-item${selectedInFigma.has(id) ? ' selected-in-figma' : ''}`;
-        item.dataset.frameId = id;
-        item.draggable = !activeJob;
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox'; checkbox.className = 'frame-checkbox'; checkbox.checked = checkedFrames.has(id);
-        checkbox.setAttribute('aria-label', `Include ${frame.name}`);
-        checkbox.addEventListener('change', () => { if (activeJob) return; checkbox.checked ? checkedFrames.add(id) : checkedFrames.delete(id); updateControls(); });
+        item.className = 'frame-item'; item.tabIndex = 0; item.setAttribute('role', 'listitem');
+        item.dataset.frameId = id; item.draggable = !activeJob;
+        item.dataset.tooltip = `${frame.name}\n${Math.round(frame.width)} × ${Math.round(frame.height)} px · ${frame.parent || 'Page'}\nDrag to reorder. Right-click to remove. Keyboard: Alt + ↑/↓ to reorder, Delete to remove.`;
         const info = document.createElement('div'); info.className = 'frame-info';
-        const name = document.createElement('div'); name.className = 'frame-name'; name.textContent = frame.name;
-        const meta = document.createElement('div'); meta.className = 'frame-meta'; meta.textContent = `${Math.round(frame.width)}×${Math.round(frame.height)}px • ${frame.parent || 'Page'}`;
-        info.append(name, meta);
-        const indicator = document.createElement('span'); indicator.className = counts.has(id) ? 'connections-count' : 'no-links'; indicator.textContent = counts.has(id) ? `${counts.get(id)} links` : 'No links';
-        const handle = document.createElement('span'); handle.className = 'drag-handle'; handle.textContent = '⋮⋮';
-        const remove = document.createElement('button'); remove.className = 'remove-btn'; remove.textContent = '×'; remove.title = 'Remove from list'; remove.setAttribute('aria-label', `Remove ${frame.name}`);
-        remove.addEventListener('click', () => {
+        const name = document.createElement('div'); name.className = 'frame-name'; name.textContent = frame.name; info.append(name);
+        const indicator = document.createElement('span'); indicator.className = counts.has(id) ? 'connections-count' : 'no-links';
+        indicator.textContent = counts.has(id) ? `${counts.get(id)} link${counts.get(id) === 1 ? '' : 's'}` : 'No links';
+        item.append(info, indicator);
+        item.addEventListener('contextmenu', event => { event.preventDefault(); openFrameMenu(id, event.clientX, event.clientY); });
+        item.addEventListener('keydown', event => {
           if (activeJob) return;
-          checkedFrames.delete(id); frameOrder = frameOrder.filter(value => value !== id); allFrames = allFrames.filter(value => value.id !== id);
-          renderFrameList(); post({ type: 'remove-frame', frameId: id });
+          if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); removeListedFrame(id); }
+          if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu' || event.key === 'Enter') {
+            event.preventDefault(); const box = item.getBoundingClientRect(); openFrameMenu(id, box.right - 110, box.bottom);
+          }
+          if (event.altKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault(); const from = frameOrder.indexOf(id), to = from + (event.key === 'ArrowUp' ? -1 : 1);
+            if (to >= 0 && to < frameOrder.length) { frameOrder.splice(from, 1); frameOrder.splice(to, 0, id); renderFrameList(); [...list.children].find(row => row.dataset.frameId === id)?.focus(); }
+          }
         });
-        item.append(checkbox, info, indicator, handle, remove);
-        item.addEventListener('dragstart', event => { if (activeJob) { event.preventDefault(); return; } draggedFrameId = id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', id); item.classList.add('dragging'); });
-        item.addEventListener('dragover', event => { if (!activeJob && draggedFrameId) event.preventDefault(); });
+        item.addEventListener('dragstart', event => {
+          if (activeJob) { event.preventDefault(); return; }
+          hideTooltip(); closePopovers(); draggedFrameId = id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', id); item.classList.add('dragging');
+        });
+        item.addEventListener('dragover', event => {
+          if (!activeJob && draggedFrameId && draggedFrameId !== id) { event.preventDefault(); item.classList.add('drag-over'); }
+        });
+        item.addEventListener('dragleave', event => { if (!item.contains(event.relatedTarget)) item.classList.remove('drag-over'); });
         item.addEventListener('drop', event => {
           event.preventDefault();
           if (activeJob || !draggedFrameId || draggedFrameId === id) return;
           const from = frameOrder.indexOf(draggedFrameId), to = frameOrder.indexOf(id);
           if (from < 0 || to < 0) return;
-          frameOrder.splice(from, 1); frameOrder.splice(to, 0, draggedFrameId); renderFrameList();
+          frameOrder.splice(from, 1); frameOrder.splice(to, 0, draggedFrameId); draggedFrameId = null; renderFrameList();
         });
-        item.addEventListener('dragend', () => { draggedFrameId = null; item.classList.remove('dragging'); });
+        item.addEventListener('dragend', () => { draggedFrameId = null; document.querySelectorAll('.dragging, .drag-over').forEach(row => row.classList.remove('dragging', 'drag-over')); });
         list.appendChild(item);
       }
       list.hidden = !frameOrder.length;
@@ -1435,6 +995,8 @@
 
     function startExport() {
       if (activeJob) return;
+      if (currentScreen !== 'settings') navigateScreen('settings');
+      hideTooltip(); closePopovers();
       const selectedFrames = frameOrder.filter(id => checkedFrames.has(id));
       if (!selectedFrames.length) return;
       if (!window.PDFLib?.PDFDocument) { showStatus('The PDF library is unavailable. Reopen the plugin and try again.', 'error'); return; }
@@ -1624,7 +1186,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       const message = job.parts.length > 1
         ? `PDFs ready: ${job.frames.length} pages in ${job.parts.length} parts. Every part download has started. Keep original filenames together for cross-part links.`
-        : `PDF ready: ${job.frames.length} pages (${(job.lastOutputBytes / 1024 / 1024).toFixed(1)} MB). Download started.`;
+        : `PDF ready: ${job.frames.length} page${job.frames.length === 1 ? '' : 's'} (${(job.lastOutputBytes / 1024 / 1024).toFixed(1)} MB). Download started.`;
       showStatus(message, job.warnings.length ? 'warning' : 'success', [...job.warnings, ...job.downloadedNames]);
       releaseJob(job);
     }
@@ -1642,8 +1204,8 @@
         for (const item of document.querySelectorAll('.frame-item')) item.classList.toggle('selected-in-figma', selectedInFigma.has(item.dataset.frameId));
         return;
       }
-      if (message.type === 'restore-theme' && ['light', 'dark'].includes(message.theme)) { setTheme(message.theme); return; }
-      if (message.type === 'plugin-ready') { if (!activeJob) showStatus(message.message || 'Select frames to get started.'); return; }
+      if (message.type === 'restore-theme') return;
+      if (message.type === 'plugin-ready') return;
       const job = activeJob;
       if (!job || message.jobId !== job.id) return;
       if (!job.backendDispatched) return;
@@ -1691,10 +1253,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-      let theme = 'dark';
-      try { theme = localStorage.getItem('pdf-export-theme') || theme; } catch (_) { }
-      setTheme(theme === 'light' ? 'light' : 'dark');
-      $('theme-switch').addEventListener('change', () => setTheme($('theme-switch').checked ? 'dark' : 'light'));
+      bindInterface();
       $('export-btn').addEventListener('click', startExport);
       $('cancel-btn').addEventListener('click', cancelExport);
       $('continue-btn').addEventListener('click', continueExport);
@@ -1705,7 +1264,7 @@
       });
       $('sort-select').addEventListener('change', event => { sortFramesByName(event.target.value); event.target.value = 'none'; });
       for (const input of document.querySelectorAll('input[name="export-type"]')) input.addEventListener('change', updateExportTypeInfo);
-      for (const id of ['raster-format', 'output-mode', 'color-profile', 'cmyk-profile-source']) $(id).addEventListener('change', updateExportTypeInfo);
+      for (const id of ['raster-format', 'output-mode', 'color-profile', 'cmyk-profile-source', 'vector-image-dpi', 'quality-select', 'fit-oversized']) $(id).addEventListener('change', updateExportTypeInfo);
       updateExportTypeInfo(); updateControls();
       post({ type: 'ui-ready' });
     });
