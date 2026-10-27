@@ -4,12 +4,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const PDFLib = require('pdf-lib');
 const { createPdfColorManagement } = require('../src/color-profiles.js');
+const { createVectorCmykConverter } = require('../src/vector-cmyk.js');
 
 const root = path.resolve(__dirname, '..');
 const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
 const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfColorManagement', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfColorManagement);
+const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfColorManagement', 'createVectorCmykConverter', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfColorManagement, createVectorCmykConverter);
 const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
 const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));
@@ -48,16 +49,16 @@ test('raster pages retain precise native text annotations without copying the na
   assert.ok(saved.length < fixture.length / 2, 'only annotation geometry, not vector content, was copied');
 });
 
-test('real CMYK assembly retains exact native text-link rectangles and rejects a vector payload', async () => {
+test('real CMYK assembly retains exact native text-link rectangles in vector and raster modes', async () => {
   const constants = await import('lcms-wasm');
   const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
   const { createCmykExporter } = require('../src/cmyk.js');
   const profile = fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
   const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(profile);
   try {
+    for (const format of ['PDF', 'PNG']) {
     const output = await PDFLib.PDFDocument.create();
-    await assert.rejects(appendExportPage(output, { frame, format: 'PDF', data: fixture, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session }), /requires an sRGB PNG/);
-    const { page, warnings } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: fixture, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session });
+    const { page, warnings } = await appendExportPage(output, { frame, format, data: format === 'PDF' ? fixture : png, annotationPdfData: format === 'PNG' ? fixture : undefined, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session });
     assert.deepEqual(warnings, []);
     await addExportLinks(output, [page], [frame], textLinks);
     const reloaded = await PDFLib.PDFDocument.load(await output.save());
@@ -67,6 +68,7 @@ test('real CMYK assembly retains exact native text-link rectangles and rejects a
     const profiles = reloaded.context.enumerateIndirectObjects().map(([, object]) => object).filter(object => object instanceof PDFLib.PDFRawStream && object.dict.has(PDFLib.PDFName.of('N')));
     assert.equal(profiles.length, 1);
     assert.equal(profiles[0].dict.get(PDFLib.PDFName.of('N')).asNumber(), 4);
+    }
   } finally { session.close(); }
 });
 

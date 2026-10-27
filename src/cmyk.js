@@ -74,8 +74,8 @@ function createCmykExporter(PDFLib, options = {}) {
       } catch (error) { lcms._free(pointer); throw error; }
     }
 
-    function makeTransform(source) {
-      const transform = lcms.cmsCreateTransform(source, constants.TYPE_RGB_8, outputProfile, constants.TYPE_CMYK_8, intent, flags);
+    function makeTransform(source, sixteen = false) {
+      const transform = lcms.cmsCreateTransform(source, sixteen ? constants.TYPE_RGB_16 : constants.TYPE_RGB_8, outputProfile, sixteen ? constants.TYPE_CMYK_16 : constants.TYPE_CMYK_8, intent, flags);
       if (!transform) throw new Error('This printer profile does not provide a usable RGB-to-CMYK conversion.');
       return transform;
     }
@@ -100,22 +100,73 @@ function createCmykExporter(PDFLib, options = {}) {
       if (closed || !stillActive()) throw new Error('CMYK conversion was cancelled.');
     }
 
-    function transformFor(sourceBytes) {
-      const key = bytesKey(sourceBytes);
+    function transformFor(sourceBytes, sixteen = false) {
+      const key = `${sixteen ? 16 : 8}:${bytesKey(sourceBytes)}`;
       if (transforms.has(key)) return transforms.get(key);
-      if (transforms.size >= 8) throw new Error('This CMYK export contains too many different RGB source profiles.');
+      if (transforms.size >= 16) throw new Error('This CMYK export contains too many different RGB source profiles.');
       const source = openProfile(sourceBytes);
       try {
         if (lcms.cmsGetColorSpaceASCII(source.handle) !== 'RGB') throw new Error('The CMYK source profile must describe RGB pixels.');
-        const transform = makeTransform(source.handle);
+        const transform = makeTransform(source.handle, sixteen);
         transforms.set(key, transform);
         return transform;
       } finally { lcms.cmsCloseProfile(source.handle); lcms._free(source.pointer); }
     }
 
     function destinationProfileRef(pdfDoc) {
+      active(() => true);
       if (!profileRefs.has(pdfDoc)) profileRefs.set(pdfDoc, pdfDoc.context.register(pdfDoc.context.flateStream(profileBytes, { N: 4, Alternate: 'DeviceCMYK' })));
       return profileRefs.get(pdfDoc);
+    }
+
+    // Vector operands and gradient samples use 16-bit transforms to avoid an
+    // unnecessary 8-bit quantization before the final PDF color values.
+    async function convertColors(values, sourceBytes, { stillActive = () => true } = {}) {
+      active(stillActive);
+      if (busy) throw new Error('CMYK conversions must run one at a time.');
+      if (!values || values.length % 3 || values.length > MAX_PIXELS * 3) throw new Error('Invalid RGB color samples.');
+      busy = true;
+      try {
+        const transform = transformFor(sourceBytes, true);
+        const result = new Float64Array(values.length / 3 * 4);
+        for (let offset = 0; offset < values.length / 3; offset += CHUNK_PIXELS) {
+          active(stillActive);
+          const count = Math.min(CHUNK_PIXELS, values.length / 3 - offset);
+          const input = new Uint16Array(lcms.HEAPU8.buffer, inputPointer, count * 3);
+          for (let i = 0; i < input.length; i++) {
+            const value = values[offset * 3 + i];
+            if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid RGB color value.');
+            input[i] = Math.round(value * 65535);
+          }
+          lcms._cmsDoTransform(transform, inputPointer, outputPointer, count);
+          const output = new Uint16Array(lcms.HEAPU8.buffer, outputPointer, count * 4);
+          for (let i = 0; i < output.length; i++) result[offset * 4 + i] = output[i] / 65535;
+          await yieldToBrowser();
+        }
+        active(stillActive);
+        return result;
+      } finally { busy = false; }
+    }
+
+    async function convertRgb8(rgb, sourceBytes, { stillActive = () => true } = {}) {
+      active(stillActive);
+      if (busy) throw new Error('CMYK conversions must run one at a time.');
+      if (!(rgb instanceof Uint8Array) || rgb.length % 3 || rgb.length > 16000000 * 3) throw new Error('Vector CMYK supports embedded images up to 16 million pixels.');
+      busy = true;
+      try {
+        const transform = transformFor(sourceBytes), count = rgb.length / 3;
+        const result = new Uint8Array(count * 4);
+        for (let offset = 0; offset < count; offset += CHUNK_PIXELS) {
+          active(stillActive);
+          const chunk = Math.min(CHUNK_PIXELS, count - offset);
+          lcms.HEAPU8.set(rgb.subarray(offset * 3, (offset + chunk) * 3), inputPointer);
+          lcms._cmsDoTransform(transform, inputPointer, outputPointer, chunk);
+          result.set(lcms.HEAPU8.subarray(outputPointer, outputPointer + chunk * 4), offset * 4);
+          await yieldToBrowser();
+        }
+        active(stillActive);
+        return result;
+      } finally { busy = false; }
     }
 
     async function embedPng(pdfDoc, inputBytes, { stillActive = () => true } = {}) {
@@ -191,11 +242,11 @@ function createCmykExporter(PDFLib, options = {}) {
         if (reverseProbe) lcms.cmsDeleteTransform(reverseProbe);
         lcms.cmsCloseProfile(probeSource);
       }
-      inputPointer = allocate(CHUNK_PIXELS * 3);
-      outputPointer = allocate(CHUNK_PIXELS * 4);
+      inputPointer = allocate(CHUNK_PIXELS * 6);
+      outputPointer = allocate(CHUNK_PIXELS * 8);
       const rawName = lcms.cmsGetProfileInfoASCII(outputProfile, constants.cmsInfoDescription, 'en', 'US');
       const profileName = String(rawName || 'CMYK printer profile').replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160);
-      return { embedPng, close, profileName, renderingIntent: 'relative-colorimetric', blackPointCompensation: true, maxPixels: MAX_PIXELS };
+      return { embedPng, convertColors, convertRgb8, destinationProfileRef, close, profileName, renderingIntent: 'relative-colorimetric', blackPointCompensation: true, maxPixels: MAX_PIXELS };
     } catch (error) { close(); throw error; }
   }
 

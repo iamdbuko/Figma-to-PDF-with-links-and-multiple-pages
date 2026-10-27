@@ -733,7 +733,7 @@
     <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
     <p id="color-profile-compatibility" class="export-help" role="status" aria-live="polite" hidden></p>
     <div class="controls">
-      <div class="quality-selector">
+      <div class="quality-selector" id="quality-setting">
         <label class="quality-label" for="quality-select" id="quality-label">Fallback quality:</label>
         <select id="quality-select" class="quality-select">
           <optgroup label="Screen"><option value="screen-low">Low (0.5x, 36 DPI)</option><option value="screen-medium" selected>Medium (1x, 72 DPI)</option><option value="screen-high">High (1.5x, 108 DPI)</option></optgroup>
@@ -762,10 +762,10 @@
         <p>Some folders may be empty or missing. Many display and device profiles are RGB; this plugin requires a CMYK printer/output profile.</p>
         <p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p>
       </details>
-      <p class="export-help">CMYK beta creates raster pages on a white background and keeps links clickable. Maximum 8 million pixels per page; enable Fit oversized raster pages to lower resolution when needed. This is not a PDF/X export.</p>
+      <p id="cmyk-format-help" class="export-help"></p>
     </div>
-    <label class="export-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
-    <p class="export-help">When enabled, lowers resolution only for pages above the raster size limits. PDF page dimensions stay unchanged.</p>
+    <label class="export-setting" id="fit-oversized-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
+    <p id="fit-oversized-help" class="export-help">When enabled, lowers resolution only for pages above the raster size limits. PDF page dimensions stay unchanged.</p>
     <label class="export-setting" for="output-mode">Output <select id="output-mode"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></label>
     <label class="export-setting" id="part-size-setting" for="pages-per-part" hidden>Pages per part <input type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
     <p id="parts-help" class="export-help" hidden>Save each part before continuing. Keep every PDF together with its original filename. Links between parts require a compatible desktop PDF viewer. The export pauses for up to 15 minutes between parts.</p>
@@ -778,9 +778,9 @@
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="color-profiles.js"></script>
   <script src="cmyk.js"></script>
+  <script src="vector-cmyk.js"></script>
   <script>
     'use strict';
-    const CMYK_VECTOR_MESSAGE = 'CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.';
     const QUALITY_SETTINGS = {
       'screen-low': { scale: 0.5 }, 'screen-medium': { scale: 1 }, 'screen-high': { scale: 1.5 },
       'print-low': { scale: 2 }, 'print-medium': { scale: 3 }, 'print-high': { scale: 4 }, 'print-highest': { scale: 4.17 }
@@ -955,28 +955,97 @@
       }
     }
 
+    function deduplicateCmykPageProfiles(pdfDoc, page, session) {
+      const { PDFName, PDFRef, PDFArray, PDFDict, PDFRawStream } = PDFLib;
+      const context = pdfDoc.context;
+      const profiles = new Map();
+      const visited = new Set();
+      const stack = [{ object: page.node.Resources(), depth: 0 }];
+      let visits = 0;
+      const checkBudget = depth => {
+        if (depth > 128 || ++visits > 1000000) throw new Error('The PDF resource graph is too complex to merge safely.');
+      };
+      // Converted pages use the selected destination ICC for every four-channel
+      // color space. Inspect resources only; never decode image or font streams.
+      while (stack.length) {
+        let { object, depth } = stack.pop();
+        checkBudget(depth);
+        if (object instanceof PDFRef) object = context.lookup(object);
+        if (!object || visited.has(object)) continue;
+        visited.add(object);
+        if (object instanceof PDFRawStream) object = object.dict;
+        if (object instanceof PDFArray) {
+          if (object.get(0)?.toString() === '/ICCBased') {
+            const ref = object.get(1), profile = context.lookup(ref);
+            if (profile instanceof PDFRawStream && profile.dict.lookup(PDFName.of('N'))?.asNumber() === 4) {
+              if (!(ref instanceof PDFRef)) throw new Error('The converted CMYK profile must be an indirect PDF object.');
+              profiles.set(ref.toString(), ref);
+            }
+          }
+          for (const child of object.asArray()) stack.push({ object: child, depth: depth + 1 });
+        } else if (object instanceof PDFDict) {
+          for (const [, child] of object.entries()) stack.push({ object: child, depth: depth + 1 });
+        }
+      }
+      if (!profiles.size) return;
+      const canonical = session.destinationProfileRef(pdfDoc);
+      profiles.delete(canonical.toString());
+      if (!profiles.size) return;
+      visited.clear(); visits = 0;
+      // Each indirect object is enumerated independently, so references are only
+      // rewritten here. Traversing through them again would repeat the graph.
+      for (const [, root] of context.enumerateIndirectObjects()) {
+        stack.push({ object: root, depth: 0 });
+        while (stack.length) {
+          let { object, depth } = stack.pop();
+          checkBudget(depth);
+          if (!object || visited.has(object)) continue;
+          visited.add(object);
+          if (object instanceof PDFRawStream) object = object.dict;
+          const entries = object instanceof PDFArray ? object.asArray().map((value, index) => [index, value])
+            : object instanceof PDFDict ? object.entries() : [];
+          for (const [key, child] of entries) {
+            if (child instanceof PDFRef) {
+              if (profiles.has(child.toString())) object.set(key, canonical);
+            } else stack.push({ object: child, depth: depth + 1 });
+          }
+        }
+      }
+      // pdf-lib serializes orphan indirect objects too. Removing duplicate ICC
+      // streams keeps the retained-data allowance and saved parts meaningful.
+      for (const ref of profiles.values()) context.delete(ref);
+    }
+
     async function appendExportPage(pdfDoc, message, options = {}) {
       const bytes = message.data instanceof Uint8Array ? message.data : new Uint8Array(message.data);
       if (!bytes.byteLength) throw new Error('The exported page is empty.');
       const frame = message.frame;
       if (!frame || ![frame.width, frame.height].every(n => Number.isFinite(n) && n > 0)) throw new Error('Invalid page dimensions.');
       const cmyk = message.outputColorMode === 'CMYK';
-      if (cmyk && (message.format !== 'PNG' || message.exportColorProfile !== 'SRGB' || !options.cmykSession)) {
-        throw new Error('CMYK export requires an sRGB PNG and a prepared printer profile.');
+      if (cmyk && (!['PDF', 'PNG'].includes(message.format) || message.exportColorProfile !== 'SRGB' || !options.cmykSession)) {
+        throw new Error('CMYK export requires an sRGB PDF or PNG and a prepared printer profile.');
       }
       if (message.format === 'PDF') {
         const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
         if (source.getPageCount() !== 1) throw new Error('A frame must produce exactly one PDF page.');
         const sourcePage = source.getPage(0);
-        if (sourcePage.getRotation().angle % 360 !== 0) throw new Error('Rotated PDF page needs raster fallback.');
-        // Link coordinates use the frame origin. Unexpected native page geometry is rasterized.
+        if (sourcePage.getRotation().angle % 360 !== 0) throw new Error('Rotated native PDF pages cannot be merged.');
+        // Link coordinates use the frame origin. Unexpected native geometry cannot be copied safely.
         if (!nativePageMatchesFrame(sourcePage, frame)) {
           throw new Error('Native PDF dimensions differ from the frame.');
         }
+        const warnings = [];
+        if (cmyk) {
+          if (typeof createVectorCmykConverter !== 'function') throw new Error('The vector CMYK converter is unavailable. Reopen the plugin and try again.');
+          const converted = await createVectorCmykConverter(PDFLib).convertPage(source, sourcePage, options.cmykSession, { stillActive: options.stillActive });
+          if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+          warnings.push(...(converted?.warnings || []));
+        }
         const [page] = await pdfDoc.copyPages(source, [0]);
-        await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
+        if (cmyk) deduplicateCmykPageProfiles(pdfDoc, page, options.cmykSession);
+        if (!cmyk) await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
         pdfDoc.addPage(page);
-        return { page, warnings: [] };
+        return { page, warnings };
       }
       if (!['PNG', 'JPG'].includes(message.format)) throw new Error('Unsupported exported page format.');
       // JPEG is embedded as its original compressed DCT stream, without RGB expansion.
@@ -1173,12 +1242,19 @@
     function updateExportTypeInfo() {
       const cmyk = $('color-profile').value === 'CMYK';
       const vector = $('export-vector').checked;
-      $('color-profile-compatibility').hidden = !(cmyk && vector);
-      $('color-profile-compatibility').textContent = cmyk && vector ? CMYK_VECTOR_MESSAGE : '';
-      $('color-profile-help').hidden = cmyk && vector;
+      const vectorCmyk = cmyk && vector;
+      $('color-profile-compatibility').hidden = true;
+      $('color-profile-compatibility').textContent = '';
+      $('color-profile-help').hidden = false;
       $('raster-format-setting').hidden = cmyk;
+      $('quality-setting').hidden = vectorCmyk;
+      $('fit-oversized-setting').hidden = vectorCmyk;
+      $('fit-oversized-help').hidden = vectorCmyk;
+      $('compression-help').hidden = vectorCmyk;
       $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
-      $('export-help').textContent = cmyk && !vector
+      $('export-help').textContent = vectorCmyk
+        ? 'Converts native vectors, text and images to the selected CMYK profile. Unsupported content stops the export; pages are never automatically rasterized.'
+        : cmyk
         ? 'CMYK rasterizes every page at the selected resolution and converts colors using the selected profile. Transparent areas become white.'
         : vector
         ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
@@ -1195,6 +1271,9 @@
         CMYK: 'Use the built-in profile or choose a custom profile for your printer and paper. Conversion happens inside the plugin.'
       }[$('color-profile').value];
       $('cmyk-settings').hidden = !cmyk;
+      $('cmyk-format-help').textContent = vector
+        ? 'Vector CMYK is experimental. Some effects require Rasterized. Transparency and gradients may look different; check the exported PDF. Links stay clickable. This is not a PDF/X export.'
+        : 'Raster CMYK uses a white background and keeps links clickable. Maximum 8 million pixels per page; enable Fit oversized raster pages to lower resolution when needed. This is not a PDF/X export.';
       updateCmykProfileInfo();
       const parts = $('output-mode').value === 'parts';
       $('part-size-setting').hidden = !parts;
@@ -1210,9 +1289,11 @@
         ? Boolean(bundledCmykProfile && !bundledCmykProfileError)
         : $('cmyk-profile-source').value === 'CUSTOM' && !readingCmykProfile && Boolean(selectedCmykProfile);
       $('raster-format').disabled = busy || cmyk;
+      $('quality-select').disabled = busy || (cmyk && $('export-vector').checked);
+      $('fit-oversized').disabled = busy || (cmyk && $('export-vector').checked);
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
-      $('export-btn').disabled = busy || !count || (cmyk && ($('export-vector').checked || !cmykProfileReady));
+      $('export-btn').disabled = busy || !count || (cmyk && !cmykProfileReady);
       $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
       $('cancel-btn').hidden = !busy;
       $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
@@ -1343,7 +1424,6 @@
       if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
       const cmyk = requestedColorProfile === 'CMYK';
       const exportType = $('export-vector').checked ? 'vector' : 'raster';
-      if (cmyk && exportType === 'vector') { showStatus(CMYK_VECTOR_MESSAGE, 'error'); return; }
       let cmykProfile = null;
       const cmykProfileSource = cmyk ? $('cmyk-profile-source').value : null;
       if (cmykProfileSource === 'CUSTOM') {
@@ -1401,7 +1481,11 @@
       // Reject inconsistent metadata before import, so a profile error cannot trigger raster fallback.
       if (message.exportColorProfile !== job.exportColorProfile) throw new Error('The page color profile differs from this export. Start a new export with one consistent color profile.');
       if (message.outputColorMode !== job.outputColorMode) throw new Error('The page color mode differs from this export. Start a new export.');
-      if (job.outputColorMode === 'CMYK' && message.format !== 'PNG') throw new Error('CMYK export requires raster PNG pages. Start a new export.');
+      if (job.outputColorMode === 'CMYK' && message.format !== (job.exportType === 'vector' ? 'PDF' : 'PNG')) {
+        throw new Error(job.exportType === 'vector'
+          ? 'Vector CMYK requires a native PDF page. Choose Rasterized to export this frame in CMYK.'
+          : 'Raster CMYK requires PNG pages. Start a new export.');
+      }
       addWarnings(job, message.warnings);
       showStatus(`Preparing page ${message.index + 1} of ${job.frames.length}: ${message.frame.name}`, 'info', job.warnings);
       const before = job.pdf.getPageCount();
@@ -1412,13 +1496,16 @@
         // A failed embed must never leave a partial/blank page in a successful file.
         while (job.pdf.getPageCount() > before) job.pdf.removePage(job.pdf.getPageCount() - 1);
         if (!isCurrent(job)) return;
-        if (message.format === 'PDF' && job.fallbackIndex !== message.index) {
+        if (message.format === 'PDF' && job.outputColorMode !== 'CMYK' && job.fallbackIndex !== message.index) {
           job.fallbackIndex = message.index;
           addWarnings(job, [`${message.frame.name}: using the selected raster format because its PDF could not be imported.`]);
           post({ type: 'page-ack', jobId: job.id, index: message.index, fallback: true });
           return;
         }
-        throw new Error(`Could not create page “${message.frame.name}”: ${error.message}`);
+        const reason = error?.message || String(error);
+        const hint = job.outputColorMode === 'CMYK' && job.exportType === 'vector' && !/choose rasterized/i.test(reason)
+          ? ' Choose Rasterized to export this frame in CMYK.' : '';
+        throw new Error(`Could not create page “${message.frame.name}”: ${reason}${hint}`);
       }
       if (!isCurrent(job)) return;
       addWarnings(job, appended.warnings);

@@ -612,9 +612,8 @@ async function startExport(msg) {
     if (job.rasterFormat !== 'PNG' && job.rasterFormat !== 'JPG') throw new Error('Choose PNG or JPG for raster pages.');
     if (typeof job.fitOversized !== 'boolean') throw new Error('Fit oversized pages must be enabled or disabled.');
     if (job.outputColorMode === 'CMYK') {
-      if (job.exportType !== 'raster') throw new Error('CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.');
       // The UI converts explicit sRGB samples with the chosen printer profile.
-      // PNG avoids a lossy intermediate before that conversion.
+      // Raster CMYK uses PNG; vector CMYK must retain its native PDF or fail.
       job.rasterFormat = 'PNG';
     }
     const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
@@ -628,7 +627,11 @@ async function startExport(msg) {
       validateFrameSize(frame);
       const metadata = describeFrame(frame);
       validateFrameSize(metadata);
-      if (job.exportType === 'raster' || unsupportedPdfBlendMode(frame)) rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
+      const unsupportedMode = unsupportedPdfBlendMode(frame);
+      if (unsupportedMode && job.outputColorMode === 'CMYK' && job.exportType === 'vector') {
+        throw new Error(`“${metadata.name}” uses a blend mode that Figma cannot export as vector PDF. Choose Rasterized to export this frame in CMYK.`);
+      }
+      if (job.exportType === 'raster' || unsupportedMode) rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
       job.frames.push(metadata);
       liveFrames.push(frame);
     }
@@ -697,6 +700,10 @@ async function exportPage(job, index, options = {}) {
   assertUnchangedDimensions(frame, metadata);
   const warnings = [];
   const unsupportedMode = unsupportedPdfBlendMode(frame);
+  const vectorCmyk = job.outputColorMode === 'CMYK' && job.exportType === 'vector';
+  if (vectorCmyk && (unsupportedMode || options.forceRaster)) {
+    throw new Error(`“${metadata.name}” cannot be exported as vector CMYK. Choose Rasterized to export this frame in CMYK.`);
+  }
   let format = job.exportType === 'raster' || options.forceRaster || unsupportedMode ? job.rasterFormat : 'PDF';
   let data;
   let annotationPdfData = options.annotationPdfData;
@@ -713,6 +720,7 @@ async function exportPage(job, index, options = {}) {
       data = checkedExportBytes(data, metadata.name);
     } catch (error) {
       if (!verifySourceColorProfile(job)) return;
+      if (vectorCmyk) throw new Error(`Figma could not export the native PDF for “${metadata.name}”: ${error.message || error}. Choose Rasterized to export this frame in CMYK.`);
       nativeExportFailed = true;
       format = job.rasterFormat;
       warnings.push(`“${metadata.name}” was rasterized because Figma could not export its PDF: ${error.message || error}`);
@@ -801,6 +809,10 @@ async function acknowledgePage(msg) {
   const pending = job.pending;
   // A saved part cannot be rewritten, and raster replacements cannot retry.
   if (msg.fallback === true && (job.phase === 'awaiting-part' || pending.format !== 'PDF')) return;
+  if (msg.fallback === true && job.outputColorMode === 'CMYK' && job.exportType === 'vector') {
+    terminateJob(job, 'export-error', 'This page could not be processed as vector CMYK. Choose Rasterized to export it in CMYK.');
+    return;
+  }
   if (!verifySourceColorProfile(job)) return;
   const annotationPdfData = msg.fallback === true &&
     job.connections.some(link => link.fromFrameId === job.frames[msg.index].id && link.source === 'text')

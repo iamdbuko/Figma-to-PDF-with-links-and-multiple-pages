@@ -621,25 +621,64 @@ test('source-profile changes and source events during a legacy JPEG probe abort 
   }
 });
 
-test('Vector with CMYK fails before exporting and releases the job for a corrected request', async () => {
-  for (const rasterFormat of ['PNG', 'JPG']) {
-    const h = harness(); h.frame('a'); h.frame('b');
-    await h.start(['a', 'b'], { colorProfile: 'CMYK', exportType: 'vector', rasterFormat });
-    assert.equal(h.messagesOf('export-error')[0].error, 'CMYK currently requires Rasterized. Choose Rasterized to export in CMYK.');
-    assert.equal(h.messagesOf('export-start').length, 0);
-    assert.equal(h.messagesOf('export-page').length, 0);
-    assert.equal(h.exports.length, 0);
-    assert.equal(h.pageEvents.size, 0);
-    assert.equal(h.events.has('stylechange'), false);
-    assert.equal(h.timers.size, 0);
-    assert.equal(vm.runInContext('activeExportJob', h.context), null);
-    await h.ack(0);
-    assert.equal(h.exports.length, 0);
-    await h.start(['a'], { jobId: 'corrected-raster', colorProfile: 'CMYK', exportType: 'raster', rasterFormat });
-    assert.equal(h.messagesOf('export-error').length, 1);
-    assert.equal(h.messagesOf('export-page')[0].format, 'PNG');
-    assert.equal(h.messagesOf('export-page')[0].outputColorMode, 'CMYK');
+test('Vector CMYK exports explicit sRGB native PDFs without raster size limits or source mutations', async () => {
+  for (const documentColorProfile of ['SRGB', 'DISPLAY_P3', 'LEGACY']) {
+    const h = harness({ documentColorProfile });
+    const frame = h.frame('a', { width: 10000, height: 10000 });
+    textLink(h, frame); h.frame('b');
+    await h.start(['a', 'b'], { colorProfile: 'CMYK', exportType: 'vector', rasterFormat: 'JPG', qualityScale: 4.17 });
+    assert.equal(h.messagesOf('export-error').length, 0);
+    assert.equal(h.messagesOf('export-start')[0].exportColorProfile, 'SRGB');
+    assert.equal(h.messagesOf('export-start')[0].outputColorMode, 'CMYK');
+    assert.deepEqual(h.exports.map(item => [item.format, item.colorProfile, item.constraint]), [['PDF', 'SRGB', undefined]]);
+    const page = h.messagesOf('export-page')[0];
+    assert.equal(page.format, 'PDF'); assert.equal(page.outputColorMode, 'CMYK');
+    assert.equal(page.annotationPdfData, undefined);
+    assert.equal(h.messagesOf('export-start')[0].connections.length, 1);
+    await h.ack(0); await h.ack(1);
+    assert.equal(h.messagesOf('export-complete').length, 1);
+    assert.deepEqual(h.exports.map(item => item.format), ['PDF', 'PDF']);
+    assert.equal(h.figma.root.documentColorProfile, documentColorProfile);
   }
+});
+
+test('Vector CMYK rejects unsupported blends during preflight without exporting any page', async () => {
+  for (const blendMode of ['LINEAR_BURN', 'LINEAR_DODGE', 'PLUS_DARKER', 'PLUS_LIGHTER']) {
+    const h = harness(); h.frame('a');
+    const frame = h.frame('b'); h.child(frame, { fills: [{ type: 'SOLID', blendMode }] });
+    await h.start(['a', 'b'], { colorProfile: 'CMYK' });
+    assert.match(h.messagesOf('export-error')[0].error, /Choose Rasterized/);
+    assert.equal(h.messagesOf('export-start').length, 0);
+    assert.equal(h.exports.length, 0);
+    assert.equal(h.pageEvents.size, 0); assert.equal(h.events.has('stylechange'), false);
+    assert.equal(h.timers.size, 0); assert.equal(vm.runInContext('activeExportJob', h.context), null);
+    await h.start(['a'], { jobId: 'retry', colorProfile: 'CMYK', exportType: 'raster' });
+    assert.equal(h.messagesOf('export-page')[0].format, 'PNG');
+  }
+});
+
+test('Vector CMYK stops on native export failures and invalid bytes instead of rasterizing', async () => {
+  for (const invalidBytes of [false, true]) {
+    const h = harness();
+    h.frame('a', { exporter: async () => { if (invalidBytes) return new Uint8Array(); throw new Error('Native failure'); } });
+    await h.start(['a'], { colorProfile: 'CMYK', rasterFormat: 'JPG' });
+    assert.match(h.messagesOf('export-error')[0].error, /Choose Rasterized/);
+    assert.deepEqual(h.exports.map(item => item.format), ['PDF']);
+    assert.equal(h.messagesOf('export-page').length, 0);
+    assert.equal(h.timers.size, 0); assert.equal(vm.runInContext('activeExportJob', h.context), null);
+  }
+});
+
+test('Vector CMYK rejects a merge fallback request, releases the job, and never sends raster data', async () => {
+  const h = harness(); h.frame('a'); h.frame('b');
+  await h.start(['a', 'b'], { colorProfile: 'CMYK' });
+  await h.ack(0, { fallback: true });
+  assert.match(h.messagesOf('export-error')[0].error, /Choose Rasterized/);
+  assert.deepEqual(h.exports.map(item => item.format), ['PDF']);
+  assert.equal(h.messagesOf('export-page').length, 1);
+  assert.equal(h.messagesOf('export-complete').length, 0);
+  assert.equal(h.pageEvents.size, 0); assert.equal(h.timers.size, 0);
+  assert.equal(vm.runInContext('activeExportJob', h.context), null);
 });
 
 test('Rasterized CMYK renders explicit sRGB PNG, with separate output mode and native link metadata', async () => {

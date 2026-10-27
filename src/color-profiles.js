@@ -189,4 +189,4 @@ function createPdfColorManagement(PDFLib) {
   return { attachRasterProfile, preserveNativeColorProfile, getRasterProfile };
 }
 
-if (typeof module !== 'undefined' && module.exports) module.exports = { createPdfColorManagement };
+if (typeof module !== 'undefined' && module.exports) module.exports = { createPdfColorManagement, PDF_EXPORT_SRGB_ICC };

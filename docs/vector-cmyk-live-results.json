@@ -1,0 +1,1033 @@
+{
+  "status": "passed",
+  "mode": "vector-cmyk",
+  "pages": [
+    {
+      "page": 0,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 0,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272736,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/1/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.704529,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/1/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/1/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/1/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.636353,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/1/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647736,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 1,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772705,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 5,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 1,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4700,
+            "sha256": "1d684f9513e6afb67c5cbde9451726e0393a60487c60ae75451587ac8c9a7fd3",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    },
+    {
+      "page": 1,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 1,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272949,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/2/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.70459,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/2/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/2/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/2/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.63623,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/2/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647949,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 2,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772461,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 0,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 2,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4718,
+            "sha256": "286e9c9b677efd43d63a019fbd84624c646f34da0ad65e88aafe70bfaaeca0c3",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 2,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272461,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/3/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.704102,
+            2663.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/3/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/3/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727264
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/3/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.636719,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/3/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647461,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 3,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772461,
+            2303.727234
+          ],
+          "kind": "internal",
+          "targetPage": 1,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 3,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4732,
+            "sha256": "8047fa0bc6a2fa59bcf7be689d0c4568766de615e0fe9df0ca9487bba28e80b5",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 3,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272736,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/4/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.704529,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/4/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/4/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/4/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.636353,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/4/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647736,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 4,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772705,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 2,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 4,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4710,
+            "sha256": "375b2b682ac7f14fbde2e1045ff1e002f60e59637cc1f37d50aca20125c01426",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 4,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272949,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/5/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.70459,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/5/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/5/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/5/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.63623,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/5/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647949,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 5,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772461,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 3,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 5,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4721,
+            "sha256": "cd82e4c400c835726708e06d660fd2c573596154e3137b62a93589e72fed3afa",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "file": "live-dev7-large-vector-cmyk.pdf",
+      "localPage": 5,
+      "dimensions": [
+        3840,
+        2880
+      ],
+      "links": [
+        {
+          "rect": [
+            100,
+            2586.272705,
+            343.272461,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/6/web"
+        },
+        {
+          "rect": [
+            396.875,
+            2586.272705,
+            857.704102,
+            2663.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/6/docs"
+        },
+        {
+          "rect": [
+            100,
+            2496.272705,
+            1638.75,
+            2573.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/6/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2406.272705,
+            1717.75,
+            2483.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/6/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2316.272705,
+            648.636719,
+            2393.727295
+          ],
+          "kind": "external",
+          "uri": "https://example.com/combined/6/wrapped"
+        },
+        {
+          "rect": [
+            100,
+            2226.272705,
+            411.647461,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 0,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            465.25,
+            2226.272705,
+            893.772461,
+            2303.727295
+          ],
+          "kind": "internal",
+          "targetPage": 4,
+          "transport": "local"
+        },
+        {
+          "rect": [
+            100,
+            360,
+            400,
+            480
+          ],
+          "kind": "internal",
+          "targetPage": 0,
+          "transport": "local"
+        }
+      ],
+      "imageCount": 1,
+      "pathPaints": 3,
+      "textOperators": 10,
+      "vectorStructure": {
+        "programs": [
+          {
+            "resource": "page",
+            "instructions": 4733,
+            "sha256": "30a00650d4c1a693e7a52453addbe490eafa0495f32d26abfce10554d2beb0b2",
+            "pathPaints": 3,
+            "textOperators": 10
+          }
+        ],
+        "images": [
+          {
+            "resource": "page:/X1",
+            "dimensions": [
+              3840,
+              2880
+            ],
+            "bits": 8,
+            "softMask": {
+              "dimensions": [
+                3840,
+                2880
+              ],
+              "bits": 8,
+              "bytes": 11059200,
+              "sha256": "ea02bc398fc84eccaa000dd290d66c5f51a1556ddf89cd1bae43445ae72dc8e6"
+            },
+            "convertedSamples": {
+              "bytes": 44236800,
+              "sha256": "95a14ffd89b93133106e50b953a7aad495f91197d6756dc6d9004afd2bbf23f5"
+            }
+          }
+        ],
+        "fonts": 1,
+        "emptyType3Glyphs": 75,
+        "normalOpacity": [
+          {
+            "resource": "page:/E1",
+            "ca": 0.88,
+            "CA": 1,
+            "blend": "/Normal"
+          },
+          {
+            "resource": "page:/E2",
+            "ca": 0.8,
+            "CA": 1,
+            "blend": "/Normal"
+          }
+        ],
+        "paintingProfileObjects": [
+          "171:0"
+        ],
+        "noActiveRgbPaint": true
+      },
+      "outputIccProfiles": [
+        {
+          "object": "171:0",
+          "components": 4,
+          "bytes": 1052612,
+          "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886"
+        }
+      ]
+    }
+  ],
+  "files": [
+    "/Users/di/Work/03_FigmaPlugins/PDF Export/figma-to-pdf-dev/test-results/vector-cmyk/visual/live-dev7-large-vector-cmyk.pdf"
+  ],
+  "exactOracleRectangles": true,
+  "oracleKind": "vector",
+  "tolerance": 0.01,
+  "limitations": [
+    "Annotation rectangles were compared to the plugin vector export, not an independently captured native source PDF.",
+    "This validates the known combined fixture with pypdf; it is not a general PDF conformance check, colorimetric proof, or viewer-navigation test."
+  ],
+  "recordedAt": "2026-10-27",
+  "version": "9.0.0-dev.7",
+  "builtUiSha256": "9b00834b57dafcb9640bded7e0cde97c1cb22b5caeb06221bc74e7638b9d0f04",
+  "nativeProvenance": {
+    "application": "Native macOS Figma development plugin",
+    "fixture": "docs/large-links-live-fixture.json",
+    "frames": [
+      "30:3",
+      "30:5",
+      "30:7",
+      "30:9",
+      "30:11",
+      "30:13"
+    ],
+    "sourceChange": "The six existing fixture frames were selected without editing nodes.",
+    "output": "test-results/vector-cmyk/visual/live-dev7-large-vector-cmyk.pdf",
+    "outputBytes": 5715823,
+    "outputSha256": "32268d11cd63825ee13018163d68de66b7cce9d0893ff80a4f13aa48f1b8a933",
+    "annotationAndDrawingOracle": "test-results/combined-large/live/combined-dev6-vector.pdf",
+    "oracleSha256": "09843304c98b120be96dcf9f8b7ba1095bb8cc726fe5e52d4862382807d9c472"
+  },
+  "validation": {
+    "engine": "pypdf",
+    "pages": 6,
+    "annotations": 48,
+    "nonColorDrawingInstructionsCompared": true,
+    "drawingNumericNormalization": "Six decimal places; signed zero normalized.",
+    "exactMasksCompared": true,
+    "exactImageDimensionsCompared": true,
+    "oneExactBuiltinIccPerOutputIncludingOrphans": true,
+    "noRetainedRgbOrGrayIcc": true,
+    "noActiveRgbPaintOrResource": true,
+    "negativeValidatorChecks": [
+      {
+        "case": "active RGB paint",
+        "rejected": true,
+        "reason": "Unconverted device paint operator b'rg'"
+      },
+      {
+        "case": "RGB painting profile",
+        "rejected": true,
+        "reason": "Painting color space does not use the exact selected CMYK profile"
+      },
+      {
+        "case": "duplicate CMYK ICC streams",
+        "rejected": true,
+        "reason": "Expected one CMYK ICC and no retained RGB/gray ICC streams"
+      }
+    ]
+  },
+  "visualReview": {
+    "reviewer": "Parent task agent, reported separately from this structural validator",
+    "scope": "All six native large-page output renders and the native swatch render were inspected; all content was present. Transparency/compositing differences are documented.",
+    "physicalPrintProof": false,
+    "rendererWarnings": "Poppler reported78 Type3 glyph bounding-box warnings across6 CMYK pages. The same warning was reproduced13 times on the first prior RGB vector page; inspected visible content was present."
+  },
+  "automatedSuiteCheckpoint": {
+    "totalPassed": 194,
+    "focusedPassed": 57,
+    "source": "Parent task report; this validator did not rerun those suites."
+  },
+  "packagedUiSha256": "c844c78229a9a2a8d6520771005943b12fa3b04b7b731fcba56dc74eec949f38",
+  "packagingNote": "Final packaged HTML adds only the JPEG decoder copyright/license comment. Removing that one comment exactly reproduces the tested HTML bytes; no executable code changed. Full194-test suite rerun on packaged HTML."
+}
