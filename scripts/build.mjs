@@ -14,6 +14,15 @@ const pdfLibraryLicenses = [
   ['pako', 'pako/LICENSE', 'pako-MIT.txt'],
   ['tslib', 'tslib/LICENSE.txt', 'tslib-0BSD.txt']
 ];
+// Notices travel inside the UI because Figma does not distribute loose repository files.
+// Preserve ordinary license text; neutralize delimiters if a future notice contains them.
+export function runtimeLicenseComment(name, text) {
+  const content = `${name}\n${text}`.replace(/\r\n?/g, '\n').replace(/[ \t]+$/gm, '')
+    .replace(/\*\//g, '*\\/')
+    .replace(/<\/script/gi, '<\\/script');
+  return `/*! ${content}*/`;
+}
+
 // tslib exposes its entry point but intentionally does not export license files.
 const resolvePdfLicense = location => location === 'tslib/LICENSE.txt'
   ? path.join(path.dirname(require.resolve('tslib')), 'LICENSE.txt') : require.resolve(location);
@@ -55,6 +64,10 @@ export async function buildPdfLibrary() {
 }
 
 export async function buildCmykBundle() {
+  const notices = [
+    runtimeLicenseComment('lcms-wasm', readFileSync(require.resolve('lcms-wasm/LICENSE.md'), 'utf8')),
+    runtimeLicenseComment('LittleCMS', readFileSync(path.join(root, 'licenses/littlecms-MIT.txt'), 'utf8'))
+  ].join('\n');
   const wasm = readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')).toString('base64');
   // Keep the redistributed production profile byte-for-byte identical to OpenICC.
   // Its original license and download provenance are recorded in licenses/.
@@ -96,7 +109,7 @@ ${profileLicense}
     bundle: true, platform: 'browser', format: 'iife', target: 'es2020', minify: true,
     // Emscripten includes an unreachable Node branch. No Node code runs in the UI.
     external: ['module'], define: { 'import.meta.url': '"data:application/javascript,lcms-offline"' },
-    legalComments: 'inline', write: false
+    legalComments: 'inline', write: false, banner: { js: notices }
   });
   return result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 }
@@ -118,7 +131,10 @@ if (source.split(vectorMarker).length !== 2) throw new Error('Expected exactly o
 const jpegBundle = await build({
   stdin: { contents: "import decode from 'jpeg-js/lib/decoder.js'; globalThis.decodeCmykJpeg = decode;", resolveDir: root },
   bundle: true, platform: 'browser', format: 'iife', target: 'es2020', minify: true, legalComments: 'inline', write: false,
-  banner: { js: '/*! JPEG decoder: Copyright 2011 notmasteryet. Licensed under Apache-2.0; see licenses/jpeg-js-decoder-Apache-2.0.txt and https://www.apache.org/licenses/LICENSE-2.0 */' }
+  banner: { js: [
+    runtimeLicenseComment('JPEG decoder: Copyright 2011 notmasteryet.', readFileSync(path.join(root, 'licenses/jpeg-js-decoder-Apache-2.0.txt'), 'utf8')),
+    runtimeLicenseComment('jpeg-js package modifications', readFileSync(require.resolve('jpeg-js/LICENSE'), 'utf8'))
+  ].join('\n') }
 });
 const vectorHelpers = [jpegBundle.outputFiles[0].text, ...['cooperative-yield.js', 'pdf-functions.js', 'pdf-loader.js', 'pdf-image-resolution.js', 'vector-cmyk.js'].map(file => readFileSync(path.join(root, 'src', file), 'utf8'))]
   .map(text => text.replace(/<\/script/gi, '<\\/script')).join('\n');
