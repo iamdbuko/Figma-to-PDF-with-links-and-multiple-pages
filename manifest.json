@@ -1,5 +1,5 @@
 {
-  "name": "PDF Export with Links",
+  "name": "PDF Export with Links \u2014 v9 Dev",
   "id": "1535371360850075397",
   "documentAccess": "dynamic-page",
   "api": "1.0.0",
@@ -12,8 +12,7 @@
   ],
   "networkAccess": {
     "allowedDomains": [
-      "https://cdnjs.cloudflare.com",
-      "https://unpkg.com"
+      "none"
     ]
   }
 }

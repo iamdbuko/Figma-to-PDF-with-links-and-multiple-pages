@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PDF Export with Links</title>
+  <style>
+    /* Light mode variables (default) */
+    :root {
+      --bg-primary: #fff;
+      --bg-secondary: #f8f9fa;
+      --bg-hover: #f8f8f8;
+      --bg-empty: #fff;
+
+      --text-primary: #333;
+      --text-secondary: #666;
+      --text-tertiary: #999;
+
+      --border-primary: #e0e0e0;
+      --border-secondary: #ddd;
+      --border-light: #f0f0f0;
+      --border-section: #e9ecef;
+
+      --accent-blue: #1976d2;
+      --accent-blue-hover: #1565c0;
+      --accent-blue-bg: #e3f2fd;
+      --accent-blue-border: #90caf9;
+
+      --accent-green-bg: #e8f5e8;
+      --accent-green-text: #2e7d2e;
+      --accent-green-border: #a5d6a5;
+      --accent-green: #4caf50;
+
+      --accent-red-bg: #ffe6e6;
+      --accent-red-text: #d32f2f;
+      --accent-red-border: #ffb3b3;
+      --accent-red: #ff4444;
+
+      --accent-purple-bg: #f3e5f5;
+      --accent-purple-text: #7b1fa2;
+      --accent-purple-border: #ce93d8;
+
+      --accent-orange-bg: #fff3e0;
+      --accent-orange-text: #e65100;
+      --accent-orange-border: #ffcc80;
+
+      --button-disabled: #ccc;
+      --button-secondary-bg: #f5f5f5;
+      --button-secondary-hover: #eeeeee;
+
+      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode variables */
+    [data-theme="dark"] {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #2a2a2a;
+      --bg-hover: #333;
+      --bg-empty: #252525;
+
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #707070;
+
+      --border-primary: #404040;
+      --border-secondary: #505050;
+      --border-light: #353535;
+      --border-section: #3a3a3a;
+
+      --accent-blue: #2196f3;
+      --accent-blue-hover: #1976d2;
+      --accent-blue-bg: #1e3a5f;
+      --accent-blue-border: #2c5282;
+
+      --accent-green-bg: #1b3a1b;
+      --accent-green-text: #66bb6a;
+      --accent-green-border: #2e7d32;
+      --accent-green: #4caf50;
+
+      --accent-red-bg: #3a1b1b;
+      --accent-red-text: #ef5350;
+      --accent-red-border: #7d2e2e;
+      --accent-red: #f44336;
+
+      --accent-purple-bg: #2e1a33;
+      --accent-purple-text: #ba68c8;
+      --accent-purple-border: #7b1fa2;
+
+      --accent-orange-bg: #3a2a1a;
+      --accent-orange-text: #ffb74d;
+      --accent-orange-border: #e65100;
+
+      --button-disabled: #555;
+      --button-secondary-bg: #333;
+      --button-secondary-hover: #404040;
+
+      --shadow-toggle: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .controls-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .controls-top .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .controls-top .left-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sort-select {
+      padding: 8px 12px;
+      padding-right: 28px;
+      border: 1px solid var(--border-secondary);
+      border-radius: 4px;
+      font-size: 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    [data-theme="dark"] .sort-select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+    }
+
+    /* Theme toggle switch */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-icon {
+      font-size: 14px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border-secondary);
+      transition: .3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--bg-primary);
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-blue);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .frame-list {
+      border: 1px solid var(--border-primary);
+      border-radius: 4px;
+      max-height: 360px;
+      overflow-y: auto;
+      background: var(--bg-primary);
+      margin-bottom: 16px;
+    }
+
+    .frame-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: move;
+      user-select: none;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .frame-item:last-child {
+      border-bottom: none;
+    }
+
+    .frame-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .frame-item.dragging {
+      opacity: 0.5;
+      background: var(--accent-blue-bg);
+    }
+
+    .frame-item.drag-over {
+      background: var(--accent-green-bg);
+      border-top: 2px solid var(--accent-green);
+    }
+
+    .frame-item.just-added {
+      animation: highlight 2s ease-out;
+    }
+
+    @keyframes highlight {
+      0% {
+        background: var(--accent-green-bg);
+        border-left: 3px solid var(--accent-green);
+      }
+      100% {
+        background: transparent;
+        border-left: none;
+      }
+    }
+
+    .frame-item.selected-in-figma {
+      background: var(--accent-blue-bg);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    .frame-checkbox {
+      margin-right: 12px;
+      accent-color: var(--accent-blue);
+    }
+
+    .frame-info {
+      flex: 1;
+    }
+
+    .frame-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .frame-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .connections-count {
+      font-size: 11px;
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .no-links {
+      font-size: 11px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .drag-handle {
+      color: var(--text-tertiary);
+      margin-left: 8px;
+      cursor: move;
+    }
+
+    .frame-item .remove-btn {
+      background: var(--accent-red);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .frame-item:hover .remove-btn {
+      opacity: 1;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 0;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-blue-hover);
+    }
+
+    .btn-primary:disabled {
+      background: var(--button-disabled);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .btn-secondary {
+      background: var(--button-secondary-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--button-secondary-hover);
+    }
+
+    /* Export panel */
+    .export-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      border: 1px solid var(--border-primary);
+    }
+
+    .export-type-selector {
+      display: flex;
+      align-items: center;
+    }
+
+    .export-type-options {
+      display: inline-flex;
+      border: 1px solid var(--border-primary);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+
+    .export-type-option {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .export-type-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .export-type-option label {
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border-primary);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .export-type-option:last-child label {
+      border-right: none;
+    }
+
+    .export-type-option input[type="radio"]:checked + label {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Quality selector styles */
+    .quality-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quality-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .quality-select {
+      padding: 8px 12px;
+      padding-right: 28px;
+      border: 1px solid var(--border-secondary);
+      border-radius: 4px;
+      font-size: 13px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      min-width: 180px;
+    }
+
+    .quality-select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: var(--bg-secondary);
+    }
+
+    .quality-select optgroup {
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    .quality-select option {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    [data-theme="dark"] .quality-select {
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M3 4.5L6 7.5L9 4.5' stroke='%23aaa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+    }
+
+    .quality-select:hover:not(:disabled) {
+      border-color: var(--text-tertiary);
+    }
+
+    .quality-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px var(--accent-blue-bg);
+    }
+
+    .status {
+      margin-top: 0;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+    }
+
+    .status-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .status-log {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 140px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .status-line {
+      font-size: 12px;
+      color: inherit;
+      opacity: 0.9;
+    }
+
+    .status.success {
+      background: var(--accent-green-bg);
+      color: var(--accent-green-text);
+      border: 1px solid var(--accent-green-border);
+    }
+
+    .status.error {
+      background: var(--accent-red-bg);
+      color: var(--accent-red-text);
+      border: 1px solid var(--accent-red-border);
+    }
+
+    .status.info {
+      background: var(--accent-blue-bg);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue-border);
+    }
+
+    .status.warning {
+      background: var(--accent-orange-bg);
+      color: var(--accent-orange-text);
+      border: 1px solid var(--accent-orange-border);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+      background: var(--bg-empty);
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .empty-state p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .selection-info {
+      background: var(--accent-blue-bg);
+      border: 1px solid var(--accent-blue-border);
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--accent-blue);
+    }
+
+    /* Scrollbar styles for dark mode */
+    [data-theme="dark"] ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb {
+      background: var(--border-secondary);
+      border-radius: 4px;
+    }
+
+    [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary);
+    }
+
+    /* Batch warning modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-primary);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-icon {
+      font-size: 24px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .modal-content {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-content strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .batch-list {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+      padding: 12px;
+      margin: 12px 0;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .batch-item {
+      padding: 6px 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-actions .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    .export-actions { display: flex; gap: 8px; }
+    #cancel-btn { margin-top: 8px; width: 100%; }
+    [hidden] { display: none !important; }
+    button:disabled, select:disabled, input:disabled { cursor: default; opacity: .6; }
+    .export-help { color: var(--text-secondary); font-size: 12px; line-height: 1.5; margin: 10px 0; }
+    .frame-name { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="controls-top">
+    <div class="left-controls">
+      <button id="clear-list-btn" class="btn btn-secondary">Clear List</button>
+      <select id="sort-select" class="sort-select" title="Sort frames" aria-label="Sort frames">
+        <option value="none" selected>Sort</option>
+        <option value="az">Name A–Z</option>
+        <option value="za">Name Z–A</option>
+      </select>
+    </div>
+    <div class="theme-toggle">
+      <label class="theme-toggle-label" for="theme-switch"><span class="theme-icon">🌙</span><span id="theme-label">Dark</span></label>
+      <label class="switch"><input type="checkbox" id="theme-switch" checked aria-label="Dark theme"><span class="slider"></span></label>
+    </div>
+  </div>
+  <div id="frame-list" class="frame-list" hidden></div>
+  <div id="empty-state" class="empty-state"><h3>Select frames in Figma</h3></div>
+  <div id="selection-info" class="selection-info" hidden></div>
+  <div class="export-panel">
+    <div class="export-type-selector"><div class="export-type-options">
+      <div class="export-type-option"><input type="radio" id="export-vector" name="export-type" value="vector" checked><label for="export-vector">Vector</label></div>
+      <div class="export-type-option"><input type="radio" id="export-raster" name="export-type" value="raster"><label for="export-raster">Rasterized</label></div>
+    </div></div>
+    <div class="controls">
+      <div class="quality-selector">
+        <label class="quality-label" for="quality-select" id="quality-label">Fallback quality:</label>
+        <select id="quality-select" class="quality-select">
+          <optgroup label="Screen"><option value="screen-low">Low (0.5x, 36 DPI)</option><option value="screen-medium" selected>Medium (1x, 72 DPI)</option><option value="screen-high">High (1.5x, 108 DPI)</option></optgroup>
+          <optgroup label="Print"><option value="print-low">Low (2x, 144 DPI)</option><option value="print-medium">Medium (3x, 216 DPI)</option><option value="print-high">High (4x, 288 DPI)</option><option value="print-highest">Highest (4.17x, 300 DPI)</option></optgroup>
+        </select>
+      </div>
+      <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
+    </div>
+    <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
+    <button id="cancel-btn" class="btn btn-secondary" hidden>Cancel export</button>
+    <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
+  </div>
+  <!-- Replaced with the pinned local library by the production build. -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script>
+    'use strict';
+    const QUALITY_SETTINGS = {
+      'screen-low': { scale: 0.5 }, 'screen-medium': { scale: 1 }, 'screen-high': { scale: 1.5 },
+      'print-low': { scale: 2 }, 'print-medium': { scale: 3 }, 'print-high': { scale: 4 }, 'print-highest': { scale: 4.17 }
+    };
+    let allFrames = [];
+    let frameOrder = [];
+    let connections = [];
+    let checkedFrames = new Set();
+    let selectedInFigma = new Set();
+    let deferredFrames = null;
+    let draggedFrameId = null;
+    let activeJob = null;
+    let jobSequence = 0;
+    const $ = id => document.getElementById(id);
+    const post = message => parent.postMessage({ pluginMessage: message }, '*');
+    const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+
+    // PDF_ASSEMBLY_START: tested against the pinned pdf-lib implementation.
+    function normalizeUrl(value) {
+      if (typeof value !== 'string') return null;
+      const input = value.trim();
+      if (!input || /[\u0000-\u001f\u007f]/.test(input)) return null;
+      const scheme = input.match(/^([a-z][a-z0-9+.-]*):/i);
+      if (scheme && !/^(https?|mailto|tel)$/i.test(scheme[1])) return null;
+      try {
+        const url = new URL(scheme ? input : `https://${input}`);
+        if (!['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)) return null;
+        if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.hostname) return null;
+        if ((url.protocol === 'mailto:' || url.protocol === 'tel:') && !url.pathname) return null;
+        return url.href;
+      } catch (_) { return null; }
+    }
+
+    function calculateLinkBounds(bounds, width, height) {
+      if (!bounds || ![bounds.x, bounds.y, bounds.width, bounds.height, width, height].every(Number.isFinite)) return null;
+      if (bounds.width <= 0 || bounds.height <= 0 || width <= 0 || height <= 0) return null;
+      const x = Math.max(0, bounds.x), y = Math.max(0, bounds.y);
+      const right = Math.min(width, bounds.x + bounds.width), bottom = Math.min(height, bounds.y + bounds.height);
+      return right > x && bottom > y ? { x, y, width: right - x, height: bottom - y } : null;
+    }
+
+    function rectanglesIntersect(a, b) {
+      return a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+    }
+
+    function nativeFigmaNodeId(uri) {
+      if (typeof uri !== 'string' || !uri) return null;
+      try {
+        const url = new URL(uri);
+        if (!['http:', 'https:'].includes(url.protocol) ||
+            !['figma.com', 'www.figma.com'].includes(url.hostname) ||
+            !/^\/(design|file)\/[a-z0-9]+(?:\/|$)/i.test(url.pathname)) return null;
+        const values = url.searchParams.getAll('node-id');
+        if (values.length !== 1 || !/^(?:I?\d+[:-]\d+)(?:;I?\d+[:-]\d+)*$/.test(values[0])) return null;
+        return values[0].replace(/-/g, ':');
+      } catch (_) { return null; }
+    }
+
+    function nativeLinkRecords(pdfDoc, page) {
+      const { PDFName, PDFArray, PDFDict, PDFString, PDFHexString } = PDFLib;
+      const result = [];
+      const annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+      if (!annotations) return result;
+      for (let i = 0; i < annotations.size(); i++) {
+        try {
+          const annotation = annotations.lookup(i, PDFDict);
+          if (annotation.get(PDFName.of('Subtype'))?.toString() !== '/Link') continue;
+          const box = annotation.lookupMaybe(PDFName.of('Rect'), PDFArray);
+          if (!box || box.size() !== 4) continue;
+          const rect = box.asArray().map(n => pdfDoc.context.lookup(n).asNumber());
+          const action = annotation.lookupMaybe(PDFName.of('A'), PDFDict);
+          let target = null, rawUri = null;
+          if (action?.get(PDFName.of('S'))?.toString() === '/URI') {
+            const uri = action.lookup(PDFName.of('URI'));
+            if (uri instanceof PDFString || uri instanceof PDFHexString) {
+              rawUri = uri.decodeText();
+              target = normalizeUrl(rawUri);
+            }
+          }
+          const destination = annotation.lookupMaybe(PDFName.of('Dest'), PDFArray);
+          if (!target && destination?.size()) target = `page:${destination.get(0).toString()}`;
+          if (rect.every(Number.isFinite)) result.push({ target, rawUri, rect, annotation, annotationIndex: i });
+        } catch (_) { /* Preserve unrelated annotations we cannot interpret. */ }
+      }
+      return result;
+    }
+
+    function appendLinkAnnotation(pdfDoc, page, rect, targetPage, url) {
+      const { PDFName, PDFArray, PDFString } = PDFLib;
+      const annotation = { Type: 'Annot', Subtype: 'Link', Rect: rect, Border: [0, 0, 0] };
+      if (targetPage) annotation.Dest = [targetPage.ref, PDFName.of('Fit')];
+      else annotation.A = { Type: 'Action', S: 'URI', URI: PDFString.of(url) };
+      let annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+      if (!annotations) { annotations = pdfDoc.context.obj([]); page.node.set(PDFName.of('Annots'), annotations); }
+      const object = pdfDoc.context.obj(annotation);
+      annotations.push(pdfDoc.context.register(object));
+      return object;
+    }
+
+    function nativePageMatchesFrame(page, frame) {
+      if (page.getRotation().angle % 360 !== 0) return false;
+      // Both page contents and annotation rectangles use the PDF coordinate
+      // origin. Equal widths/heights alone do not make offset boxes compatible.
+      return [page.getMediaBox(), page.getCropBox()].every(box =>
+        [box.x, box.y, box.width, box.height].every(Number.isFinite) &&
+        Math.abs(box.x) <= 0.1 && Math.abs(box.y) <= 0.1 &&
+        Math.abs(box.width - frame.width) <= 0.1 && Math.abs(box.height - frame.height) <= 0.1
+      );
+    }
+
+    async function copyNativeUriAnnotations(pdfDoc, page, bytes, frame) {
+      bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+      const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+      if (source.getPageCount() !== 1) throw new Error('Unexpected annotation page count.');
+      const sourcePage = source.getPage(0);
+      if (!nativePageMatchesFrame(sourcePage, frame)) throw new Error('Text annotation dimensions differ from the frame.');
+      for (const record of nativeLinkRecords(source, sourcePage)) {
+        // Depending on the export context, Figma represents NODE links as an
+        // empty URI or a full Figma node URL. Both retain the exact text rectangle.
+        if (record.rawUri !== null && (record.rawUri === '' || record.target)) appendLinkAnnotation(pdfDoc, page, record.rect, null, record.rawUri);
+      }
+    }
+
+    async function appendExportPage(pdfDoc, message) {
+      const bytes = message.data instanceof Uint8Array ? message.data : new Uint8Array(message.data);
+      if (!bytes.byteLength) throw new Error('The exported page is empty.');
+      const frame = message.frame;
+      if (!frame || ![frame.width, frame.height].every(n => Number.isFinite(n) && n > 0)) throw new Error('Invalid page dimensions.');
+      if (message.format === 'PDF') {
+        const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+        if (source.getPageCount() !== 1) throw new Error('A frame must produce exactly one PDF page.');
+        const sourcePage = source.getPage(0);
+        if (sourcePage.getRotation().angle % 360 !== 0) throw new Error('Rotated PDF page needs raster fallback.');
+        // Link coordinates use the frame origin. Unexpected native page geometry is rasterized.
+        if (!nativePageMatchesFrame(sourcePage, frame)) {
+          throw new Error('Native PDF dimensions differ from the frame.');
+        }
+        const [page] = await pdfDoc.copyPages(source, [0]);
+        pdfDoc.addPage(page);
+        return { page, warnings: [] };
+      }
+      if (message.format !== 'PNG') throw new Error('Unsupported exported page format.');
+      const image = await pdfDoc.embedPng(bytes);
+      const page = pdfDoc.addPage([frame.width, frame.height]);
+      page.drawImage(image, { x: 0, y: 0, width: frame.width, height: frame.height });
+      // Flush this image now so pdf-lib releases its decoded RGB/alpha buffers before the next page.
+      await image.embed();
+      const warnings = [];
+      if (message.annotationPdfData) {
+        try { await copyNativeUriAnnotations(pdfDoc, page, message.annotationPdfData, frame); }
+        catch (_) { warnings.push(`${frame.name}: precise text-link geometry could not be imported.`); }
+      }
+      return { page, warnings };
+    }
+
+    async function addExportLinks(pdfDoc, pages, frames, links, stillActive = () => true) {
+      const { PDFName, PDFArray } = PDFLib;
+      const pageById = new Map(frames.map((frame, index) => [frame.id, pages[index]]));
+      const linksByFrame = new Map();
+      for (const link of links) {
+        if (!linksByFrame.has(link.fromFrameId)) linksByFrame.set(link.fromFrameId, []);
+        linksByFrame.get(link.fromFrameId).push(link);
+      }
+      let added = 0, skipped = 0;
+      const warnings = [];
+      for (let i = 0; i < frames.length; i++) {
+        if (!stillActive()) return { added, skipped, warnings };
+        const frame = frames[i], page = pages[i];
+        const records = nativeLinkRecords(pdfDoc, page);
+        const frameLinks = linksByFrame.get(frame.id) || [];
+        const toRect = link => {
+          const bounds = calculateLinkBounds(link.elementBounds, frame.width, frame.height);
+          return bounds && [bounds.x, frame.height - bounds.y - bounds.height, bounds.x + bounds.width, frame.height - bounds.y];
+        };
+        const internalText = frameLinks.filter(link => link.source === 'text' && link.type === 'internal');
+        const externalText = frameLinks.filter(link => link.source === 'text' && link.type === 'external');
+        const destinationsByTextNode = new Map();
+        for (const link of internalText) {
+          const node = link.textNodeId || link.elementName;
+          if (!destinationsByTextNode.has(node)) destinationsByTextNode.set(node, new Set());
+          destinationsByTextNode.get(node).add(link.toFrameId);
+        }
+        for (const record of records) {
+          const nodeId = nativeFigmaNodeId(record.rawUri);
+          if (record.rawUri !== '' && !nodeId) continue;
+          // A user-authored web link to Figma can have the same node ID as an
+          // internal NODE link. The scanner distinguishes these; do not turn
+          // an explicitly external URL in this text region into a page jump.
+          if (nodeId && externalText.some(link => {
+            const rect = toRect(link);
+            return normalizeUrl(link.toUrl) === record.target && rect && rectanglesIntersect(rect, record.rect);
+          })) continue;
+          const candidates = internalText.filter(link => {
+            const rect = toRect(link);
+            return rect && rectanglesIntersect(rect, record.rect) &&
+              (!nodeId || link.toNodeId === nodeId);
+          });
+          const targets = new Set(candidates.map(link => link.toFrameId));
+          // Full URLs identify each destination, even when one text node has
+          // several NODE links. Empty URIs still require an unambiguous region.
+          const ambiguousNode = !nodeId && candidates.some(link => destinationsByTextNode.get(link.textNodeId || link.elementName).size !== 1);
+          const destination = targets.size === 1 && !ambiguousNode ? pageById.get([...targets][0]) : null;
+          if (destination) {
+            record.annotation.delete(PDFName.of('A'));
+            record.annotation.set(PDFName.of('Dest'), pdfDoc.context.obj([destination.ref, PDFName.of('Fit')]));
+            record.target = `page:${destination.ref.toString()}`;
+            added++;
+          }
+        }
+        // Remove unsupported URI actions and unresolved empty NODE links, preserving every other native annotation.
+        const annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+        for (const record of [...records].reverse()) {
+          if (record.rawUri !== null && !record.target) annotations.remove(record.annotationIndex);
+        }
+        for (const link of frameLinks) {
+          const rect = toRect(link);
+          const destination = link.type === 'internal' ? pageById.get(link.toFrameId) : null;
+          const url = link.type === 'external' ? normalizeUrl(link.toUrl) : null;
+          if (!rect || (!destination && !url)) { skipped++; continue; }
+          const target = destination ? `page:${destination.ref.toString()}` : url;
+          if (link.source === 'text') {
+            // The scanner's whole-text rectangle is a search region, never a replacement for range geometry.
+            if (!records.some(record => record.target === target && rectanglesIntersect(rect, record.rect))) {
+              skipped++;
+              const warning = `${frame.name}: some text links could not be mapped precisely and were omitted.`;
+              if (!warnings.includes(warning)) warnings.push(warning);
+            }
+            continue;
+          }
+          if (records.some(record => record.target === target && record.rect.every((n, index) => Math.abs(n - rect[index]) < 0.5))) continue;
+          appendLinkAnnotation(pdfDoc, page, rect, destination, url);
+          records.push({ target, rect });
+          added++;
+        }
+        if (i % 10 === 0) await yieldToBrowser();
+      }
+      return { added, skipped, warnings };
+    }
+    // PDF_ASSEMBLY_END
+
+    function showStatus(message, type = 'info', details = []) {
+      const status = $('status');
+      status.className = `status ${type}`;
+      status.style.display = 'block';
+      $('status-title').textContent = message;
+      $('status-log').replaceChildren();
+      for (const detail of details.slice(-8)) {
+        const line = document.createElement('div');
+        line.className = 'status-log-line';
+        line.textContent = typeof detail === 'string' ? detail : (detail.message || String(detail));
+        $('status-log').appendChild(line);
+      }
+    }
+
+    function setTheme(theme) {
+      document.body.dataset.theme = theme;
+      $('theme-switch').checked = theme === 'dark';
+      $('theme-label').textContent = theme === 'dark' ? 'Dark' : 'Light';
+      document.querySelector('.theme-icon').textContent = theme === 'dark' ? '🌙' : '☀️';
+      try { localStorage.setItem('pdf-export-theme', theme); } catch (_) { }
+    }
+
+    function updateExportTypeInfo() {
+      const vector = $('export-vector').checked;
+      $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
+      $('export-help').textContent = vector
+        ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
+        : 'Creates image pages at the selected resolution. Page links and web links remain clickable.';
+    }
+
+    function updateControls() {
+      const busy = Boolean(activeJob);
+      for (const input of document.querySelectorAll('#clear-list-btn, #sort-select, #quality-select, input[name="export-type"], .frame-checkbox, .remove-btn')) input.disabled = busy;
+      for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
+      const count = frameOrder.filter(id => checkedFrames.has(id)).length;
+      $('export-btn').disabled = busy || !count;
+      $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
+      $('cancel-btn').hidden = !busy;
+      $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
+      $('cancel-btn').textContent = activeJob?.cancelled ? 'Cancelling…' : 'Cancel export';
+    }
+
+    function handleFramesUpdated(message) {
+      if (activeJob) { deferredFrames = message; return; }
+      const incoming = Array.isArray(message.frames) ? message.frames : [];
+      const previous = new Set(allFrames.map(frame => frame.id));
+      const ids = new Set(incoming.map(frame => frame.id));
+      frameOrder = frameOrder.filter(id => ids.has(id));
+      for (const frame of incoming) {
+        if (!frameOrder.includes(frame.id)) frameOrder.push(frame.id);
+        if (!previous.has(frame.id)) checkedFrames.add(frame.id);
+      }
+      checkedFrames = new Set([...checkedFrames].filter(id => ids.has(id)));
+      allFrames = incoming;
+      connections = Array.isArray(message.connections) ? message.connections : [];
+      renderFrameList();
+    }
+
+    function renderFrameList() {
+      const list = $('frame-list');
+      list.replaceChildren();
+      const byId = new Map(allFrames.map(frame => [frame.id, frame]));
+      const counts = new Map();
+      for (const connection of connections) counts.set(connection.fromFrameId, (counts.get(connection.fromFrameId) || 0) + 1);
+      for (const id of frameOrder) {
+        const frame = byId.get(id);
+        if (!frame) continue;
+        const item = document.createElement('div');
+        item.className = `frame-item${selectedInFigma.has(id) ? ' selected-in-figma' : ''}`;
+        item.dataset.frameId = id;
+        item.draggable = !activeJob;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox'; checkbox.className = 'frame-checkbox'; checkbox.checked = checkedFrames.has(id);
+        checkbox.setAttribute('aria-label', `Include ${frame.name}`);
+        checkbox.addEventListener('change', () => { if (activeJob) return; checkbox.checked ? checkedFrames.add(id) : checkedFrames.delete(id); updateControls(); });
+        const info = document.createElement('div'); info.className = 'frame-info';
+        const name = document.createElement('div'); name.className = 'frame-name'; name.textContent = frame.name;
+        const meta = document.createElement('div'); meta.className = 'frame-meta'; meta.textContent = `${Math.round(frame.width)}×${Math.round(frame.height)}px • ${frame.parent || 'Page'}`;
+        info.append(name, meta);
+        const indicator = document.createElement('span'); indicator.className = counts.has(id) ? 'connections-count' : 'no-links'; indicator.textContent = counts.has(id) ? `${counts.get(id)} links` : 'No links';
+        const handle = document.createElement('span'); handle.className = 'drag-handle'; handle.textContent = '⋮⋮';
+        const remove = document.createElement('button'); remove.className = 'remove-btn'; remove.textContent = '×'; remove.title = 'Remove from list'; remove.setAttribute('aria-label', `Remove ${frame.name}`);
+        remove.addEventListener('click', () => {
+          if (activeJob) return;
+          checkedFrames.delete(id); frameOrder = frameOrder.filter(value => value !== id); allFrames = allFrames.filter(value => value.id !== id);
+          renderFrameList(); post({ type: 'remove-frame', frameId: id });
+        });
+        item.append(checkbox, info, indicator, handle, remove);
+        item.addEventListener('dragstart', event => { if (activeJob) { event.preventDefault(); return; } draggedFrameId = id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', id); item.classList.add('dragging'); });
+        item.addEventListener('dragover', event => { if (!activeJob && draggedFrameId) event.preventDefault(); });
+        item.addEventListener('drop', event => {
+          event.preventDefault();
+          if (activeJob || !draggedFrameId || draggedFrameId === id) return;
+          const from = frameOrder.indexOf(draggedFrameId), to = frameOrder.indexOf(id);
+          if (from < 0 || to < 0) return;
+          frameOrder.splice(from, 1); frameOrder.splice(to, 0, draggedFrameId); renderFrameList();
+        });
+        item.addEventListener('dragend', () => { draggedFrameId = null; item.classList.remove('dragging'); });
+        list.appendChild(item);
+      }
+      list.hidden = !frameOrder.length;
+      $('empty-state').hidden = Boolean(frameOrder.length);
+      updateControls();
+    }
+
+    function sortFramesByName(direction) {
+      if (activeJob || !['az', 'za'].includes(direction)) return;
+      const byId = new Map(allFrames.map(frame => [frame.id, frame]));
+      const oldPosition = new Map(frameOrder.map((id, index) => [id, index]));
+      frameOrder.sort((a, b) => {
+        const result = String(byId.get(a)?.name || '').localeCompare(String(byId.get(b)?.name || ''), undefined, { numeric: true, sensitivity: 'base' });
+        return result ? result * (direction === 'az' ? 1 : -1) : oldPosition.get(a) - oldPosition.get(b);
+      });
+      renderFrameList();
+    }
+
+    function isCurrent(job) { return activeJob === job && !job.cancelled && !job.failed; }
+    function addWarnings(job, warnings) {
+      for (const warning of warnings || []) {
+        const value = typeof warning === 'string' ? warning : warning?.message;
+        if (value && !job.warnings.includes(value)) job.warnings.push(value);
+      }
+    }
+    function releaseJob(job) {
+      if (activeJob !== job) return;
+      activeJob = null;
+      job.pdf = null; job.pages = []; job.frames = []; job.connections = [];
+      if (deferredFrames) { const message = deferredFrames; deferredFrames = null; handleFramesUpdated(message); }
+      updateControls();
+    }
+    function finishTerminal(job) {
+      if (activeJob !== job || !job.backendStopped || (!job.cancelled && !job.failed)) return;
+      // Called only after this job's serialized library work has settled.
+      showStatus(job.failed ? `Export failed: ${job.failed}` : 'Export cancelled. No PDF was downloaded.', job.failed ? 'error' : 'info');
+      releaseJob(job);
+    }
+    function failJob(job, error, notifyBackend = true) {
+      if (activeJob !== job || job.cancelled || job.failed) return;
+      job.failed = error instanceof Error ? error.message : String(error || 'Unknown error');
+      showStatus(`Export failed: ${job.failed}`, 'error');
+      updateControls();
+      if (notifyBackend) post({ type: 'export-failed', jobId: job.id, message: job.failed });
+    }
+    function enqueue(job, task) {
+      job.queue = job.queue.then(async () => {
+        if (isCurrent(job)) await task();
+      }).catch(error => failJob(job, error)).finally(() => finishTerminal(job));
+    }
+
+    function startExport() {
+      if (activeJob) return;
+      const selectedFrames = frameOrder.filter(id => checkedFrames.has(id));
+      if (!selectedFrames.length) return;
+      if (!window.PDFLib?.PDFDocument) { showStatus('The PDF library is unavailable. Reopen the plugin and try again.', 'error'); return; }
+      const quality = $('quality-select').value;
+      const id = `${Date.now()}-${++jobSequence}`;
+      const job = { id, requestedIds: selectedFrames, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: $('export-vector').checked ? 'vector' : 'raster' };
+      activeJob = job;
+      updateControls();
+      showStatus('Preparing frames…');
+      post({ type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames, qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType });
+    }
+
+    function cancelExport() {
+      const job = activeJob;
+      if (!job || job.cancelled || job.failed) return;
+      job.cancelled = true;
+      showStatus('Cancelling export… Waiting for the current page operation to finish.');
+      updateControls();
+      post({ type: 'export-cancel', jobId: job.id });
+    }
+
+    async function receivePage(job, message) {
+      if (!job.started || !job.pdf) throw new Error('Page arrived before export initialization.');
+      if (!Number.isInteger(message.index) || message.index < 0) throw new Error('Invalid page number.');
+      if (message.index < job.nextIndex) return;
+      if (message.index !== job.nextIndex || job.frames[message.index]?.id !== message.frame?.id) throw new Error('Exported page order does not match the selection.');
+      if (job.fallbackIndex === message.index && message.format === 'PDF') return;
+      addWarnings(job, message.warnings);
+      showStatus(`Preparing page ${message.index + 1} of ${job.frames.length}: ${message.frame.name}`, 'info', job.warnings);
+      const before = job.pdf.getPageCount();
+      try {
+        const { page, warnings } = await appendExportPage(job.pdf, message);
+        if (!isCurrent(job)) return;
+        addWarnings(job, warnings);
+        job.pages.push(page);
+        job.nextIndex++;
+        job.fallbackIndex = null;
+        await yieldToBrowser();
+        if (isCurrent(job)) post({ type: 'page-ack', jobId: job.id, index: message.index });
+      } catch (error) {
+        // A failed embed must never leave a partial/blank page in a successful file.
+        while (job.pdf.getPageCount() > before) job.pdf.removePage(job.pdf.getPageCount() - 1);
+        if (!isCurrent(job)) return;
+        if (message.format === 'PDF' && job.fallbackIndex !== message.index) {
+          job.fallbackIndex = message.index;
+          addWarnings(job, [`${message.frame.name}: using a raster fallback because its PDF could not be imported.`]);
+          post({ type: 'page-ack', jobId: job.id, index: message.index, fallback: true });
+        } else throw new Error(`Could not create page “${message.frame.name}”: ${error.message}`);
+      }
+    }
+
+    async function completeExport(job) {
+      if (!job.started || !job.frames.length || job.nextIndex !== job.frames.length || job.pdf.getPageCount() !== job.frames.length) throw new Error('The export did not contain every selected page.');
+      showStatus('Adding links…', 'info', job.warnings);
+      const links = await addExportLinks(job.pdf, job.pages, job.frames, job.connections, () => isCurrent(job));
+      if (!isCurrent(job)) return;
+      addWarnings(job, links.warnings);
+      if (links.skipped) addWarnings(job, [`${links.skipped} link${links.skipped === 1 ? '' : 's'} without a supported target or precise exported geometry were omitted.`]);
+      showStatus(`Saving ${job.frames.length} pages…`, 'info', job.warnings);
+      await yieldToBrowser();
+      if (!isCurrent(job)) return;
+      const bytes = await job.pdf.save({ addDefaultPage: false, useObjectStreams: true, objectsPerTick: 20 });
+      await yieldToBrowser();
+      if (!isCurrent(job)) return;
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const date = new Date();
+      const dateLabel = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      link.download = `figma-export-${dateLabel}.pdf`;
+      document.body.appendChild(link);
+      try {
+        if (!isCurrent(job)) return;
+        link.click();
+      } finally {
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }
+      job.completed = true;
+      post({ type: 'export-finished', jobId: job.id });
+      showStatus(`PDF ready: ${job.frames.length} pages (${(bytes.byteLength / 1024 / 1024).toFixed(1)} MB). Download started.`, job.warnings.length ? 'warning' : 'success', job.warnings);
+      releaseJob(job);
+    }
+
+    window.addEventListener('message', event => {
+      // Figma forwards messages through sandbox relay windows, so source is not
+      // necessarily parent. Validate the plugin envelope and active job ID below.
+      const message = event.data?.pluginMessage;
+      if (!message || typeof message.type !== 'string') return;
+      if (message.type === 'frames-updated') { handleFramesUpdated(message); return; }
+      if (message.type === 'selection-changed') {
+        selectedInFigma = new Set(message.selectedFrameIds || []);
+        $('selection-info').textContent = message.selectedFrameNames?.length ? `Currently selected: ${message.selectedFrameNames.join(', ')}` : '';
+        $('selection-info').hidden = !message.selectedFrameNames?.length;
+        for (const item of document.querySelectorAll('.frame-item')) item.classList.toggle('selected-in-figma', selectedInFigma.has(item.dataset.frameId));
+        return;
+      }
+      if (message.type === 'restore-theme' && ['light', 'dark'].includes(message.theme)) { setTheme(message.theme); return; }
+      if (message.type === 'plugin-ready') { if (!activeJob) showStatus(message.message || 'Select frames to get started.'); return; }
+      const job = activeJob;
+      if (!job || message.jobId !== job.id) return;
+      if (message.type === 'export-error' || message.type === 'export-cancelled') {
+        job.backendStopped = true;
+        if (message.type === 'export-error' && !job.cancelled) failJob(job, message.message || message.error || 'Figma could not export these frames.', false);
+        else job.cancelled = true;
+        job.queue.finally(() => finishTerminal(job));
+        return;
+      }
+      if (!isCurrent(job)) return;
+      if (message.type === 'export-start') {
+        enqueue(job, async () => {
+          if (job.started) throw new Error('Duplicate export initialization.');
+          const frames = message.frames || [];
+          if (frames.length !== job.requestedIds.length || frames.some((frame, index) => frame.id !== job.requestedIds[index])) throw new Error('Export order differs from the selected frames.');
+          job.frames = frames; job.connections = message.connections || []; addWarnings(job, message.warnings);
+          job.pdf = await PDFLib.PDFDocument.create();
+          job.pdf.setProducer('Figma to PDF with links');
+          job.started = true;
+        });
+      } else if (message.type === 'export-page') {
+        const key = `${message.index}:${message.format}`;
+        if (job.pendingPage === key) return;
+        if (job.pendingPage) { failJob(job, 'Received overlapping page data. Please retry the export.'); return; }
+        job.pendingPage = key;
+        enqueue(job, async () => { try { await receivePage(job, message); } finally { job.pendingPage = null; } });
+      } else if (message.type === 'export-complete') {
+        if (job.finishing) return;
+        job.finishing = true;
+        addWarnings(job, message.warnings);
+        enqueue(job, () => completeExport(job));
+      } else if (message.type === 'export-progress') {
+        showStatus(message.message || 'Exporting frames…', 'info', job.warnings);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      let theme = 'dark';
+      try { theme = localStorage.getItem('pdf-export-theme') || theme; } catch (_) { }
+      setTheme(theme === 'light' ? 'light' : 'dark');
+      $('theme-switch').addEventListener('change', () => setTheme($('theme-switch').checked ? 'dark' : 'light'));
+      $('export-btn').addEventListener('click', startExport);
+      $('cancel-btn').addEventListener('click', cancelExport);
+      $('clear-list-btn').addEventListener('click', () => {
+        if (activeJob) return;
+        allFrames = []; frameOrder = []; checkedFrames.clear(); connections = []; renderFrameList(); post({ type: 'clear-list' });
+      });
+      $('sort-select').addEventListener('change', event => { sortFramesByName(event.target.value); event.target.value = 'none'; });
+      for (const input of document.querySelectorAll('input[name="export-type"]')) input.addEventListener('change', updateExportTypeInfo);
+      updateExportTypeInfo(); updateControls();
+      post({ type: 'ui-ready' });
+    });
+  </script>
+</body>
+</html>
