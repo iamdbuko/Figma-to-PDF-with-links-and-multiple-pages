@@ -1,0 +1,408 @@
+{
+  "recordedAt": "2026-10-27T15:02:34.082Z",
+  "builtUiSha256": "a4795fc47f18f61c6711eed14a874f979e49beb52ae0b149254ee5192c495f6a",
+  "platform": "darwin",
+  "profile": {
+    "file": "assets/color-profiles/ISOcoated_v2_300_bas.ICC",
+    "source": "BUNDLED",
+    "bytes": 1052612,
+    "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "purpose": "Built-in basICColor ISO Coated v2 300%, FOGRA39 coated printing. No physical print validation."
+  },
+  "scope": "Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uses the indicated profile source, sends one PNG page at a time, honors part-ready/page-ack, clicks Continue only after validating each downloaded part, and saves no PDF binaries in the repository. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.",
+  "memoryScope": "CDP Runtime.getHeapUsage samples V8 usedSize and backingStorageSize separately. Samples are not total browser/Figma/native decoder/GPU resident memory and can miss transient peaks. The renderer includes a reusable fixture canvas and one encoded PNG. No forced garbage collection is used. Node-side PDF inspection is outside renderer samples. WASM heap length is reported separately and must not be added to backingStorageSize as if disjoint.",
+  "rasterSource": "Eight distinct 2800x2800 synthetic landscapes: layered gradients and curved terrain plus smoothly enlarged seeded low-resolution noise. Small transparent and translucent regions exercise white compositing. These are compressible photo-like fixtures, not a real photograph corpus or worst-case random entropy workload. Pages are generated sequentially, only after the prior page/part is acknowledged.",
+  "requestedPages": 8,
+  "pagesPerPart": 2,
+  "pageDimensions": {
+    "width": 1400,
+    "height": 1400
+  },
+  "rasterDimensions": {
+    "width": 2800,
+    "height": 2800
+  },
+  "pixelsPerPage": 7840000,
+  "cmykPixelLimit": 8000000,
+  "retainedDataBudgetBytes": 134217728,
+  "status": "passed",
+  "pages": [
+    {
+      "index": 0,
+      "inputBytes": 8875041,
+      "generationMs": 467,
+      "assemblyToHandshakeMs": 2805
+    },
+    {
+      "index": 1,
+      "inputBytes": 8957547,
+      "generationMs": 456,
+      "assemblyToHandshakeMs": 2675
+    },
+    {
+      "index": 2,
+      "inputBytes": 9006785,
+      "generationMs": 450,
+      "assemblyToHandshakeMs": 2820
+    },
+    {
+      "index": 3,
+      "inputBytes": 8920997,
+      "generationMs": 558,
+      "assemblyToHandshakeMs": 2618
+    },
+    {
+      "index": 4,
+      "inputBytes": 8901897,
+      "generationMs": 445,
+      "assemblyToHandshakeMs": 2737
+    },
+    {
+      "index": 5,
+      "inputBytes": 8891221,
+      "generationMs": 447,
+      "assemblyToHandshakeMs": 2650
+    },
+    {
+      "index": 6,
+      "inputBytes": 8871042,
+      "generationMs": 534,
+      "assemblyToHandshakeMs": 2898
+    },
+    {
+      "index": 7,
+      "inputBytes": 8858262,
+      "generationMs": 455,
+      "assemblyToHandshakeMs": 2561
+    }
+  ],
+  "parts": [
+    {
+      "index": 0,
+      "filename": "figma-export-2026-10-27-mvqte7j4-4bdaf51c-part-1-of-4.pdf",
+      "outputBytes": 13878543,
+      "sha256": "1058c9bc7f5957f62c874305f265de140f0ad80eeaaf300e203c5b3eedc598f3",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "localLinks": 1,
+        "remoteLinks": 1
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 3047
+    },
+    {
+      "index": 1,
+      "filename": "figma-export-2026-10-27-mvqte7j4-4bdaf51c-part-2-of-4.pdf",
+      "outputBytes": 14162826,
+      "sha256": "964329a83a8b768c755ec248c2cad5b9f8a1ad7c3f82abb3d0b45a014d649ad4",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "localLinks": 1,
+        "remoteLinks": 1
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 2961
+    },
+    {
+      "index": 2,
+      "filename": "figma-export-2026-10-27-mvqte7j4-4bdaf51c-part-3-of-4.pdf",
+      "outputBytes": 13939298,
+      "sha256": "e4944ef904e4354d7f059ec9e4b4285ee9082a4598067268d2edfd242c3119fd",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "localLinks": 1,
+        "remoteLinks": 1
+      },
+      "pausedState": {
+        "pdfReleased": true,
+        "pageObjects": 0,
+        "retainedBytes": 0,
+        "liveUrls": 1,
+        "converterClosed": 0
+      },
+      "assemblyThroughDownloadMs": 2983
+    },
+    {
+      "index": 3,
+      "filename": "figma-export-2026-10-27-mvqte7j4-4bdaf51c-part-4-of-4.pdf",
+      "outputBytes": 13997590,
+      "sha256": "fc6d138cc50bfefb0853071e7b3ff3d63f634a4a9f0dba1ad0d939b718384ebc",
+      "validation": {
+        "pages": 2,
+        "exactPageDimensions": true,
+        "exactRasterDimensions": true,
+        "fourChannelPixels": 15680000,
+        "originalUploadedIcc": true,
+        "sharedIccObjects": 1,
+        "noSoftMask": true,
+        "localLinks": 1,
+        "remoteLinks": 1
+      }
+    }
+  ],
+  "compressedInputBytes": 71282792,
+  "memorySamples": [
+    {
+      "label": "before-pages",
+      "usedSize": 6251236,
+      "totalSize": 18382848,
+      "embedderHeapUsedSize": 1519864,
+      "backingStorageSize": 32911768,
+      "wasmHeapBytes": 20185088
+    },
+    {
+      "label": "page-1-page-ack",
+      "usedSize": 4751760,
+      "totalSize": 16629760,
+      "embedderHeapUsedSize": 1552776,
+      "backingStorageSize": 117547807,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-2-part-ready",
+      "usedSize": 3983484,
+      "totalSize": 5881856,
+      "embedderHeapUsedSize": 1490680,
+      "backingStorageSize": 137767028,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-1-paused",
+      "usedSize": 4015360,
+      "totalSize": 5881856,
+      "embedderHeapUsedSize": 1687672,
+      "backingStorageSize": 137767273,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-1-released",
+      "usedSize": 4161712,
+      "totalSize": 5881856,
+      "embedderHeapUsedSize": 1959648,
+      "backingStorageSize": 67877907,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-3-page-ack",
+      "usedSize": 4791828,
+      "totalSize": 6930432,
+      "embedderHeapUsedSize": 1575480,
+      "backingStorageSize": 118168049,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-4-part-ready",
+      "usedSize": 4742436,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1608120,
+      "backingStorageSize": 138348554,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-2-paused",
+      "usedSize": 4761816,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1715240,
+      "backingStorageSize": 138348657,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-2-released",
+      "usedSize": 4876744,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1865632,
+      "backingStorageSize": 138348999,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-5-page-ack",
+      "usedSize": 4727352,
+      "totalSize": 5881856,
+      "embedderHeapUsedSize": 1498664,
+      "backingStorageSize": 117806074,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-6-part-ready",
+      "usedSize": 4790108,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1525320,
+      "backingStorageSize": 137773475,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-3-paused",
+      "usedSize": 4815880,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1629176,
+      "backingStorageSize": 137773578,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "part-3-released",
+      "usedSize": 4923596,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1781376,
+      "backingStorageSize": 137773920,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-7-page-ack",
+      "usedSize": 4766268,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1485272,
+      "backingStorageSize": 117774862,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "page-8-page-ack",
+      "usedSize": 4747600,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 1378520,
+      "backingStorageSize": 123339875,
+      "wasmHeapBytes": 24248320
+    },
+    {
+      "label": "after-final-download",
+      "usedSize": 4882564,
+      "totalSize": 6144000,
+      "embedderHeapUsedSize": 2915592,
+      "backingStorageSize": 137906412,
+      "wasmHeapBytes": 24248320
+    }
+  ],
+  "retainedBudgetSamples": [
+    {
+      "bytes": 7270585,
+      "pages": 1,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13882980,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13882980,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 13883381,
+      "pages": 2,
+      "partIndex": 0
+    },
+    {
+      "bytes": 7512939,
+      "pages": 1,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14167262,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14167262,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 14167663,
+      "pages": 2,
+      "partIndex": 1
+    },
+    {
+      "bytes": 7386867,
+      "pages": 1,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13943733,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13943733,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 13944134,
+      "pages": 2,
+      "partIndex": 2
+    },
+    {
+      "bytes": 7386453,
+      "pages": 1,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14002027,
+      "pages": 2,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14002027,
+      "pages": 2,
+      "partIndex": 3
+    },
+    {
+      "bytes": 14002428,
+      "pages": 2,
+      "partIndex": 3
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "validation": {
+    "outputPages": 8,
+    "outputParts": 4,
+    "exactUploadedIccOncePerPart": true,
+    "exactPageAndPixelDimensions": true,
+    "noSoftMasks": true,
+    "actualFourChannelPixels": 62720000,
+    "localLinks": 4,
+    "remoteLinks": 4,
+    "repeatedNamesResolvedByFrameId": true,
+    "intermediatePartMemoryReleased": true,
+    "conversionSessionPreparedOnceClosedOnce": true,
+    "browserErrors": []
+  },
+  "durationMs": 27912,
+  "outputBytes": 55978257,
+  "generationMs": 3812,
+  "peakSampledJsHeapBytes": 6251236,
+  "peakSampledBackingStorageBytes": 138348999,
+  "peakSampledWasmHeapBytes": 24248320,
+  "peakMeasuredRetainedPdfBytes": 14167663
+}

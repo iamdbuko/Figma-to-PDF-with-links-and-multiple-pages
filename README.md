@@ -1,30 +1,72 @@
 # Figma to PDF with links and multiple pages
 
-Export Figma frames into a multi-page PDF with internal navigation and external hyperlinks.
+Export selected Figma frames into one PDF with individual page sizes, internal navigation and external hyperlinks.
 
-[Open the published Figma plugin](https://www.figma.com/community/plugin/1535371360850075397)
+[Published Community plugin](https://www.figma.com/community/plugin/1535371360850075397) · [Recovered v8 baseline](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/tree/v8-recovered)
 
-## Published v8 baseline
+## Version 9
 
-This repository now preserves the actual Version 8 JavaScript and HTML published on February 17, 2026 (Figma release ID `188025`). The code was recovered on October 27, 2026 from the package Figma loaded when running that published release.
+This is **v9.0.0**. See the [release notes](docs/releases/v9.0.0.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
 
-The main plugin code is identical to v7. The v8 interface adds stable, numeric-aware A-Z/Z-A frame sorting. The supporting manifest is retained from the repository's v7 baseline; it was not independently recovered from Figma.
+The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
-Recovery evidence, the unchanged downloaded bundle, source checksums, and the v7-to-v8 comparison are in `recovery/`.
+Other changes include cancellation, detection of edits during export, fresh frame dimensions, explicit failures instead of blank placeholder pages, stable sorting and selection, and an offline bundled PDF library. Original layers are never hidden or rewritten during export.
 
-## Local development
+**Color profile** defaults to **Same as Figma file**, including older files. Explicit sRGB and Display P3 remain available. The chosen profile applies to vector pages, raster pages, and fallbacks; raster profiles are embedded in the PDF, including compressed JPEGs. See [color-profile behavior and validation](docs/COLOR-PROFILES.md).
 
-1. Open a test design file in Figma Desktop.
-2. Choose Plugins > Development > Import plugin from manifest.
-3. Select this repository's `manifest.json`.
-4. Run the development plugin and select frames to add them to the export list.
+**Vector or Rasterized → CMYK (beta)** works using the built-in basICColor ISO Coated v2 300% profile (FOGRA39 coated paper), or an optional custom printer profile. Conversion stays offline. Vector CMYK converts supported paths, text, gradients and images while preserving links; unsupported content stops with an explanation. Rasterized CMYK turns each page into pixels and flattens transparency onto white. See [Vector CMYK features and limits](docs/VECTOR-CMYK.md), [CMYK setup](docs/CMYK.md), and [finding profiles on Mac and Windows](docs/ICC-PROFILES.md).
 
-There is no build step: Figma loads `code.js` and `ui.html` directly. The interface currently loads PDF libraries from the network.
+**Vector image resolution** defaults to 72 DPI and offers Original plus 36–300 DPI for supported embedded images, in RGB and CMYK. It downsamples images according to their placement while retaining vector drawing, text and links; it cannot add detail beyond Figma's native export. Rasterized mode retains its separate page-resolution control. See the [functionality audit](docs/FUNCTIONALITY-AUDIT.md).
 
-Importing a development plugin does not publish an update to the Community. Publishing is a separate action.
+## Run and develop
 
-## Validation of the recovered baseline
+Requires Node.js 22 or later for the development tools and Figma Desktop for importing a local plugin.
 
-The downloaded bundle, extracted plugin code, and inline interface scripts passed syntax checks. The published plugin was observed running with its v8 sorting control. This establishes source provenance; it does not claim complete PDF export or performance coverage.
+```sh
+npm ci --ignore-scripts
+npm run build
+```
 
-Use the `v8-recovered` tag to return to this baseline. Future development takes place separately from this snapshot.
+1. Open a test design file in Figma Desktop using an account with editing access.
+2. Choose **Plugins → Development → Import plugin from manifest** and select `manifest.json`.
+3. Run **PDF Export with Links** from the **Development** menu.
+4. Select frames in Figma. Drag rows to set page order; right-click a row to remove it. Every listed frame is included.
+5. Click **Export** to open settings, choose the format/profile/quality, then click **Export** again to create the PDF. **Cancel** returns to the list while idle; during export it cancels the job. Same as Figma file and 72 DPI are the defaults. Hover or focus a setting for help. See [the simplified interface](docs/INTERFACE.md).
+
+Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. PDF and color helpers are in `src/color-profiles.js`, `src/cmyk.js`, `src/vector-cmyk.js`, `src/pdf-functions.js`, `src/pdf-image-resolution.js` and `src/pdf-loader.js`. `src/cooperative-yield.js` schedules processing and cancellation; the pinned PDF library uses the same scheduler. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
+
+The [development and release process](docs/RELEASING.md) explains how to preserve checkpoints, validate changes and publish updates to the existing Community listing.
+
+## Checks
+
+```sh
+npx playwright install chromium
+npm run build
+npm test
+npm run test:stress
+```
+
+The normal suite checks the export protocol, link extraction, real PDF assembly and browser lifecycle. The separate stress benchmark compares PNG and JPEG on the same large synthetic images and checks multipart exports; it takes longer. GitHub Actions runs the normal checks and verifies the committed UI matches its source.
+
+See [large-file export options and validation](docs/LARGE-EXPORTS.md), [initial v9 validation](docs/VALIDATION.md), [Community report triage](docs/COMMUNITY-BUGS.md), and [measured browser stress results](docs/stress-results.json). Passing synthetic tests does not guarantee every design, font, effect, PDF viewer or permission configuration.
+
+## Current limits
+
+- Raster rendering: at most **32 million scaled pixels** and **16,384 pixels per side**. Lower the quality or export a smaller frame when a request exceeds these limits.
+- Rasterized CMYK: **8 million scaled pixels** per page; fitting uses this lower limit. Vector CMYK: **16 million pixels per embedded image**, **32 million converted image pixels per page**, with additional drawing-content limits. It retains normal transparency with an appearance warning. The built-in profile describes FOGRA39 coated printing; use a custom profile when your printer specifies another condition. Neither mode is PDF/X.
+- Explicit Vector image downsizing: up to **20 million source pixels per image**, **80 million decoded source pixels per page**, and **16 million output pixels per image**. Unsupported images stay original with a warning; CMYK may still refuse them. Resized JPEGs use lossless compression, so fewer pixels do not guarantee fewer bytes.
+- Transport budget: **128 MiB per page**, including temporary text-link data. Earlier pages and discarded retries do not consume this allowance.
+- PDF data budget: **128 MiB per output document**, estimated from retained PDF objects and streams. This is not a total-memory measurement; final serialization needs additional memory. Lower image/page resolution, split into smaller parts, or use JPEG for raster pages when a document exceeds it.
+- RGB Vector mode rasterizes whole frames containing Figma's unsupported Plus lighter/darker blend modes, or when native export/import fails. The UI identifies fallback pages. Vector CMYK stops on unsupported content and never silently rasterizes a page.
+- Text links require native PDF annotation geometry. Missing or ambiguous geometry is omitted with a warning rather than guessed. Desktop Figma node URLs identify distinct internal targets; an empty native URI cannot distinguish multiple internal targets in one text layer.
+- Internal destinations must be included in the same export. Selected sources must be frames. Prototype actions are represented as static PDF hyperlinks, not interactive animations, overlays or conditional flows.
+- Optional **Fit oversized pages** lowers raster resolution to the pixel limits and reports the actual scale; it preserves PDF page dimensions.
+- **Split into parts** saves one document at a time. Keep the original filenames together for links between parts; these links need a compatible desktop PDF viewer. Save each part before continuing within 15 minutes. Stopping midway leaves earlier files intact, with links to unfinished parts unavailable.
+- JPEG can help image-heavy pages but is lossy, may soften small text, and turns transparent areas white. It does not always produce a smaller file. PNG remains the default.
+- Keep source pages unchanged while rendering and between parts. Edits cancel the export to prevent mismatched visuals and links.
+
+## Recovery provenance
+
+Tag `v8-recovered` preserves the actual JavaScript and HTML published on February 17, 2026 (Figma release ID `188025`), recovered on October 27, 2026. Its main code matches v7; its UI adds stable numeric-aware name sorting. The supporting manifest came from repository v7 and was not independently recovered.
+
+`recovery/` contains the unchanged downloaded bundle, provenance, checksums and v7-to-v8 comparison. Those checksums describe the recovered baseline, not this v9 release.

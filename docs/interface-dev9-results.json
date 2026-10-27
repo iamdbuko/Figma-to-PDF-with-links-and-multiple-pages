@@ -1,0 +1,50 @@
+{
+  "version": "9.0.0-dev.9",
+  "date": "2026-10-27",
+  "uiSha256": "e604a9ebd16a7f3eeee79db8e8dc6f7354689dff6f10a1a290dfcd773b380736",
+  "uiBytes": 2602207,
+  "automatedTests": 262,
+  "reproducibleBuild": true,
+  "nativeUiCheck": {
+    "pages": 1,
+    "bytes": 92072,
+    "sha256": "b6e74a6e49e6ec6577022858393e84fd2475892730c718b54a713842d6ba007f",
+    "pageBox": [
+      0.0,
+      0.0,
+      375.0,
+      467.0
+    ],
+    "annotations": 0,
+    "validFlateStreams": 7,
+    "expectedTextPresentAfterWhitespaceNormalization": true,
+    "renderedAndVisuallyInspected": true,
+    "nativeUiSha256": "a7cb77f6a896c72f5b15ff801a05fcfd779831c199d8c630038d23e999a5407b",
+    "note": "Final UI differs only by singular page wording in export success status. Existing Figma Type3 glyph-bounds warnings remain."
+  },
+  "browserBenchmark": {
+    "uiSha256": "8f1a5cf3861b371adecc35f0185379329d94c03ead5cfed8d10c1e09db12413e",
+    "fixtureSha256": "4d2732c975615566a357816a314858d83c4b8fd8fff8fb67fa7566db1eb4aa6d",
+    "status": "passed",
+    "outputBytes": 9217799,
+    "durationMs": 22670,
+    "validation": {
+      "outputPages": 250,
+      "exactPageDimensions": true,
+      "exactRasterPixelDimensions": null,
+      "preservedNativeUriAnnotations": 1250,
+      "correctInternalDestinations": 250,
+      "repeatedNamesResolvedByFrameId": true,
+      "browserErrors": []
+    },
+    "scope": "Built plugin UI and bundled pdf-lib in isolated headless Chromium; real Figma native PDF fixture and synthetic PNGs. Figma exportAsync, document traversal, backend message handling, plugin sandbox, and Figma process memory are not included. The harness enforces the same 128 MiB transfer threshold and cancels before sending an over-budget page; backend guard behavior is covered separately by protocol tests.",
+    "quality": "Original explicitly selected; preserves previous benchmark semantics."
+  },
+  "visualChecks": [
+    "Both reference layouts at 520x650",
+    "156 long frame names and conditional settings at 400x450",
+    "Native Figma frame list and settings",
+    "Native exported design frame rendered and inspected"
+  ],
+  "privacy": "Screenshots, native PDFs and detailed test outputs stay in ignored test-results/ui-dev9. No customer report is redistributed."
+}

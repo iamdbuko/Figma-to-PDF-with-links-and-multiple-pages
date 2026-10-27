@@ -1,0 +1,167 @@
+{
+  "version": "9.0.0-dev.4",
+  "recordedAt": "2026-10-27T14:23:46.275Z",
+  "builtUiSHA256": "aa4f1d47fe9e9575605cfd22074e21a77550ca6dfad0c488d91aa6826423bd26",
+  "codeSHA256": "c6df922d446a61cd317c338c6b22e2e01ecccf7e9eab8573f8dcdb6801df3c6a",
+  "cmykHelperSHA256": "93d7bc8416aedd2aca9cd438680a83c268752bc953cbb02fd09e28d0dd519229",
+  "engine": {
+    "package": "lcms-wasm",
+    "version": "1.0.5",
+    "littleCMS": "2.16",
+    "networkRequestsInOfflineTest": 0
+  },
+  "automated": {
+    "tests": 125,
+    "passed": 125,
+    "failed": 0,
+    "scope": "Backend, link scanning, PDF assembly, ICC validation, real offline WASM conversion and browser lifecycle. Isolated browser, not Figma native for all cases."
+  },
+  "independentConversion": {
+    "referenceEngine": "Pillow native LittleCMS 2.19",
+    "pixels": [
+      300,
+      200
+    ],
+    "channels": 4,
+    "renderingIntent": "relative colorimetric",
+    "blackPointCompensation": true,
+    "maxChannelDifferenceOutOf255": 0,
+    "meanChannelDifferenceOutOf255": 0,
+    "exactChannelFraction": 1
+  },
+  "assembledPDF": {
+    "input": "native Figma sRGB swatch PNG",
+    "profile": "Generic CMYK Profile.icc",
+    "profileBytes": 55280,
+    "profileSHA256": "0c8a584b288a306eac9e1d3f1e68bc1b64331c717ceb051420e6257f17b3509a",
+    "outputBytes": 56983,
+    "pages": 1,
+    "pageSize": [
+      600,
+      400
+    ],
+    "pixels": [
+      300,
+      200
+    ],
+    "imageColorSpace": "ICCBased",
+    "components": 4,
+    "exactProfilePreserved": true,
+    "transparencyMask": false,
+    "prototypeLinks": 1,
+    "outputIntent": false,
+    "note": "Local conversion evidence only. No printer profile preset or physical print verification."
+  },
+  "liveFigma": {
+    "fileKey": "yKf6bZSYBB3tZoWz5qMmen",
+    "frameId": "28:3",
+    "defaultObserved": "Same as Figma file",
+    "documentExports": [
+      {
+        "file": "live-DOCUMENT-vector.pdf",
+        "bytes": 5835,
+        "pages": 1,
+        "size": {
+          "width": 600,
+          "height": 400
+        },
+        "profiles": [
+          {
+            "components": 3,
+            "bytes": 3144,
+            "sha256": "2b3aa1645779a9e634744faf9b01e9102b0c9b88fd6deced7934df86b949af7e"
+          }
+        ],
+        "links": [
+          {
+            "url": "https://example.com/color",
+            "rect": [
+              300,
+              0,
+              600,
+              160
+            ]
+          }
+        ]
+      },
+      {
+        "file": "live-DOCUMENT-JPG.pdf",
+        "bytes": 42515,
+        "pages": 1,
+        "size": {
+          "width": 600,
+          "height": 400
+        },
+        "profiles": [
+          {
+            "components": 3,
+            "bytes": 588,
+            "sha256": "81d313ce695fe3d921806c24018e87561b90127a69057797cfe20f9b508359b8"
+          }
+        ],
+        "links": [
+          {
+            "url": "https://example.com/color",
+            "rect": [
+              300,
+              0,
+              600,
+              160
+            ]
+          }
+        ]
+      }
+    ],
+    "cmyk": {
+      "status": "passed",
+      "recordedAt": "2026-10-27T14:44:56.620Z",
+      "application": "Figma Desktop on macOS",
+      "file": "live-CMYK.pdf",
+      "fileSHA256": "5edafff4ad0c8b656b5aba35fc3f8de62feaaf1d312a8fe22f87f9cde6cdc8f2",
+      "bytes": 103381,
+      "pages": 1,
+      "pageSize": {
+        "width": 600,
+        "height": 400
+      },
+      "quality": "Medium (1x, 72 DPI)",
+      "pixels": [
+        600,
+        400
+      ],
+      "imageColorSpace": "ICCBased",
+      "components": 4,
+      "decodedImageBytes": 960000,
+      "profile": "Generic CMYK Profile.icc",
+      "profileBytes": 55280,
+      "profileSHA256": "0c8a584b288a306eac9e1d3f1e68bc1b64331c717ceb051420e6257f17b3509a",
+      "exactProfilePreserved": true,
+      "transparencyMask": false,
+      "links": [
+        {
+          "url": "https://example.com/color",
+          "rect": [
+            300,
+            0,
+            600,
+            160
+          ]
+        }
+      ],
+      "outputIntent": false,
+      "scope": "Live Figma export and saved PDF structure; source fixture contains color swatches, a gradient, a raster image and alpha. No physical-print claim.",
+      "visualInspection": {
+        "renderer": "Poppler pdftoppm",
+        "status": "passed",
+        "content": "All six swatches, the gradient, raster image and composited alpha region are present without missing or clipped content."
+      }
+    }
+  },
+  "stressReport": "cmyk-stress-results.json",
+  "limits": [
+    "Raster-only CMYK beta, white compositing, uploaded printer ICC required; no PDF/X claim.",
+    "No physical printer, calibrated monitor, Windows Figma, Acrobat or full vector-CMYK validation.",
+    "Synthetic stress is compressible photo-like content, not worst-case entropy or arbitrary Figma-file proof."
+  ],
+  "localSystemProfile": "The macOS Generic CMYK profile was used for local comparison and the live Figma test. It is not redistributed or offered as a printer preset."
+}

@@ -1,0 +1,3623 @@
+{
+  "recordedAt": "2026-10-27T00:01:25.024Z",
+  "browser": "141.0.7390.37",
+  "platform": "darwin",
+  "builtUiSha256": "b72c5774572d41dac81af69d4ae25e968fa584f326241ebd874bcb7c5d81aea0",
+  "nativeFixtureSha256": "4d2732c975615566a357816a314858d83c4b8fd8fff8fb67fa7566db1eb4aa6d",
+  "transferLimitBytes": 134217728,
+  "scope": "Built plugin UI and bundled pdf-lib in isolated headless Chromium; real Figma native PDF fixture and synthetic PNGs. Figma exportAsync, document traversal, backend message handling, plugin sandbox, and Figma process memory are not included. The harness enforces the same 128 MiB transfer threshold and cancels before sending an over-budget page; backend guard behavior is covered separately by protocol tests.",
+  "memoryScope": "CDP Runtime.getHeapUsage is sampled after each acknowledged page. usedSize and totalSize measure JavaScript heap in the renderer; embedderHeapUsedSize and backingStorageSize, when available, are separate V8-reported values. These are not whole-browser, native decoder, GPU, or Figma memory measurements. No forced garbage collection.",
+  "rasterSource": "Deterministic synthetic landscape: full-resolution color gradients and curved terrain with a low-resolution seeded noise overlay enlarged smoothly. Every page has different colors, terrain, and texture. This is a compressible image workload, not a real-photo corpus or worst-case entropy test.",
+  "scenarios": [
+    {
+      "name": "250 native PDF pages with preserved links",
+      "requestedPages": 250,
+      "format": "PDF",
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 244,
+          "heap": {
+            "usedSize": 7184428,
+            "totalSize": 12894208,
+            "embedderHeapUsedSize": 13211840,
+            "backingStorageSize": 2832253
+          }
+        },
+        {
+          "index": 1,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 182,
+          "heap": {
+            "usedSize": 9245320,
+            "totalSize": 14008320,
+            "embedderHeapUsedSize": 13210896,
+            "backingStorageSize": 2941659
+          }
+        },
+        {
+          "index": 2,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 132,
+          "heap": {
+            "usedSize": 8606176,
+            "totalSize": 14270464,
+            "embedderHeapUsedSize": 13222224,
+            "backingStorageSize": 3051065
+          }
+        },
+        {
+          "index": 3,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 133,
+          "heap": {
+            "usedSize": 10530936,
+            "totalSize": 15384576,
+            "embedderHeapUsedSize": 13221208,
+            "backingStorageSize": 3160471
+          }
+        },
+        {
+          "index": 4,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 12473756,
+            "totalSize": 16760832,
+            "embedderHeapUsedSize": 13220288,
+            "backingStorageSize": 3269877
+          }
+        },
+        {
+          "index": 5,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 14475408,
+            "totalSize": 18661376,
+            "embedderHeapUsedSize": 13219368,
+            "backingStorageSize": 3379283
+          }
+        },
+        {
+          "index": 6,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 124,
+          "heap": {
+            "usedSize": 7890800,
+            "totalSize": 15548416,
+            "embedderHeapUsedSize": 4632048,
+            "backingStorageSize": 3488519
+          }
+        },
+        {
+          "index": 7,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 142,
+          "heap": {
+            "usedSize": 9915380,
+            "totalSize": 16662528,
+            "embedderHeapUsedSize": 5173544,
+            "backingStorageSize": 3048124
+          }
+        },
+        {
+          "index": 8,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 349,
+          "heap": {
+            "usedSize": 11872888,
+            "totalSize": 18038784,
+            "embedderHeapUsedSize": 5195232,
+            "backingStorageSize": 3157530
+          }
+        },
+        {
+          "index": 9,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 132,
+          "heap": {
+            "usedSize": 13781872,
+            "totalSize": 19152896,
+            "embedderHeapUsedSize": 5195232,
+            "backingStorageSize": 3266936
+          }
+        },
+        {
+          "index": 10,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 15747636,
+            "totalSize": 20267008,
+            "embedderHeapUsedSize": 5182888,
+            "backingStorageSize": 3376342
+          }
+        },
+        {
+          "index": 11,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 133,
+          "heap": {
+            "usedSize": 11897228,
+            "totalSize": 19054592,
+            "embedderHeapUsedSize": 5181872,
+            "backingStorageSize": 3485748
+          }
+        },
+        {
+          "index": 12,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 13798772,
+            "totalSize": 20168704,
+            "embedderHeapUsedSize": 5180952,
+            "backingStorageSize": 3595154
+          }
+        },
+        {
+          "index": 13,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 133,
+          "heap": {
+            "usedSize": 15703136,
+            "totalSize": 21807104,
+            "embedderHeapUsedSize": 5179960,
+            "backingStorageSize": 3704560
+          }
+        },
+        {
+          "index": 14,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 11066232,
+            "totalSize": 19218432,
+            "embedderHeapUsedSize": 4767136,
+            "backingStorageSize": 3813966
+          }
+        },
+        {
+          "index": 15,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 133,
+          "heap": {
+            "usedSize": 13041260,
+            "totalSize": 20332544,
+            "embedderHeapUsedSize": 5121680,
+            "backingStorageSize": 3295028
+          }
+        },
+        {
+          "index": 16,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 133,
+          "heap": {
+            "usedSize": 14955432,
+            "totalSize": 21446656,
+            "embedderHeapUsedSize": 5153336,
+            "backingStorageSize": 3404434
+          }
+        },
+        {
+          "index": 17,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 132,
+          "heap": {
+            "usedSize": 16882796,
+            "totalSize": 22822912,
+            "embedderHeapUsedSize": 5153336,
+            "backingStorageSize": 3513840
+          }
+        },
+        {
+          "index": 18,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 18872596,
+            "totalSize": 24199168,
+            "embedderHeapUsedSize": 5143856,
+            "backingStorageSize": 3623246
+          }
+        },
+        {
+          "index": 19,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 20792928,
+            "totalSize": 26099712,
+            "embedderHeapUsedSize": 5142936,
+            "backingStorageSize": 3732652
+          }
+        },
+        {
+          "index": 20,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 22711576,
+            "totalSize": 28000256,
+            "embedderHeapUsedSize": 5141944,
+            "backingStorageSize": 3842058
+          }
+        },
+        {
+          "index": 21,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 134,
+          "heap": {
+            "usedSize": 24727884,
+            "totalSize": 30425088,
+            "embedderHeapUsedSize": 5141024,
+            "backingStorageSize": 3951464
+          }
+        },
+        {
+          "index": 22,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 26675348,
+            "totalSize": 32325632,
+            "embedderHeapUsedSize": 5140008,
+            "backingStorageSize": 4060870
+          }
+        },
+        {
+          "index": 23,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 16923468,
+            "totalSize": 29212672,
+            "embedderHeapUsedSize": 5139088,
+            "backingStorageSize": 4170276
+          }
+        },
+        {
+          "index": 24,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 18842876,
+            "totalSize": 30326784,
+            "embedderHeapUsedSize": 5179376,
+            "backingStorageSize": 4279682
+          }
+        },
+        {
+          "index": 25,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 20762628,
+            "totalSize": 31440896,
+            "embedderHeapUsedSize": 5178384,
+            "backingStorageSize": 4389088
+          }
+        },
+        {
+          "index": 26,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 22658016,
+            "totalSize": 32555008,
+            "embedderHeapUsedSize": 5177464,
+            "backingStorageSize": 4498494
+          }
+        },
+        {
+          "index": 27,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 16077944,
+            "totalSize": 29409280,
+            "embedderHeapUsedSize": 4778168,
+            "backingStorageSize": 4607900
+          }
+        },
+        {
+          "index": 28,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 18067444,
+            "totalSize": 30523392,
+            "embedderHeapUsedSize": 5226608,
+            "backingStorageSize": 3696247
+          }
+        },
+        {
+          "index": 29,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 19981388,
+            "totalSize": 31637504,
+            "embedderHeapUsedSize": 5224744,
+            "backingStorageSize": 3805653
+          }
+        },
+        {
+          "index": 30,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 21903688,
+            "totalSize": 32751616,
+            "embedderHeapUsedSize": 5223824,
+            "backingStorageSize": 3915059
+          }
+        },
+        {
+          "index": 31,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 23894516,
+            "totalSize": 33865728,
+            "embedderHeapUsedSize": 5222832,
+            "backingStorageSize": 4024465
+          }
+        },
+        {
+          "index": 32,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 25812292,
+            "totalSize": 34979840,
+            "embedderHeapUsedSize": 5233656,
+            "backingStorageSize": 4133871
+          }
+        },
+        {
+          "index": 33,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 27734492,
+            "totalSize": 36093952,
+            "embedderHeapUsedSize": 5232736,
+            "backingStorageSize": 4243277
+          }
+        },
+        {
+          "index": 34,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 29727344,
+            "totalSize": 37208064,
+            "embedderHeapUsedSize": 5231816,
+            "backingStorageSize": 4352683
+          }
+        },
+        {
+          "index": 35,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 21179916,
+            "totalSize": 33865728,
+            "embedderHeapUsedSize": 5230824,
+            "backingStorageSize": 4462089
+          }
+        },
+        {
+          "index": 36,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 115,
+          "heap": {
+            "usedSize": 21102960,
+            "totalSize": 33406976,
+            "embedderHeapUsedSize": 5156096,
+            "backingStorageSize": 3943151
+          }
+        },
+        {
+          "index": 37,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 23017360,
+            "totalSize": 34521088,
+            "embedderHeapUsedSize": 5153248,
+            "backingStorageSize": 4052557
+          }
+        },
+        {
+          "index": 38,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 24939712,
+            "totalSize": 35635200,
+            "embedderHeapUsedSize": 5152256,
+            "backingStorageSize": 4161963
+          }
+        },
+        {
+          "index": 39,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 26930480,
+            "totalSize": 36749312,
+            "embedderHeapUsedSize": 5151336,
+            "backingStorageSize": 4271369
+          }
+        },
+        {
+          "index": 40,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 28856724,
+            "totalSize": 37863424,
+            "embedderHeapUsedSize": 5150344,
+            "backingStorageSize": 4380775
+          }
+        },
+        {
+          "index": 41,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 30781176,
+            "totalSize": 39239680,
+            "embedderHeapUsedSize": 5159496,
+            "backingStorageSize": 4490181
+          }
+        },
+        {
+          "index": 42,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 32786500,
+            "totalSize": 40353792,
+            "embedderHeapUsedSize": 5158504,
+            "backingStorageSize": 4599587
+          }
+        },
+        {
+          "index": 43,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 34968660,
+            "totalSize": 41467904,
+            "embedderHeapUsedSize": 5157584,
+            "backingStorageSize": 4708993
+          }
+        },
+        {
+          "index": 44,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 36887480,
+            "totalSize": 43106304,
+            "embedderHeapUsedSize": 5156664,
+            "backingStorageSize": 4818399
+          }
+        },
+        {
+          "index": 45,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 38842216,
+            "totalSize": 45006848,
+            "embedderHeapUsedSize": 5197024,
+            "backingStorageSize": 4927805
+          }
+        },
+        {
+          "index": 46,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 40758716,
+            "totalSize": 46907392,
+            "embedderHeapUsedSize": 5203392,
+            "backingStorageSize": 5037211
+          }
+        },
+        {
+          "index": 47,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 42687688,
+            "totalSize": 49070080,
+            "embedderHeapUsedSize": 5202472,
+            "backingStorageSize": 5146617
+          }
+        },
+        {
+          "index": 48,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 44682208,
+            "totalSize": 50970624,
+            "embedderHeapUsedSize": 5201552,
+            "backingStorageSize": 5256023
+          }
+        },
+        {
+          "index": 49,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 46637812,
+            "totalSize": 52871168,
+            "embedderHeapUsedSize": 5202064,
+            "backingStorageSize": 5365429
+          }
+        },
+        {
+          "index": 50,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 48568188,
+            "totalSize": 55033856,
+            "embedderHeapUsedSize": 5205728,
+            "backingStorageSize": 5474835
+          }
+        },
+        {
+          "index": 51,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 25345068,
+            "totalSize": 45137920,
+            "embedderHeapUsedSize": 4767136,
+            "backingStorageSize": 5584241
+          }
+        },
+        {
+          "index": 52,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 27341592,
+            "totalSize": 46252032,
+            "embedderHeapUsedSize": 5177616,
+            "backingStorageSize": 4436959
+          }
+        },
+        {
+          "index": 53,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 29296852,
+            "totalSize": 47366144,
+            "embedderHeapUsedSize": 5223296,
+            "backingStorageSize": 4546365
+          }
+        },
+        {
+          "index": 54,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 31216496,
+            "totalSize": 48480256,
+            "embedderHeapUsedSize": 5223296,
+            "backingStorageSize": 4655771
+          }
+        },
+        {
+          "index": 55,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 33169936,
+            "totalSize": 49594368,
+            "embedderHeapUsedSize": 5199720,
+            "backingStorageSize": 4765177
+          }
+        },
+        {
+          "index": 56,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 35129800,
+            "totalSize": 50708480,
+            "embedderHeapUsedSize": 5198728,
+            "backingStorageSize": 4874583
+          }
+        },
+        {
+          "index": 57,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 37057688,
+            "totalSize": 51822592,
+            "embedderHeapUsedSize": 5197808,
+            "backingStorageSize": 4983989
+          }
+        },
+        {
+          "index": 58,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 39011820,
+            "totalSize": 52936704,
+            "embedderHeapUsedSize": 5195784,
+            "backingStorageSize": 5093395
+          }
+        },
+        {
+          "index": 59,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 40964128,
+            "totalSize": 54050816,
+            "embedderHeapUsedSize": 5194864,
+            "backingStorageSize": 5202801
+          }
+        },
+        {
+          "index": 60,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 42887752,
+            "totalSize": 55164928,
+            "embedderHeapUsedSize": 5193872,
+            "backingStorageSize": 5312207
+          }
+        },
+        {
+          "index": 61,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 44841868,
+            "totalSize": 56279040,
+            "embedderHeapUsedSize": 5192952,
+            "backingStorageSize": 5421613
+          }
+        },
+        {
+          "index": 62,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 46798616,
+            "totalSize": 57393152,
+            "embedderHeapUsedSize": 5191960,
+            "backingStorageSize": 5531019
+          }
+        },
+        {
+          "index": 63,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 48739472,
+            "totalSize": 58507264,
+            "embedderHeapUsedSize": 5191040,
+            "backingStorageSize": 5640425
+          }
+        },
+        {
+          "index": 64,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 50692848,
+            "totalSize": 59621376,
+            "embedderHeapUsedSize": 5196592,
+            "backingStorageSize": 5749831
+          }
+        },
+        {
+          "index": 65,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 52654804,
+            "totalSize": 60735488,
+            "embedderHeapUsedSize": 5195672,
+            "backingStorageSize": 5859237
+          }
+        },
+        {
+          "index": 66,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 54569592,
+            "totalSize": 61849600,
+            "embedderHeapUsedSize": 5194680,
+            "backingStorageSize": 5968643
+          }
+        },
+        {
+          "index": 67,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 29569724,
+            "totalSize": 49512448,
+            "embedderHeapUsedSize": 4767136,
+            "backingStorageSize": 4929199
+          }
+        },
+        {
+          "index": 68,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 31561132,
+            "totalSize": 50626560,
+            "embedderHeapUsedSize": 5122504,
+            "backingStorageSize": 3781917
+          }
+        },
+        {
+          "index": 69,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 33516856,
+            "totalSize": 51740672,
+            "embedderHeapUsedSize": 5151608,
+            "backingStorageSize": 3891323
+          }
+        },
+        {
+          "index": 70,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 35440916,
+            "totalSize": 52854784,
+            "embedderHeapUsedSize": 5151608,
+            "backingStorageSize": 4000729
+          }
+        },
+        {
+          "index": 71,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 37389960,
+            "totalSize": 53968896,
+            "embedderHeapUsedSize": 5144680,
+            "backingStorageSize": 4110135
+          }
+        },
+        {
+          "index": 72,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 149,
+          "heap": {
+            "usedSize": 39342988,
+            "totalSize": 55083008,
+            "embedderHeapUsedSize": 5143688,
+            "backingStorageSize": 4219541
+          }
+        },
+        {
+          "index": 73,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 41262648,
+            "totalSize": 56197120,
+            "embedderHeapUsedSize": 5142768,
+            "backingStorageSize": 4328947
+          }
+        },
+        {
+          "index": 74,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 43216120,
+            "totalSize": 57311232,
+            "embedderHeapUsedSize": 5141848,
+            "backingStorageSize": 4438353
+          }
+        },
+        {
+          "index": 75,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 45176228,
+            "totalSize": 58687488,
+            "embedderHeapUsedSize": 5140928,
+            "backingStorageSize": 4547759
+          }
+        },
+        {
+          "index": 76,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 47114248,
+            "totalSize": 60063744,
+            "embedderHeapUsedSize": 5139936,
+            "backingStorageSize": 4657165
+          }
+        },
+        {
+          "index": 77,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 49058340,
+            "totalSize": 61177856,
+            "embedderHeapUsedSize": 5139016,
+            "backingStorageSize": 4766571
+          }
+        },
+        {
+          "index": 78,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 51014228,
+            "totalSize": 62291968,
+            "embedderHeapUsedSize": 5138096,
+            "backingStorageSize": 4875977
+          }
+        },
+        {
+          "index": 79,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 52941520,
+            "totalSize": 63406080,
+            "embedderHeapUsedSize": 5137104,
+            "backingStorageSize": 4985383
+          }
+        },
+        {
+          "index": 80,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 54893820,
+            "totalSize": 64520192,
+            "embedderHeapUsedSize": 5138240,
+            "backingStorageSize": 5094789
+          }
+        },
+        {
+          "index": 81,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 56839356,
+            "totalSize": 65634304,
+            "embedderHeapUsedSize": 5142248,
+            "backingStorageSize": 5204195
+          }
+        },
+        {
+          "index": 82,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 58765584,
+            "totalSize": 66748416,
+            "embedderHeapUsedSize": 5141328,
+            "backingStorageSize": 5313601
+          }
+        },
+        {
+          "index": 83,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 32196584,
+            "totalSize": 52756480,
+            "embedderHeapUsedSize": 4762440,
+            "backingStorageSize": 5423007
+          }
+        },
+        {
+          "index": 84,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 34196480,
+            "totalSize": 53870592,
+            "embedderHeapUsedSize": 5124968,
+            "backingStorageSize": 4275725
+          }
+        },
+        {
+          "index": 85,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 36152060,
+            "totalSize": 54984704,
+            "embedderHeapUsedSize": 5170696,
+            "backingStorageSize": 4385131
+          }
+        },
+        {
+          "index": 86,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 38627472,
+            "totalSize": 56590336,
+            "embedderHeapUsedSize": 5170696,
+            "backingStorageSize": 4494537
+          }
+        },
+        {
+          "index": 87,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 40584264,
+            "totalSize": 57704448,
+            "embedderHeapUsedSize": 5147120,
+            "backingStorageSize": 4603943
+          }
+        },
+        {
+          "index": 88,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 42601064,
+            "totalSize": 58818560,
+            "embedderHeapUsedSize": 5146200,
+            "backingStorageSize": 4713349
+          }
+        },
+        {
+          "index": 89,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 44557636,
+            "totalSize": 59932672,
+            "embedderHeapUsedSize": 5145208,
+            "backingStorageSize": 4822755
+          }
+        },
+        {
+          "index": 90,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 46574288,
+            "totalSize": 61046784,
+            "embedderHeapUsedSize": 5144288,
+            "backingStorageSize": 4932161
+          }
+        },
+        {
+          "index": 91,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 48531032,
+            "totalSize": 62160896,
+            "embedderHeapUsedSize": 5143296,
+            "backingStorageSize": 5041567
+          }
+        },
+        {
+          "index": 92,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 50547680,
+            "totalSize": 63275008,
+            "embedderHeapUsedSize": 5142376,
+            "backingStorageSize": 5150973
+          }
+        },
+        {
+          "index": 93,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 52504432,
+            "totalSize": 64389120,
+            "embedderHeapUsedSize": 5141384,
+            "backingStorageSize": 5260379
+          }
+        },
+        {
+          "index": 94,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 54521036,
+            "totalSize": 65503232,
+            "embedderHeapUsedSize": 5140392,
+            "backingStorageSize": 5369785
+          }
+        },
+        {
+          "index": 95,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 56482216,
+            "totalSize": 66617344,
+            "embedderHeapUsedSize": 5139472,
+            "backingStorageSize": 5479191
+          }
+        },
+        {
+          "index": 96,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 58502080,
+            "totalSize": 67731456,
+            "embedderHeapUsedSize": 5145024,
+            "backingStorageSize": 5588597
+          }
+        },
+        {
+          "index": 97,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 60449184,
+            "totalSize": 68845568,
+            "embedderHeapUsedSize": 5144104,
+            "backingStorageSize": 5698003
+          }
+        },
+        {
+          "index": 98,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 62500096,
+            "totalSize": 69959680,
+            "embedderHeapUsedSize": 5143112,
+            "backingStorageSize": 5807409
+          }
+        },
+        {
+          "index": 99,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 64425172,
+            "totalSize": 71598080,
+            "embedderHeapUsedSize": 5144184,
+            "backingStorageSize": 5916815
+          }
+        },
+        {
+          "index": 100,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 66349996,
+            "totalSize": 73760768,
+            "embedderHeapUsedSize": 5150072,
+            "backingStorageSize": 6026221
+          }
+        },
+        {
+          "index": 101,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 68298300,
+            "totalSize": 75661312,
+            "embedderHeapUsedSize": 5149080,
+            "backingStorageSize": 6135627
+          }
+        },
+        {
+          "index": 102,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 70254196,
+            "totalSize": 77561856,
+            "embedderHeapUsedSize": 5148160,
+            "backingStorageSize": 6245033
+          }
+        },
+        {
+          "index": 103,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 72271756,
+            "totalSize": 79724544,
+            "embedderHeapUsedSize": 5147168,
+            "backingStorageSize": 6354439
+          }
+        },
+        {
+          "index": 104,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 74227588,
+            "totalSize": 81625088,
+            "embedderHeapUsedSize": 5148808,
+            "backingStorageSize": 6463845
+          }
+        },
+        {
+          "index": 105,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 76245976,
+            "totalSize": 83787776,
+            "embedderHeapUsedSize": 5207472,
+            "backingStorageSize": 6573251
+          }
+        },
+        {
+          "index": 106,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 78202120,
+            "totalSize": 85688320,
+            "embedderHeapUsedSize": 5280704,
+            "backingStorageSize": 6682657
+          }
+        },
+        {
+          "index": 107,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 80219620,
+            "totalSize": 87851008,
+            "embedderHeapUsedSize": 5279784,
+            "backingStorageSize": 6792063
+          }
+        },
+        {
+          "index": 108,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 82175512,
+            "totalSize": 89751552,
+            "embedderHeapUsedSize": 5277760,
+            "backingStorageSize": 6901469
+          }
+        },
+        {
+          "index": 109,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 84193008,
+            "totalSize": 91914240,
+            "embedderHeapUsedSize": 5284128,
+            "backingStorageSize": 7010875
+          }
+        },
+        {
+          "index": 110,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 86148904,
+            "totalSize": 93814784,
+            "embedderHeapUsedSize": 5283208,
+            "backingStorageSize": 7120281
+          }
+        },
+        {
+          "index": 111,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 88166340,
+            "totalSize": 95977472,
+            "embedderHeapUsedSize": 5282216,
+            "backingStorageSize": 7229687
+          }
+        },
+        {
+          "index": 112,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 90122240,
+            "totalSize": 97878016,
+            "embedderHeapUsedSize": 5281296,
+            "backingStorageSize": 7339093
+          }
+        },
+        {
+          "index": 113,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 92139748,
+            "totalSize": 100040704,
+            "embedderHeapUsedSize": 5289296,
+            "backingStorageSize": 7448499
+          }
+        },
+        {
+          "index": 114,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 94113252,
+            "totalSize": 102203392,
+            "embedderHeapUsedSize": 5288376,
+            "backingStorageSize": 7557905
+          }
+        },
+        {
+          "index": 115,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 40901072,
+            "totalSize": 76906496,
+            "embedderHeapUsedSize": 4762448,
+            "backingStorageSize": 7667311
+          }
+        },
+        {
+          "index": 116,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 42916296,
+            "totalSize": 78020608,
+            "embedderHeapUsedSize": 5169480,
+            "backingStorageSize": 5263341
+          }
+        },
+        {
+          "index": 117,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 44852912,
+            "totalSize": 79134720,
+            "embedderHeapUsedSize": 5215176,
+            "backingStorageSize": 5372747
+          }
+        },
+        {
+          "index": 118,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 46870384,
+            "totalSize": 80248832,
+            "embedderHeapUsedSize": 5215176,
+            "backingStorageSize": 5482153
+          }
+        },
+        {
+          "index": 119,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 48826248,
+            "totalSize": 81362944,
+            "embedderHeapUsedSize": 5191616,
+            "backingStorageSize": 5591559
+          }
+        },
+        {
+          "index": 120,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 50856172,
+            "totalSize": 82477056,
+            "embedderHeapUsedSize": 5190696,
+            "backingStorageSize": 5700965
+          }
+        },
+        {
+          "index": 121,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 52811808,
+            "totalSize": 83591168,
+            "embedderHeapUsedSize": 5189776,
+            "backingStorageSize": 5810371
+          }
+        },
+        {
+          "index": 122,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 54829272,
+            "totalSize": 84705280,
+            "embedderHeapUsedSize": 5188784,
+            "backingStorageSize": 5919777
+          }
+        },
+        {
+          "index": 123,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 56790300,
+            "totalSize": 85819392,
+            "embedderHeapUsedSize": 5187864,
+            "backingStorageSize": 6029183
+          }
+        },
+        {
+          "index": 124,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 58807792,
+            "totalSize": 86933504,
+            "embedderHeapUsedSize": 5186872,
+            "backingStorageSize": 6138589
+          }
+        },
+        {
+          "index": 125,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 60766668,
+            "totalSize": 88047616,
+            "embedderHeapUsedSize": 5185952,
+            "backingStorageSize": 6247995
+          }
+        },
+        {
+          "index": 126,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 62787084,
+            "totalSize": 89161728,
+            "embedderHeapUsedSize": 5184960,
+            "backingStorageSize": 6357401
+          }
+        },
+        {
+          "index": 127,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 64745484,
+            "totalSize": 90275840,
+            "embedderHeapUsedSize": 5184040,
+            "backingStorageSize": 6466807
+          }
+        },
+        {
+          "index": 128,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 66766056,
+            "totalSize": 91389952,
+            "embedderHeapUsedSize": 5189648,
+            "backingStorageSize": 6576213
+          }
+        },
+        {
+          "index": 129,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 68721992,
+            "totalSize": 92504064,
+            "embedderHeapUsedSize": 5188728,
+            "backingStorageSize": 6685619
+          }
+        },
+        {
+          "index": 130,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 70739380,
+            "totalSize": 93618176,
+            "embedderHeapUsedSize": 5187736,
+            "backingStorageSize": 6795025
+          }
+        },
+        {
+          "index": 131,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 72695292,
+            "totalSize": 94732288,
+            "embedderHeapUsedSize": 5191320,
+            "backingStorageSize": 6904431
+          }
+        },
+        {
+          "index": 132,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 74712728,
+            "totalSize": 95846400,
+            "embedderHeapUsedSize": 5190328,
+            "backingStorageSize": 7013837
+          }
+        },
+        {
+          "index": 133,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 76668596,
+            "totalSize": 96960512,
+            "embedderHeapUsedSize": 5194904,
+            "backingStorageSize": 7123243
+          }
+        },
+        {
+          "index": 134,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 78691368,
+            "totalSize": 98074624,
+            "embedderHeapUsedSize": 5193984,
+            "backingStorageSize": 7232649
+          }
+        },
+        {
+          "index": 135,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 80649600,
+            "totalSize": 99188736,
+            "embedderHeapUsedSize": 5193064,
+            "backingStorageSize": 7342055
+          }
+        },
+        {
+          "index": 136,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 115,
+          "heap": {
+            "usedSize": 82667052,
+            "totalSize": 100302848,
+            "embedderHeapUsedSize": 5192072,
+            "backingStorageSize": 7451461
+          }
+        },
+        {
+          "index": 137,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 84626996,
+            "totalSize": 101416960,
+            "embedderHeapUsedSize": 5252952,
+            "backingStorageSize": 7560867
+          }
+        },
+        {
+          "index": 138,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 115,
+          "heap": {
+            "usedSize": 86650948,
+            "totalSize": 102531072,
+            "embedderHeapUsedSize": 5323904,
+            "backingStorageSize": 7670273
+          }
+        },
+        {
+          "index": 139,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 88618884,
+            "totalSize": 103645184,
+            "embedderHeapUsedSize": 5322912,
+            "backingStorageSize": 7779679
+          }
+        },
+        {
+          "index": 140,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 90634304,
+            "totalSize": 104759296,
+            "embedderHeapUsedSize": 5321992,
+            "backingStorageSize": 7889085
+          }
+        },
+        {
+          "index": 141,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 92584468,
+            "totalSize": 105873408,
+            "embedderHeapUsedSize": 5321072,
+            "backingStorageSize": 7998491
+          }
+        },
+        {
+          "index": 142,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 94598072,
+            "totalSize": 106987520,
+            "embedderHeapUsedSize": 5327712,
+            "backingStorageSize": 8107897
+          }
+        },
+        {
+          "index": 143,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 96550072,
+            "totalSize": 108101632,
+            "embedderHeapUsedSize": 5326792,
+            "backingStorageSize": 8217303
+          }
+        },
+        {
+          "index": 144,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 98564120,
+            "totalSize": 109215744,
+            "embedderHeapUsedSize": 5325800,
+            "backingStorageSize": 8326709
+          }
+        },
+        {
+          "index": 145,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 100515660,
+            "totalSize": 110329856,
+            "embedderHeapUsedSize": 5324808,
+            "backingStorageSize": 8436115
+          }
+        },
+        {
+          "index": 146,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 49139516,
+            "totalSize": 85164032,
+            "embedderHeapUsedSize": 4762448,
+            "backingStorageSize": 8545521
+          }
+        },
+        {
+          "index": 147,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 51148584,
+            "totalSize": 86278144,
+            "embedderHeapUsedSize": 5156696,
+            "backingStorageSize": 6220094
+          }
+        },
+        {
+          "index": 148,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 53116700,
+            "totalSize": 87392256,
+            "embedderHeapUsedSize": 5203504,
+            "backingStorageSize": 6329500
+          }
+        },
+        {
+          "index": 149,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 55104616,
+            "totalSize": 88506368,
+            "embedderHeapUsedSize": 5203504,
+            "backingStorageSize": 6438906
+          }
+        },
+        {
+          "index": 150,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 57063676,
+            "totalSize": 89620480,
+            "embedderHeapUsedSize": 5178904,
+            "backingStorageSize": 6548312
+          }
+        },
+        {
+          "index": 151,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 59076644,
+            "totalSize": 90734592,
+            "embedderHeapUsedSize": 5177912,
+            "backingStorageSize": 6657718
+          }
+        },
+        {
+          "index": 152,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 61028648,
+            "totalSize": 91848704,
+            "embedderHeapUsedSize": 5176992,
+            "backingStorageSize": 6767124
+          }
+        },
+        {
+          "index": 153,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 63042236,
+            "totalSize": 92962816,
+            "embedderHeapUsedSize": 5176072,
+            "backingStorageSize": 6876530
+          }
+        },
+        {
+          "index": 154,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 64994228,
+            "totalSize": 94076928,
+            "embedderHeapUsedSize": 5175152,
+            "backingStorageSize": 6985936
+          }
+        },
+        {
+          "index": 155,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 67015648,
+            "totalSize": 95191040,
+            "embedderHeapUsedSize": 5174160,
+            "backingStorageSize": 7095342
+          }
+        },
+        {
+          "index": 156,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 68965588,
+            "totalSize": 96305152,
+            "embedderHeapUsedSize": 5172208,
+            "backingStorageSize": 7204748
+          }
+        },
+        {
+          "index": 157,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 71022224,
+            "totalSize": 97419264,
+            "embedderHeapUsedSize": 5171216,
+            "backingStorageSize": 7314154
+          }
+        },
+        {
+          "index": 158,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 72975668,
+            "totalSize": 98533376,
+            "embedderHeapUsedSize": 5170200,
+            "backingStorageSize": 7423560
+          }
+        },
+        {
+          "index": 159,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 74951272,
+            "totalSize": 99647488,
+            "embedderHeapUsedSize": 5177144,
+            "backingStorageSize": 7532966
+          }
+        },
+        {
+          "index": 160,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 76899712,
+            "totalSize": 100761600,
+            "embedderHeapUsedSize": 5176224,
+            "backingStorageSize": 7642372
+          }
+        },
+        {
+          "index": 161,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 78913052,
+            "totalSize": 101875712,
+            "embedderHeapUsedSize": 5175304,
+            "backingStorageSize": 7751778
+          }
+        },
+        {
+          "index": 162,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 80865304,
+            "totalSize": 102989824,
+            "embedderHeapUsedSize": 5174312,
+            "backingStorageSize": 7861184
+          }
+        },
+        {
+          "index": 163,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 82878628,
+            "totalSize": 104103936,
+            "embedderHeapUsedSize": 5176160,
+            "backingStorageSize": 7970590
+          }
+        },
+        {
+          "index": 164,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 84830896,
+            "totalSize": 105218048,
+            "embedderHeapUsedSize": 5183336,
+            "backingStorageSize": 8079996
+          }
+        },
+        {
+          "index": 165,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 86849524,
+            "totalSize": 106332160,
+            "embedderHeapUsedSize": 5182344,
+            "backingStorageSize": 8189402
+          }
+        },
+        {
+          "index": 166,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 88805428,
+            "totalSize": 107446272,
+            "embedderHeapUsedSize": 5181424,
+            "backingStorageSize": 8298808
+          }
+        },
+        {
+          "index": 167,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 90818432,
+            "totalSize": 108560384,
+            "embedderHeapUsedSize": 5180432,
+            "backingStorageSize": 8408214
+          }
+        },
+        {
+          "index": 168,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 92772488,
+            "totalSize": 109674496,
+            "embedderHeapUsedSize": 5239096,
+            "backingStorageSize": 8517620
+          }
+        },
+        {
+          "index": 169,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 94797320,
+            "totalSize": 110788608,
+            "embedderHeapUsedSize": 5306072,
+            "backingStorageSize": 8627026
+          }
+        },
+        {
+          "index": 170,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 96777724,
+            "totalSize": 111902720,
+            "embedderHeapUsedSize": 5305152,
+            "backingStorageSize": 8736432
+          }
+        },
+        {
+          "index": 171,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 98764504,
+            "totalSize": 113016832,
+            "embedderHeapUsedSize": 5304160,
+            "backingStorageSize": 8845838
+          }
+        },
+        {
+          "index": 172,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 101639360,
+            "totalSize": 115081216,
+            "embedderHeapUsedSize": 5311016,
+            "backingStorageSize": 8955244
+          }
+        },
+        {
+          "index": 173,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 103603940,
+            "totalSize": 116195328,
+            "embedderHeapUsedSize": 5310024,
+            "backingStorageSize": 9064650
+          }
+        },
+        {
+          "index": 174,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 105515832,
+            "totalSize": 117309440,
+            "embedderHeapUsedSize": 5309104,
+            "backingStorageSize": 9174056
+          }
+        },
+        {
+          "index": 175,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 107433864,
+            "totalSize": 118423552,
+            "embedderHeapUsedSize": 5308112,
+            "backingStorageSize": 9283462
+          }
+        },
+        {
+          "index": 176,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 109425776,
+            "totalSize": 119537664,
+            "embedderHeapUsedSize": 5314344,
+            "backingStorageSize": 9392868
+          }
+        },
+        {
+          "index": 177,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 57112312,
+            "totalSize": 93126656,
+            "embedderHeapUsedSize": 4762448,
+            "backingStorageSize": 9502274
+          }
+        },
+        {
+          "index": 178,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 59101616,
+            "totalSize": 94240768,
+            "embedderHeapUsedSize": 5133064,
+            "backingStorageSize": 7176847
+          }
+        },
+        {
+          "index": 179,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 61019288,
+            "totalSize": 95354880,
+            "embedderHeapUsedSize": 5178808,
+            "backingStorageSize": 7286253
+          }
+        },
+        {
+          "index": 180,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 62934672,
+            "totalSize": 96468992,
+            "embedderHeapUsedSize": 5178808,
+            "backingStorageSize": 7395659
+          }
+        },
+        {
+          "index": 181,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 64885352,
+            "totalSize": 97583104,
+            "embedderHeapUsedSize": 5154288,
+            "backingStorageSize": 7505065
+          }
+        },
+        {
+          "index": 182,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 66831152,
+            "totalSize": 98697216,
+            "embedderHeapUsedSize": 5153296,
+            "backingStorageSize": 7614471
+          }
+        },
+        {
+          "index": 183,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 68738784,
+            "totalSize": 99811328,
+            "embedderHeapUsedSize": 5152376,
+            "backingStorageSize": 7723877
+          }
+        },
+        {
+          "index": 184,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 70695856,
+            "totalSize": 100925440,
+            "embedderHeapUsedSize": 5151384,
+            "backingStorageSize": 7833283
+          }
+        },
+        {
+          "index": 185,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 72607724,
+            "totalSize": 102039552,
+            "embedderHeapUsedSize": 5150392,
+            "backingStorageSize": 7942689
+          }
+        },
+        {
+          "index": 186,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 74525776,
+            "totalSize": 103153664,
+            "embedderHeapUsedSize": 5149472,
+            "backingStorageSize": 8052095
+          }
+        },
+        {
+          "index": 187,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 76512396,
+            "totalSize": 104267776,
+            "embedderHeapUsedSize": 5148552,
+            "backingStorageSize": 8161501
+          }
+        },
+        {
+          "index": 188,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 78428528,
+            "totalSize": 105381888,
+            "embedderHeapUsedSize": 5147560,
+            "backingStorageSize": 8270907
+          }
+        },
+        {
+          "index": 189,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 80345064,
+            "totalSize": 106496000,
+            "embedderHeapUsedSize": 5146568,
+            "backingStorageSize": 8380313
+          }
+        },
+        {
+          "index": 190,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 82331748,
+            "totalSize": 107610112,
+            "embedderHeapUsedSize": 5152248,
+            "backingStorageSize": 8489719
+          }
+        },
+        {
+          "index": 191,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 84243720,
+            "totalSize": 108724224,
+            "embedderHeapUsedSize": 5151328,
+            "backingStorageSize": 8599125
+          }
+        },
+        {
+          "index": 192,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 118,
+          "heap": {
+            "usedSize": 86161632,
+            "totalSize": 109838336,
+            "embedderHeapUsedSize": 5150336,
+            "backingStorageSize": 8708531
+          }
+        },
+        {
+          "index": 193,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 115,
+          "heap": {
+            "usedSize": 88148304,
+            "totalSize": 110952448,
+            "embedderHeapUsedSize": 5151240,
+            "backingStorageSize": 8817937
+          }
+        },
+        {
+          "index": 194,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 90066072,
+            "totalSize": 112066560,
+            "embedderHeapUsedSize": 5157544,
+            "backingStorageSize": 8927343
+          }
+        },
+        {
+          "index": 195,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 91980292,
+            "totalSize": 113180672,
+            "embedderHeapUsedSize": 5156552,
+            "backingStorageSize": 9036749
+          }
+        },
+        {
+          "index": 196,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 93972212,
+            "totalSize": 114294784,
+            "embedderHeapUsedSize": 5155560,
+            "backingStorageSize": 9146155
+          }
+        },
+        {
+          "index": 197,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 95912228,
+            "totalSize": 115408896,
+            "embedderHeapUsedSize": 5154640,
+            "backingStorageSize": 9255561
+          }
+        },
+        {
+          "index": 198,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 97819908,
+            "totalSize": 116523008,
+            "embedderHeapUsedSize": 5159224,
+            "backingStorageSize": 9364967
+          }
+        },
+        {
+          "index": 199,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 99788776,
+            "totalSize": 117637120,
+            "embedderHeapUsedSize": 5217816,
+            "backingStorageSize": 9474373
+          }
+        },
+        {
+          "index": 200,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 101703420,
+            "totalSize": 118751232,
+            "embedderHeapUsedSize": 5291120,
+            "backingStorageSize": 9583779
+          }
+        },
+        {
+          "index": 201,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 103621716,
+            "totalSize": 119865344,
+            "embedderHeapUsedSize": 5290128,
+            "backingStorageSize": 9693185
+          }
+        },
+        {
+          "index": 202,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 105608460,
+            "totalSize": 120979456,
+            "embedderHeapUsedSize": 5289136,
+            "backingStorageSize": 9802591
+          }
+        },
+        {
+          "index": 203,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 107519968,
+            "totalSize": 122093568,
+            "embedderHeapUsedSize": 5288216,
+            "backingStorageSize": 9911997
+          }
+        },
+        {
+          "index": 204,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 109440668,
+            "totalSize": 123207680,
+            "embedderHeapUsedSize": 5286192,
+            "backingStorageSize": 10021403
+          }
+        },
+        {
+          "index": 205,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 111427996,
+            "totalSize": 124321792,
+            "embedderHeapUsedSize": 5293560,
+            "backingStorageSize": 10130809
+          }
+        },
+        {
+          "index": 206,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 113339488,
+            "totalSize": 125435904,
+            "embedderHeapUsedSize": 5292568,
+            "backingStorageSize": 10240215
+          }
+        },
+        {
+          "index": 207,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 115261104,
+            "totalSize": 126550016,
+            "embedderHeapUsedSize": 5291576,
+            "backingStorageSize": 10349621
+          }
+        },
+        {
+          "index": 208,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 117247872,
+            "totalSize": 127664128,
+            "embedderHeapUsedSize": 5290656,
+            "backingStorageSize": 10459027
+          }
+        },
+        {
+          "index": 209,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 63660032,
+            "totalSize": 98893824,
+            "embedderHeapUsedSize": 4762448,
+            "backingStorageSize": 10568433
+          }
+        },
+        {
+          "index": 210,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 65647008,
+            "totalSize": 100007936,
+            "embedderHeapUsedSize": 5151608,
+            "backingStorageSize": 8164463
+          }
+        },
+        {
+          "index": 211,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 67588480,
+            "totalSize": 101122048,
+            "embedderHeapUsedSize": 5197376,
+            "backingStorageSize": 8273869
+          }
+        },
+        {
+          "index": 212,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 69575080,
+            "totalSize": 102236160,
+            "embedderHeapUsedSize": 5197376,
+            "backingStorageSize": 8383275
+          }
+        },
+        {
+          "index": 213,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 71526960,
+            "totalSize": 103350272,
+            "embedderHeapUsedSize": 5173816,
+            "backingStorageSize": 8492681
+          }
+        },
+        {
+          "index": 214,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 73447932,
+            "totalSize": 104464384,
+            "embedderHeapUsedSize": 5172824,
+            "backingStorageSize": 8602087
+          }
+        },
+        {
+          "index": 215,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 75391628,
+            "totalSize": 105578496,
+            "embedderHeapUsedSize": 5171904,
+            "backingStorageSize": 8711493
+          }
+        },
+        {
+          "index": 216,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 77343516,
+            "totalSize": 106692608,
+            "embedderHeapUsedSize": 5170912,
+            "backingStorageSize": 8820899
+          }
+        },
+        {
+          "index": 217,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 79264532,
+            "totalSize": 107806720,
+            "embedderHeapUsedSize": 5169992,
+            "backingStorageSize": 8930305
+          }
+        },
+        {
+          "index": 218,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 81208208,
+            "totalSize": 108920832,
+            "embedderHeapUsedSize": 5169000,
+            "backingStorageSize": 9039711
+          }
+        },
+        {
+          "index": 219,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 83160072,
+            "totalSize": 110034944,
+            "embedderHeapUsedSize": 5168080,
+            "backingStorageSize": 9149117
+          }
+        },
+        {
+          "index": 220,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 85081072,
+            "totalSize": 111149056,
+            "embedderHeapUsedSize": 5167088,
+            "backingStorageSize": 9258523
+          }
+        },
+        {
+          "index": 221,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 87034632,
+            "totalSize": 112263168,
+            "embedderHeapUsedSize": 5166168,
+            "backingStorageSize": 9367929
+          }
+        },
+        {
+          "index": 222,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 88985512,
+            "totalSize": 113377280,
+            "embedderHeapUsedSize": 5171776,
+            "backingStorageSize": 9477335
+          }
+        },
+        {
+          "index": 223,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 90906528,
+            "totalSize": 114491392,
+            "embedderHeapUsedSize": 5170856,
+            "backingStorageSize": 9586741
+          }
+        },
+        {
+          "index": 224,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 92850180,
+            "totalSize": 115605504,
+            "embedderHeapUsedSize": 5169936,
+            "backingStorageSize": 9696147
+          }
+        },
+        {
+          "index": 225,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 94803508,
+            "totalSize": 116719616,
+            "embedderHeapUsedSize": 5173448,
+            "backingStorageSize": 9805553
+          }
+        },
+        {
+          "index": 226,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 96815156,
+            "totalSize": 117833728,
+            "embedderHeapUsedSize": 5172528,
+            "backingStorageSize": 9914959
+          }
+        },
+        {
+          "index": 227,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 98769908,
+            "totalSize": 118947840,
+            "embedderHeapUsedSize": 5180048,
+            "backingStorageSize": 10024365
+          }
+        },
+        {
+          "index": 228,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 100785536,
+            "totalSize": 120061952,
+            "embedderHeapUsedSize": 5179056,
+            "backingStorageSize": 10133771
+          }
+        },
+        {
+          "index": 229,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 102737488,
+            "totalSize": 121176064,
+            "embedderHeapUsedSize": 5178136,
+            "backingStorageSize": 10243177
+          }
+        },
+        {
+          "index": 230,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 104750620,
+            "totalSize": 122290176,
+            "embedderHeapUsedSize": 5176184,
+            "backingStorageSize": 10352583
+          }
+        },
+        {
+          "index": 231,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 106702500,
+            "totalSize": 123404288,
+            "embedderHeapUsedSize": 5234776,
+            "backingStorageSize": 10461989
+          }
+        },
+        {
+          "index": 232,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 108715700,
+            "totalSize": 124518400,
+            "embedderHeapUsedSize": 5308184,
+            "backingStorageSize": 10571395
+          }
+        },
+        {
+          "index": 233,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 110667580,
+            "totalSize": 125632512,
+            "embedderHeapUsedSize": 5307192,
+            "backingStorageSize": 10680801
+          }
+        },
+        {
+          "index": 234,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 112680780,
+            "totalSize": 126746624,
+            "embedderHeapUsedSize": 5306272,
+            "backingStorageSize": 10790207
+          }
+        },
+        {
+          "index": 235,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 114632660,
+            "totalSize": 127860736,
+            "embedderHeapUsedSize": 5305280,
+            "backingStorageSize": 10899613
+          }
+        },
+        {
+          "index": 236,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 116650168,
+            "totalSize": 128974848,
+            "embedderHeapUsedSize": 5313704,
+            "backingStorageSize": 11009019
+          }
+        },
+        {
+          "index": 237,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 118601532,
+            "totalSize": 130088960,
+            "embedderHeapUsedSize": 5312784,
+            "backingStorageSize": 11118425
+          }
+        },
+        {
+          "index": 238,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 120614736,
+            "totalSize": 131203072,
+            "embedderHeapUsedSize": 5311864,
+            "backingStorageSize": 11227831
+          }
+        },
+        {
+          "index": 239,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 122566612,
+            "totalSize": 132317184,
+            "embedderHeapUsedSize": 5310872,
+            "backingStorageSize": 11337237
+          }
+        },
+        {
+          "index": 240,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 124582744,
+            "totalSize": 133431296,
+            "embedderHeapUsedSize": 5309880,
+            "backingStorageSize": 11446643
+          }
+        },
+        {
+          "index": 241,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 70180528,
+            "totalSize": 105447424,
+            "embedderHeapUsedSize": 4762448,
+            "backingStorageSize": 11556049
+          }
+        },
+        {
+          "index": 242,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 150,
+          "heap": {
+            "usedSize": 72178408,
+            "totalSize": 106561536,
+            "embedderHeapUsedSize": 5135992,
+            "backingStorageSize": 9152079
+          }
+        },
+        {
+          "index": 243,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 74112008,
+            "totalSize": 107675648,
+            "embedderHeapUsedSize": 5166384,
+            "backingStorageSize": 9261485
+          }
+        },
+        {
+          "index": 244,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 76098576,
+            "totalSize": 108789760,
+            "embedderHeapUsedSize": 5166384,
+            "backingStorageSize": 9370891
+          }
+        },
+        {
+          "index": 245,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 78064012,
+            "totalSize": 109903872,
+            "embedderHeapUsedSize": 5158200,
+            "backingStorageSize": 9480297
+          }
+        },
+        {
+          "index": 246,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 80075980,
+            "totalSize": 111017984,
+            "embedderHeapUsedSize": 5157208,
+            "backingStorageSize": 9589703
+          }
+        },
+        {
+          "index": 247,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 82027724,
+            "totalSize": 112132096,
+            "embedderHeapUsedSize": 5156288,
+            "backingStorageSize": 9699109
+          }
+        },
+        {
+          "index": 248,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 116,
+          "heap": {
+            "usedSize": 84044576,
+            "totalSize": 113246208,
+            "embedderHeapUsedSize": 5155296,
+            "backingStorageSize": 9808515
+          }
+        },
+        {
+          "index": 249,
+          "inputBytes": 46624,
+          "generationMs": 0,
+          "assemblyMs": 117,
+          "heap": {
+            "usedSize": 85996092,
+            "totalSize": 114360320,
+            "embedderHeapUsedSize": 5154304,
+            "backingStorageSize": 9917921
+          }
+        }
+      ],
+      "compressedInputBytes": 11656000,
+      "pageDimensions": {
+        "width": 600,
+        "height": 400
+      },
+      "heapBeforePages": {
+        "usedSize": 7636340,
+        "totalSize": 10600448,
+        "embedderHeapUsedSize": 11159096,
+        "backingStorageSize": 2723027
+      },
+      "finalizeAndDownloadMs": 5808,
+      "outputBytes": 9217799,
+      "heapAfterDownload": {
+        "usedSize": 73276212,
+        "totalSize": 91373568,
+        "embedderHeapUsedSize": 7647144,
+        "backingStorageSize": 21360689
+      },
+      "validation": {
+        "outputPages": 250,
+        "exactPageDimensions": true,
+        "preservedNativeUriAnnotations": 1250,
+        "correctInternalDestinations": 250,
+        "repeatedNamesResolvedByFrameId": true,
+        "browserErrors": []
+      },
+      "durationMs": 36809,
+      "acknowledgedPages": 250,
+      "peakSampledJsHeapBytes": 124582744,
+      "transferBudgetUsedPercent": 8.68,
+      "builtUiSha256": "5ca0969b015fd604684ea02b4d9a3c559364bd1b6764d7644fbfdbc9253c5158",
+      "generationMs": 0,
+      "pageAssemblyMs": 29967,
+      "peakSampledBackingStorageBytes": 21360689
+    },
+    {
+      "name": "30 large raster pages at 1.5x",
+      "requestedPages": 30,
+      "format": "PNG",
+      "status": "transfer-limit",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 13158686,
+          "generationMs": 936,
+          "assemblyMs": 2891,
+          "heap": {
+            "usedSize": 5241512,
+            "totalSize": 6995968,
+            "embedderHeapUsedSize": 1561360,
+            "backingStorageSize": 238111760
+          }
+        },
+        {
+          "index": 1,
+          "inputBytes": 13234094,
+          "generationMs": 898,
+          "assemblyMs": 2901,
+          "heap": {
+            "usedSize": 4266668,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1554352,
+            "backingStorageSize": 245400904
+          }
+        },
+        {
+          "index": 2,
+          "inputBytes": 13216260,
+          "generationMs": 894,
+          "assemblyMs": 2889,
+          "heap": {
+            "usedSize": 4300272,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1516512,
+            "backingStorageSize": 253732142
+          }
+        },
+        {
+          "index": 3,
+          "inputBytes": 13192174,
+          "generationMs": 896,
+          "assemblyMs": 2871,
+          "heap": {
+            "usedSize": 4304820,
+            "totalSize": 6127616,
+            "embedderHeapUsedSize": 1506736,
+            "backingStorageSize": 261794306
+          }
+        },
+        {
+          "index": 4,
+          "inputBytes": 13149354,
+          "generationMs": 894,
+          "assemblyMs": 2823,
+          "heap": {
+            "usedSize": 4318424,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1497720,
+            "backingStorageSize": 269907605
+          }
+        },
+        {
+          "index": 5,
+          "inputBytes": 13095673,
+          "generationMs": 899,
+          "assemblyMs": 2784,
+          "heap": {
+            "usedSize": 4310988,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1507728,
+            "backingStorageSize": 278076560
+          }
+        },
+        {
+          "index": 6,
+          "inputBytes": 13048749,
+          "generationMs": 894,
+          "assemblyMs": 2756,
+          "heap": {
+            "usedSize": 4332756,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1492736,
+            "backingStorageSize": 286264220
+          }
+        },
+        {
+          "index": 7,
+          "inputBytes": 12943374,
+          "generationMs": 892,
+          "assemblyMs": 2757,
+          "heap": {
+            "usedSize": 4317168,
+            "totalSize": 5341184,
+            "embedderHeapUsedSize": 1501960,
+            "backingStorageSize": 294312991
+          }
+        },
+        {
+          "index": 8,
+          "inputBytes": 12883586,
+          "generationMs": 892,
+          "assemblyMs": 2810,
+          "heap": {
+            "usedSize": 4478552,
+            "totalSize": 6127616,
+            "embedderHeapUsedSize": 1498168,
+            "backingStorageSize": 302410315
+          }
+        },
+        {
+          "index": 9,
+          "inputBytes": 12773428,
+          "generationMs": 1169,
+          "assemblyMs": 2711,
+          "heap": {
+            "usedSize": 4314052,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1501296,
+            "backingStorageSize": 310362259
+          }
+        }
+      ],
+      "compressedInputBytes": 130695378,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5,
+        "pixels": 18662400
+      },
+      "heapBeforePages": {
+        "usedSize": 5893732,
+        "totalSize": 8978432,
+        "embedderHeapUsedSize": 2872728,
+        "backingStorageSize": 2723026
+      },
+      "nextPageBytes": 12680749,
+      "durationMs": 38913,
+      "acknowledgedPages": 10,
+      "peakSampledJsHeapBytes": 5893732,
+      "transferBudgetUsedPercent": 97.38,
+      "builtUiSha256": "5ca0969b015fd604684ea02b4d9a3c559364bd1b6764d7644fbfdbc9253c5158",
+      "generationMs": 9264,
+      "pageAssemblyMs": 28193,
+      "peakSampledBackingStorageBytes": 310362259
+    },
+    {
+      "name": "30 large raster pages at 1.5x, lower texture control",
+      "requestedPages": 30,
+      "format": "PNG",
+      "builtUiSha256": "b72c5774572d41dac81af69d4ae25e968fa584f326241ebd874bcb7c5d81aea0",
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 2107897,
+          "generationMs": 845,
+          "assemblyMs": 911,
+          "heap": {
+            "usedSize": 4865864,
+            "totalSize": 8044544,
+            "embedderHeapUsedSize": 1613136,
+            "backingStorageSize": 211632313
+          }
+        },
+        {
+          "index": 1,
+          "inputBytes": 2151319,
+          "generationMs": 787,
+          "assemblyMs": 897,
+          "heap": {
+            "usedSize": 3922176,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1620016,
+            "backingStorageSize": 211198923
+          }
+        },
+        {
+          "index": 2,
+          "inputBytes": 2178488,
+          "generationMs": 791,
+          "assemblyMs": 892,
+          "heap": {
+            "usedSize": 3961024,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1519480,
+            "backingStorageSize": 211869249
+          }
+        },
+        {
+          "index": 3,
+          "inputBytes": 2173833,
+          "generationMs": 790,
+          "assemblyMs": 892,
+          "heap": {
+            "usedSize": 3951196,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1596456,
+            "backingStorageSize": 212507336
+          }
+        },
+        {
+          "index": 4,
+          "inputBytes": 2162752,
+          "generationMs": 790,
+          "assemblyMs": 893,
+          "heap": {
+            "usedSize": 3983404,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1501456,
+            "backingStorageSize": 213116562
+          }
+        },
+        {
+          "index": 5,
+          "inputBytes": 2137791,
+          "generationMs": 792,
+          "assemblyMs": 941,
+          "heap": {
+            "usedSize": 3976344,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1580464,
+            "backingStorageSize": 213729503
+          }
+        },
+        {
+          "index": 6,
+          "inputBytes": 2129673,
+          "generationMs": 796,
+          "assemblyMs": 888,
+          "heap": {
+            "usedSize": 4023068,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1513216,
+            "backingStorageSize": 214349343
+          }
+        },
+        {
+          "index": 7,
+          "inputBytes": 2117121,
+          "generationMs": 790,
+          "assemblyMs": 893,
+          "heap": {
+            "usedSize": 4021372,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1548600,
+            "backingStorageSize": 214972529
+          }
+        },
+        {
+          "index": 8,
+          "inputBytes": 2157226,
+          "generationMs": 794,
+          "assemblyMs": 889,
+          "heap": {
+            "usedSize": 4131196,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1510216,
+            "backingStorageSize": 215668484
+          }
+        },
+        {
+          "index": 9,
+          "inputBytes": 2061359,
+          "generationMs": 788,
+          "assemblyMs": 878,
+          "heap": {
+            "usedSize": 4102500,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1534776,
+            "backingStorageSize": 216160146
+          }
+        },
+        {
+          "index": 10,
+          "inputBytes": 2130402,
+          "generationMs": 789,
+          "assemblyMs": 877,
+          "heap": {
+            "usedSize": 4151996,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1492960,
+            "backingStorageSize": 216877861
+          }
+        },
+        {
+          "index": 11,
+          "inputBytes": 2059543,
+          "generationMs": 787,
+          "assemblyMs": 879,
+          "heap": {
+            "usedSize": 4147444,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1537168,
+            "backingStorageSize": 217431472
+          }
+        },
+        {
+          "index": 12,
+          "inputBytes": 1993532,
+          "generationMs": 789,
+          "assemblyMs": 877,
+          "heap": {
+            "usedSize": 4133984,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1486264,
+            "backingStorageSize": 217960176
+          }
+        },
+        {
+          "index": 13,
+          "inputBytes": 2055636,
+          "generationMs": 788,
+          "assemblyMs": 879,
+          "heap": {
+            "usedSize": 4143136,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1537784,
+            "backingStorageSize": 218665954
+          }
+        },
+        {
+          "index": 14,
+          "inputBytes": 2103540,
+          "generationMs": 791,
+          "assemblyMs": 891,
+          "heap": {
+            "usedSize": 4187248,
+            "totalSize": 6127616,
+            "embedderHeapUsedSize": 1474224,
+            "backingStorageSize": 219344259
+          }
+        },
+        {
+          "index": 15,
+          "inputBytes": 2145972,
+          "generationMs": 794,
+          "assemblyMs": 888,
+          "heap": {
+            "usedSize": 4159196,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1514896,
+            "backingStorageSize": 220045792
+          }
+        },
+        {
+          "index": 16,
+          "inputBytes": 2171174,
+          "generationMs": 791,
+          "assemblyMs": 892,
+          "heap": {
+            "usedSize": 4191900,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1465288,
+            "backingStorageSize": 220713018
+          }
+        },
+        {
+          "index": 17,
+          "inputBytes": 2154679,
+          "generationMs": 790,
+          "assemblyMs": 893,
+          "heap": {
+            "usedSize": 4160196,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1507520,
+            "backingStorageSize": 221318902
+          }
+        },
+        {
+          "index": 18,
+          "inputBytes": 2250308,
+          "generationMs": 792,
+          "assemblyMs": 908,
+          "heap": {
+            "usedSize": 4201608,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1474872,
+            "backingStorageSize": 222108453
+          }
+        },
+        {
+          "index": 19,
+          "inputBytes": 2157929,
+          "generationMs": 782,
+          "assemblyMs": 885,
+          "heap": {
+            "usedSize": 4213004,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1503728,
+            "backingStorageSize": 222641350
+          }
+        },
+        {
+          "index": 20,
+          "inputBytes": 2226739,
+          "generationMs": 795,
+          "assemblyMs": 904,
+          "heap": {
+            "usedSize": 4229604,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1469488,
+            "backingStorageSize": 223388211
+          }
+        },
+        {
+          "index": 21,
+          "inputBytes": 2127989,
+          "generationMs": 811,
+          "assemblyMs": 905,
+          "heap": {
+            "usedSize": 4195520,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1489640,
+            "backingStorageSize": 223888960
+          }
+        },
+        {
+          "index": 22,
+          "inputBytes": 2155221,
+          "generationMs": 789,
+          "assemblyMs": 911,
+          "heap": {
+            "usedSize": 4239660,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1480184,
+            "backingStorageSize": 224584710
+          }
+        },
+        {
+          "index": 23,
+          "inputBytes": 2104760,
+          "generationMs": 788,
+          "assemblyMs": 879,
+          "heap": {
+            "usedSize": 4233748,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1483128,
+            "backingStorageSize": 227279406
+          }
+        },
+        {
+          "index": 24,
+          "inputBytes": 2086656,
+          "generationMs": 787,
+          "assemblyMs": 879,
+          "heap": {
+            "usedSize": 4213696,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1471760,
+            "backingStorageSize": 225771043
+          }
+        },
+        {
+          "index": 25,
+          "inputBytes": 2100542,
+          "generationMs": 792,
+          "assemblyMs": 891,
+          "heap": {
+            "usedSize": 4215912,
+            "totalSize": 5603328,
+            "embedderHeapUsedSize": 1479032,
+            "backingStorageSize": 226418893
+          }
+        },
+        {
+          "index": 26,
+          "inputBytes": 2028854,
+          "generationMs": 787,
+          "assemblyMs": 880,
+          "heap": {
+            "usedSize": 4256308,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1478880,
+            "backingStorageSize": 226944871
+          }
+        },
+        {
+          "index": 27,
+          "inputBytes": 2064012,
+          "generationMs": 786,
+          "assemblyMs": 880,
+          "heap": {
+            "usedSize": 4232796,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1480968,
+            "backingStorageSize": 229684217
+          }
+        },
+        {
+          "index": 28,
+          "inputBytes": 2043444,
+          "generationMs": 788,
+          "assemblyMs": 879,
+          "heap": {
+            "usedSize": 4248456,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1468448,
+            "backingStorageSize": 228225945
+          }
+        },
+        {
+          "index": 29,
+          "inputBytes": 2020580,
+          "generationMs": 787,
+          "assemblyMs": 895,
+          "heap": {
+            "usedSize": 4259916,
+            "totalSize": 5865472,
+            "embedderHeapUsedSize": 1467296,
+            "backingStorageSize": 228801168
+          }
+        }
+      ],
+      "compressedInputBytes": 63558971,
+      "sourceVariation": "Lower-complexity control: 24×14 noise field, 8% overlay, RGB channels rounded to 8-value steps before PNG encoding. Full-resolution gradients and terrain are retained. This deliberately compressible control does not represent detailed photographs.",
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5,
+        "pixels": 18662400
+      },
+      "heapBeforePages": {
+        "usedSize": 5895304,
+        "totalSize": 9502720,
+        "embedderHeapUsedSize": 2897240,
+        "backingStorageSize": 2722958
+      },
+      "finalizeAndDownloadMs": 113,
+      "outputBytes": 19038730,
+      "heapAfterDownload": {
+        "usedSize": 4099492,
+        "totalSize": 6651904,
+        "embedderHeapUsedSize": 2137792,
+        "backingStorageSize": 257211115
+      },
+      "validation": {
+        "outputPages": 30,
+        "exactPageDimensions": true,
+        "exactRasterPixelDimensions": true,
+        "preservedNativeUriAnnotations": 0,
+        "correctInternalDestinations": 30,
+        "repeatedNamesResolvedByFrameId": true,
+        "browserErrors": []
+      },
+      "durationMs": 51271,
+      "acknowledgedPages": 30,
+      "peakSampledJsHeapBytes": 5895304,
+      "transferBudgetUsedPercent": 47.36,
+      "generationMs": 23766,
+      "pageAssemblyMs": 26746,
+      "peakSampledBackingStorageBytes": 257211115
+    }
+  ],
+  "previousRecordedAt": "2026-10-26T23:58:26.163Z",
+  "buildHistoryNote": "The first two scenarios used the build hash recorded on each scenario. Between them and the lower-texture run, the Figma relay source check and the bundled library debug source-map reference were removed. PDF assembly behavior was unchanged. The lower-texture run used the report-level build hash."
+}

@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.pdf binary
+*.png binary
+*.jpg binary
+*.icc binary
+ui.html linguist-generated=true
+# Preserve the upstream dependency license byte-for-byte.
+licenses/jpeg-js-LICENSE.txt -whitespace

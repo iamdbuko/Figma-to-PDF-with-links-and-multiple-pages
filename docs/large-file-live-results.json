@@ -1,0 +1,488 @@
+{
+  "recordedAt": "2026-10-27T09:41:19.645723+00:00",
+  "version": "9.0.0-dev.2",
+  "platform": "macOS Figma Desktop",
+  "figmaFile": "https://www.figma.com/design/yKf6bZSYBB3tZoWz5qMmen",
+  "fixturePageId": "22:2",
+  "builtUiSha256": "18e537cd0bf7976971697753b62d1c6676a557e9b9f47d679cdb11d2a61f31c5",
+  "backendSha256": "8fd8c878b76051714a545611d95fb003b6cc56db77cc8f02bc8d43d88fa2337d",
+  "exports": [
+    {
+      "file": "v9-dev2-large-single.pdf",
+      "bytes": 17865636,
+      "sha256": "3b7016c6f20cea90fb22c79362f07def5aa6dbdf474582e3fcc76e4e7af1abac",
+      "pages": [
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                619.59375,
+                2701.95459,
+                802.048279,
+                2760.045486
+              ],
+              "url": "https://example.com/large/1"
+            },
+            {
+              "rectangle": [
+                842.25,
+                2701.95459,
+                1075.98584,
+                2760.045486
+              ],
+              "localPageIndex": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                626.34375,
+                2701.95459,
+                808.79834,
+                2760.045486
+              ],
+              "url": "https://example.com/large/2"
+            },
+            {
+              "rectangle": [
+                849.0,
+                2701.95459,
+                1082.73584,
+                2760.045486
+              ],
+              "localPageIndex": 2
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                627.84375,
+                2701.95459,
+                810.297852,
+                2760.045486
+              ],
+              "url": "https://example.com/large/3"
+            },
+            {
+              "rectangle": [
+                850.5,
+                2701.95459,
+                1084.235352,
+                2760.045486
+              ],
+              "localPageIndex": 3
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                628.078125,
+                2701.95459,
+                810.532654,
+                2760.04541
+              ],
+              "url": "https://example.com/large/4"
+            },
+            {
+              "rectangle": [
+                850.734375,
+                2701.95459,
+                1084.470215,
+                2760.04541
+              ],
+              "localPageIndex": 4
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                626.484375,
+                2701.95459,
+                808.938965,
+                2760.04541
+              ],
+              "url": "https://example.com/large/5"
+            },
+            {
+              "rectangle": [
+                849.140625,
+                2701.95459,
+                1082.876465,
+                2760.04541
+              ],
+              "localPageIndex": 5
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                627.234375,
+                2701.95459,
+                809.688477,
+                2760.04541
+              ],
+              "url": "https://example.com/large/6"
+            },
+            {
+              "rectangle": [
+                849.890625,
+                2701.95459,
+                1083.625977,
+                2760.04541
+              ],
+              "localPageIndex": 0
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            600.0,
+            400.0
+          ],
+          "images": [
+            {
+              "width": 600,
+              "height": 400,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": []
+        },
+        {
+          "dimensions": [
+            10000.0,
+            10000.0
+          ],
+          "images": [
+            {
+              "width": 5656,
+              "height": 5656,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": []
+        }
+      ]
+    },
+    {
+      "file": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-1-of-3.pdf",
+      "bytes": 4348505,
+      "sha256": "81571c6269d68085316980fc9573b04e8ff92063f7557b73324ea2a500fe1cd3",
+      "pages": [
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                619.59375,
+                2701.95459,
+                802.048279,
+                2760.045486
+              ],
+              "url": "https://example.com/large/1"
+            },
+            {
+              "rectangle": [
+                842.25,
+                2701.95459,
+                1075.98584,
+                2760.045486
+              ],
+              "localPageIndex": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                626.34375,
+                2701.95459,
+                808.79834,
+                2760.045486
+              ],
+              "url": "https://example.com/large/2"
+            },
+            {
+              "rectangle": [
+                849.0,
+                2701.95459,
+                1082.73584,
+                2760.045486
+              ],
+              "remoteFile": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-2-of-3.pdf",
+              "remotePageIndex": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-2-of-3.pdf",
+      "bytes": 4350371,
+      "sha256": "0f46f939204c3b85a7abb4ab2773cebf71ce5c915f5d6efe8b212864668dba6e",
+      "pages": [
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                627.84375,
+                2701.95459,
+                810.297852,
+                2760.045486
+              ],
+              "url": "https://example.com/large/3"
+            },
+            {
+              "rectangle": [
+                850.5,
+                2701.95459,
+                1084.235352,
+                2760.045486
+              ],
+              "localPageIndex": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                628.078125,
+                2701.95459,
+                810.532654,
+                2760.04541
+              ],
+              "url": "https://example.com/large/4"
+            },
+            {
+              "rectangle": [
+                850.734375,
+                2701.95459,
+                1084.470215,
+                2760.04541
+              ],
+              "remoteFile": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-3-of-3.pdf",
+              "remotePageIndex": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-3-of-3.pdf",
+      "bytes": 4349558,
+      "sha256": "e15615948c3a54c36a06e9da95a9e88c9f633872a8c37d832943a934e5ac0a36",
+      "pages": [
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                626.484375,
+                2701.95459,
+                808.938965,
+                2760.04541
+              ],
+              "url": "https://example.com/large/5"
+            },
+            {
+              "rectangle": [
+                849.140625,
+                2701.95459,
+                1082.876465,
+                2760.04541
+              ],
+              "localPageIndex": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            3840.0,
+            2880.0
+          ],
+          "images": [
+            {
+              "width": 3840,
+              "height": 2880,
+              "filter": "/DCTDecode"
+            }
+          ],
+          "links": [
+            {
+              "rectangle": [
+                627.234375,
+                2701.95459,
+                809.688477,
+                2760.04541
+              ],
+              "url": "https://example.com/large/6"
+            },
+            {
+              "rectangle": [
+                849.890625,
+                2701.95459,
+                1083.625977,
+                2760.04541
+              ],
+              "remoteFile": "figma-export-2026-10-27-mvqhoh0s-0a59d810-part-1-of-3.pdf",
+              "remotePageIndex": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "liveChecks": {
+    "singlePdf": "8 pages, 17.0 MiB, all native JPEG streams, six web and six internal destinations correct",
+    "oversizedFit": "10000x10000 PDF page retained; raster5656x5656; explicit warning requested1x actual0.5656x",
+    "parts": "6 large pages saved as3two-page PDFs; two manual Continue pauses; six web links, three local destinations and three exact cross-file destinations verified",
+    "preview": "Same-file page1\u2192page2 click worked. Cross-file link from part1page2\u2192part2page1 produced Preview permission error; no permissions changed. Remote-action structure is verified but this macOS viewer flow is not passing.",
+    "visual": "Rendered large single PDF first and oversized final pages inspected; preserved image layout. Transparent native JPG background verifiedwhite bypixelinspection; PNG retainedalpha."
+  },
+  "nativeComparison": {
+    "scope": "Remote nativeFigma export of one synthetic3840x2880 image-filled frame; raster scale1.5, nativePDFownrepresentation; notcontrolledspeedbenchmark",
+    "PNG": {
+      "bytes": 4486377,
+      "milliseconds": 6717
+    },
+    "JPG": {
+      "bytes": 3843660,
+      "milliseconds": 2007
+    },
+    "PDF": {
+      "bytes": 917455,
+      "milliseconds": 912
+    }
+  }
+}

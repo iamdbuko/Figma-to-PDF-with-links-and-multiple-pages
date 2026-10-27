@@ -1,0 +1,382 @@
+{
+  "recordedAt": "2026-10-27T00:14:23.738220+00:00",
+  "platform": "macOS Figma Desktop",
+  "figmaFile": "https://www.figma.com/design/yKf6bZSYBB3tZoWz5qMmen",
+  "builtUiSha256": "328e692d1b3470ff06c9432d447f5d70b1844c06b0ec2333c205c44873788acc",
+  "backendSha256": "964e77db7c7d4a9c7e955de6d92ec0c29585256dc8454d64134174fd5dc34ea2",
+  "scope": "Actual development plugin exports from the synthetic Figma file, saved through the native download dialog; pypdf structure verification and Poppler preview inspection. No elapsed-time or total-memory claims.",
+  "exports": [
+    {
+      "file": "v9-live-vector-final.pdf",
+      "bytes": 717725,
+      "sha256": "1791c2790eeb962808f52369939fbb0d3d00c12b46010a7d95263f5d9e39be21",
+      "pageCount": 8,
+      "uriAnnotations": 6,
+      "internalDestinations": 4,
+      "status": "passed",
+      "pages": [
+        {
+          "dimensions": [
+            600.0,
+            400.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                40.0,
+                310.977295,
+                135.205261,
+                340.022751
+              ],
+              "uri": "https://example.com/first",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                155.3125,
+                310.977295,
+                286.494324,
+                340.022751
+              ],
+              "uri": "https://example.com/second",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                281.977264,
+                308.171875,
+                311.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                252.977264,
+                309.296875,
+                282.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                223.977264,
+                109.357956,
+                253.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            800.0,
+            300.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                40.0,
+                210.97728,
+                314.789795,
+                240.022736
+              ],
+              "uri": null,
+              "destinationPage": 1
+            },
+            {
+              "rectangle": [
+                40.0,
+                50.977264,
+                153.469482,
+                80.022736
+              ],
+              "uri": null,
+              "destinationPage": 1
+            },
+            {
+              "rectangle": [
+                173.570312,
+                50.977264,
+                321.821045,
+                80.022736
+              ],
+              "uri": null,
+              "destinationPage": 3
+            },
+            {
+              "rectangle": [
+                40.0,
+                100.0,
+                200.0,
+                160.0
+              ],
+              "uri": null,
+              "destinationPage": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            300.0,
+            650.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            360.0,
+            120.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            400.0,
+            300.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            1200.0,
+            900.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            800.0,
+            600.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                60.136353,
+                40.0,
+                98.863647,
+                199.409058
+              ],
+              "uri": "https://example.com/rotated",
+              "destinationPage": null
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            600.0,
+            400.0
+          ],
+          "annotations": []
+        }
+      ]
+    },
+    {
+      "file": "v9-live-raster-final.pdf",
+      "bytes": 253588,
+      "sha256": "70097080aafa783bd92bbe6ef2e5349f24e9cff770d52144d064b2dceed023a6",
+      "pageCount": 8,
+      "uriAnnotations": 6,
+      "internalDestinations": 4,
+      "status": "passed",
+      "pages": [
+        {
+          "dimensions": [
+            600.0,
+            400.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                40.0,
+                310.977295,
+                135.205261,
+                340.022751
+              ],
+              "uri": "https://example.com/first",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                155.3125,
+                310.977295,
+                286.494324,
+                340.022751
+              ],
+              "uri": "https://example.com/second",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                281.977264,
+                308.171875,
+                311.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                252.977264,
+                309.296875,
+                282.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            },
+            {
+              "rectangle": [
+                40.0,
+                223.977264,
+                109.357956,
+                253.022736
+              ],
+              "uri": "https://example.com/third",
+              "destinationPage": null
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            800.0,
+            300.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                40.0,
+                210.97728,
+                314.789795,
+                240.022736
+              ],
+              "uri": null,
+              "destinationPage": 1
+            },
+            {
+              "rectangle": [
+                40.0,
+                50.977264,
+                153.469482,
+                80.022736
+              ],
+              "uri": null,
+              "destinationPage": 1
+            },
+            {
+              "rectangle": [
+                173.570312,
+                50.977264,
+                321.821045,
+                80.022736
+              ],
+              "uri": null,
+              "destinationPage": 3
+            },
+            {
+              "rectangle": [
+                40.0,
+                100.0,
+                200.0,
+                160.0
+              ],
+              "uri": null,
+              "destinationPage": 1
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            300.0,
+            650.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            360.0,
+            120.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            400.0,
+            300.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            1200.0,
+            900.0
+          ],
+          "annotations": []
+        },
+        {
+          "dimensions": [
+            800.0,
+            600.0
+          ],
+          "annotations": [
+            {
+              "rectangle": [
+                60.136353,
+                40.0,
+                98.863647,
+                199.409058
+              ],
+              "uri": "https://example.com/rotated",
+              "destinationPage": null
+            }
+          ]
+        },
+        {
+          "dimensions": [
+            600.0,
+            400.0
+          ],
+          "annotations": []
+        }
+      ]
+    },
+    {
+      "file": "v9-live-250-pages.pdf",
+      "bytes": 3321698,
+      "sha256": "ddcfe6b07e55f97943a74900fa880b2479ffdb5299d0f6563a2816a307e620bb",
+      "pageCount": 250,
+      "uriAnnotations": 250,
+      "internalDestinations": 250,
+      "status": "passed",
+      "uniqueSourcePageURLs": 250,
+      "repeatedFrameNames": 25,
+      "sortedByName": true,
+      "allDimensionsCorrect": true,
+      "allCircularNextPageDestinationsCorrect": true
+    }
+  ],
+  "vectorRasterAnnotationAndDimensionEquality": true,
+  "liveFailures": [
+    {
+      "case": "10000\u00d710000 raster frame at 1x",
+      "result": "preflight error names frame and pixel limits; controls restored; no download"
+    },
+    {
+      "case": "cancel 250-page run while status showed preparing page 27",
+      "result": "Export cancelled. No PDF was downloaded.; controls restored"
+    }
+  ],
+  "sourceIntegrity": {
+    "autoLayoutChildren": "x=20,130,240; y=20; all visible after export",
+    "heavyFrame": "200 visible children; 100 blur effects retained"
+  },
+  "visualInspection": "All eight vector fixture pages and raster internal-link page rendered and inspected. Poppler emitted Type 3 glyph bounding-box warnings on native vector text; no missing content observed in inspected previews.",
+  "postLiveBuildNote": "The final build adds stricter MediaBox/CropBox origin validation, covered by a new regression test. All live source boxes are zero-origin and match their frames. Live output hashes identify the preceding build; the guard does not alter these fixtures.",
+  "finalBuiltUiSha256": "848289698ec9d8d59092432bd2a113e02e4b54c897bd1bccbe1a896f3b388335"
+}

@@ -1,0 +1,571 @@
+{
+  "recordedAt": "2026-10-27T16:55:22.354Z",
+  "builtUiSha256": "9b00834b57dafcb9640bded7e0cde97c1cb22b5caeb06221bc74e7638b9d0f04",
+  "platform": "darwin",
+  "status": "passed",
+  "source": {
+    "file": "test-results/combined-large/live/combined-dev6-vector.pdf",
+    "bytes": 2427930,
+    "sha256": "09843304c98b120be96dcf9f8b7ba1095bb8cc726fe5e52d4862382807d9c472",
+    "pages": 6,
+    "pageDimensions": {
+      "width": 3840,
+      "height": 2880
+    },
+    "embeddedPixelsPerPage": 11059200,
+    "pageInputBytes": [
+      403844,
+      404519,
+      404915,
+      403137,
+      403609,
+      404984
+    ],
+    "compressedPageInputBytes": 2425008,
+    "imageHashes": [
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5",
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5",
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5",
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5",
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5",
+      "4b7cbe973027605bea121996548aef27d3d3b411a6e4d1540fb8827582907ab5"
+    ],
+    "repeatedImage": true
+  },
+  "profile": {
+    "source": "BUNDLED",
+    "name": "ISO Coated v2 300% (basICColor)",
+    "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "bytes": 1052612
+  },
+  "scope": "Actual built UI, pdf-lib, offline JPEG decoder and LittleCMS in isolated headless Chromium. The six-page input is a prior plugin vector export from native Figma rendering, with one 3840x2880 JPEG and text/paths per page. The same synthetic chart image repeats on all pages; this is not a diverse photograph corpus. No fresh Figma exportAsync, plugin backend, scanner, real print device or physical color proof is exercised.",
+  "normalization": "The harness resolves original Dest page references, changes internal text actions into Figma NODE URI actions, removes the prototype annotation and supplies scanner-shaped metadata, then copies each source page independently. Original URLs, exact rectangles and global targets are the validation oracle. These URI actions/scanner messages and repeated frame names are harness-generated, not captured native Figma messages.",
+  "validationScope": "Saved PDFs are reloaded to check every annotation rectangle and URL/local reference/relative filename/page destination, native text/path operator counts, image dimensions, actual four-channel sample lengths, preserved soft masks, and exact built-in ICC bytes once per output including orphan objects. Viewer navigation, visual color appearance and print behavior require separate validation.",
+  "memoryScope": "CDP Runtime.getHeapUsage samples V8 usedSize/backingStorageSize; WASM heap length is separate and may overlap backing storage. These samples exclude full browser/Figma/native decoder/GPU process memory and can miss transient peaks. Node fixture preparation/PDF inspection is outside renderer samples. No forced garbage collection.",
+  "retainedPdfLimitBytes": 134217728,
+  "scenarios": [
+    {
+      "name": "single-pdf",
+      "pagesPerPart": 6,
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 403844,
+          "assemblyToHandshakeMs": 2935
+        },
+        {
+          "index": 1,
+          "inputBytes": 404519,
+          "assemblyToHandshakeMs": 2798
+        },
+        {
+          "index": 2,
+          "inputBytes": 404915,
+          "assemblyToHandshakeMs": 2749
+        },
+        {
+          "index": 3,
+          "inputBytes": 403137,
+          "assemblyToHandshakeMs": 2816
+        },
+        {
+          "index": 4,
+          "inputBytes": 403609,
+          "assemblyToHandshakeMs": 2699
+        },
+        {
+          "index": 5,
+          "inputBytes": 404984,
+          "assemblyToHandshakeMs": 2783
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "filename": "figma-export-2026-10-27-mvqxf9xh-9dcc9826.pdf",
+          "artifact": "test-results/vector-cmyk/stress/single-pdf/figma-export-2026-10-27-mvqxf9xh-9dcc9826.pdf",
+          "outputBytes": 5707747,
+          "sha256": "befb300d269a87d0b785a4b6cdea1336bab52f11b4ccfc27fd4920ea6d68ae7d",
+          "validation": {
+            "pages": 6,
+            "annotations": 48,
+            "externalLinks": 30,
+            "internalTextLinks": 12,
+            "prototypeLinks": 6,
+            "localLinks": 18,
+            "remoteLinks": 0,
+            "actualFourChannelPixels": 66355200,
+            "textShows": 60,
+            "pathPaints": 18,
+            "exactIccObjects": 1,
+            "exactIccBytes": true,
+            "exactPageAndImageDimensions": true,
+            "exactSoftMasks": true,
+            "exactUrlsRectanglesAndDestinations": true,
+            "textAndPathsRetained": true
+          }
+        }
+      ],
+      "warnings": [
+        "Vector CMYK preserves transparency. Overlapping colors can look different from RGB or Rasterized CMYK; check the PDF before printing."
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 6470288,
+          "totalSize": 16613376,
+          "embedderHeapUsedSize": 1638728,
+          "backingStorageSize": 34195835,
+          "wasmHeapBytes": 20185088
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 28417172,
+          "totalSize": 33505280,
+          "embedderHeapUsedSize": 1315024,
+          "backingStorageSize": 116454150,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 25965628,
+          "totalSize": 50593792,
+          "embedderHeapUsedSize": 1274600,
+          "backingStorageSize": 116112782,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 27672796,
+          "totalSize": 47005696,
+          "embedderHeapUsedSize": 1222304,
+          "backingStorageSize": 116910581,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 27727872,
+          "totalSize": 46743552,
+          "embedderHeapUsedSize": 1209168,
+          "backingStorageSize": 117822996,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 28145548,
+          "totalSize": 48054272,
+          "embedderHeapUsedSize": 1185616,
+          "backingStorageSize": 118638725,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 28509928,
+          "totalSize": 47792128,
+          "embedderHeapUsedSize": 1193808,
+          "backingStorageSize": 119369882,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "after-final-download",
+          "usedSize": 30622676,
+          "totalSize": 49889280,
+          "embedderHeapUsedSize": 2436848,
+          "backingStorageSize": 125971604,
+          "wasmHeapBytes": 24248320
+        }
+      ],
+      "retainedSamples": [
+        {
+          "bytes": 1615553,
+          "pages": 1
+        },
+        {
+          "bytes": 2442408,
+          "pages": 2
+        },
+        {
+          "bytes": 3269618,
+          "pages": 3
+        },
+        {
+          "bytes": 4097429,
+          "pages": 4
+        },
+        {
+          "bytes": 4925643,
+          "pages": 5
+        },
+        {
+          "bytes": 5752897,
+          "pages": 6
+        },
+        {
+          "bytes": 5752897,
+          "pages": 6
+        },
+        {
+          "bytes": 5752948,
+          "pages": 6
+        }
+      ],
+      "validation": {
+        "pages": 6,
+        "annotations": 48,
+        "externalLinks": 30,
+        "internalTextLinks": 12,
+        "prototypeLinks": 6,
+        "localLinks": 18,
+        "remoteLinks": 0,
+        "actualFourChannelPixels": 66355200,
+        "textShows": 60,
+        "pathPaints": 18
+      },
+      "durationMs": 18256,
+      "outputBytes": 5707747,
+      "peakSampledJsHeapBytes": 30622676,
+      "peakSampledBackingStorageBytes": 125971604,
+      "peakSampledWasmHeapBytes": 24248320,
+      "peakMeasuredRetainedPdfBytes": 5752948
+    },
+    {
+      "name": "three-parts",
+      "pagesPerPart": 2,
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 403844,
+          "assemblyToHandshakeMs": 2957
+        },
+        {
+          "index": 1,
+          "inputBytes": 404519,
+          "assemblyToHandshakeMs": 2731
+        },
+        {
+          "index": 2,
+          "inputBytes": 404915,
+          "assemblyToHandshakeMs": 2903
+        },
+        {
+          "index": 3,
+          "inputBytes": 403137,
+          "assemblyToHandshakeMs": 2812
+        },
+        {
+          "index": 4,
+          "inputBytes": 403609,
+          "assemblyToHandshakeMs": 2883
+        },
+        {
+          "index": 5,
+          "inputBytes": 404984,
+          "assemblyToHandshakeMs": 2767
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "filename": "figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-1-of-3.pdf",
+          "artifact": "test-results/vector-cmyk/stress/three-parts/figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-1-of-3.pdf",
+          "outputBytes": 2425089,
+          "sha256": "2b713eaa3fed90d393e9f43dddbf7871d302b3264decee05f3cc319c107bf97a",
+          "validation": {
+            "pages": 2,
+            "annotations": 16,
+            "externalLinks": 10,
+            "internalTextLinks": 4,
+            "prototypeLinks": 2,
+            "localLinks": 3,
+            "remoteLinks": 3,
+            "actualFourChannelPixels": 22118400,
+            "textShows": 20,
+            "pathPaints": 6,
+            "exactIccObjects": 1,
+            "exactIccBytes": true,
+            "exactPageAndImageDimensions": true,
+            "exactSoftMasks": true,
+            "exactUrlsRectanglesAndDestinations": true,
+            "textAndPathsRetained": true
+          },
+          "pausedState": {
+            "pdfReleased": true,
+            "pages": 0,
+            "retainedBytes": 0,
+            "liveUrls": 1,
+            "closed": 0
+          }
+        },
+        {
+          "index": 1,
+          "filename": "figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-2-of-3.pdf",
+          "artifact": "test-results/vector-cmyk/stress/three-parts/figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-2-of-3.pdf",
+          "outputBytes": 2426370,
+          "sha256": "6963e5b99de4deed832f9a4e4e74b5168a782a2fbb04ee8b296eca6d112497af",
+          "validation": {
+            "pages": 2,
+            "annotations": 16,
+            "externalLinks": 10,
+            "internalTextLinks": 4,
+            "prototypeLinks": 2,
+            "localLinks": 3,
+            "remoteLinks": 3,
+            "actualFourChannelPixels": 22118400,
+            "textShows": 20,
+            "pathPaints": 6,
+            "exactIccObjects": 1,
+            "exactIccBytes": true,
+            "exactPageAndImageDimensions": true,
+            "exactSoftMasks": true,
+            "exactUrlsRectanglesAndDestinations": true,
+            "textAndPathsRetained": true
+          },
+          "pausedState": {
+            "pdfReleased": true,
+            "pages": 0,
+            "retainedBytes": 0,
+            "liveUrls": 1,
+            "closed": 0
+          }
+        },
+        {
+          "index": 2,
+          "filename": "figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-3-of-3.pdf",
+          "artifact": "test-results/vector-cmyk/stress/three-parts/figma-export-2026-10-27-mvqxfo38-c7aa22cd-part-3-of-3.pdf",
+          "outputBytes": 2426810,
+          "sha256": "c1c466a50cb4f0e33a9c2c581f05f9a622b00b8629d80311537bc71b01920466",
+          "validation": {
+            "pages": 2,
+            "annotations": 16,
+            "externalLinks": 10,
+            "internalTextLinks": 4,
+            "prototypeLinks": 2,
+            "localLinks": 3,
+            "remoteLinks": 3,
+            "actualFourChannelPixels": 22118400,
+            "textShows": 20,
+            "pathPaints": 6,
+            "exactIccObjects": 1,
+            "exactIccBytes": true,
+            "exactPageAndImageDimensions": true,
+            "exactSoftMasks": true,
+            "exactUrlsRectanglesAndDestinations": true,
+            "textAndPathsRetained": true
+          }
+        }
+      ],
+      "warnings": [
+        "Vector CMYK preserves transparency. Overlapping colors can look different from RGB or Rasterized CMYK; check the PDF before printing."
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 6489596,
+          "totalSize": 24215552,
+          "embedderHeapUsedSize": 1434744,
+          "backingStorageSize": 33143272,
+          "wasmHeapBytes": 20185088
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 28450916,
+          "totalSize": 34029568,
+          "embedderHeapUsedSize": 1592512,
+          "backingStorageSize": 116455363,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-2-part-ready",
+          "usedSize": 26446236,
+          "totalSize": 50331648,
+          "embedderHeapUsedSize": 1608432,
+          "backingStorageSize": 116114075,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "part-1-released",
+          "usedSize": 27016676,
+          "totalSize": 50331648,
+          "embedderHeapUsedSize": 1821736,
+          "backingStorageSize": 119121453,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 27465984,
+          "totalSize": 47792128,
+          "embedderHeapUsedSize": 1402824,
+          "backingStorageSize": 116343635,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-4-part-ready",
+          "usedSize": 27837236,
+          "totalSize": 51986432,
+          "embedderHeapUsedSize": 1518064,
+          "backingStorageSize": 116203588,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "part-2-released",
+          "usedSize": 28372992,
+          "totalSize": 52248576,
+          "embedderHeapUsedSize": 1794352,
+          "backingStorageSize": 119212122,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 27664964,
+          "totalSize": 55132160,
+          "embedderHeapUsedSize": 1386968,
+          "backingStorageSize": 116449671,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 26389800,
+          "totalSize": 43778048,
+          "embedderHeapUsedSize": 1339800,
+          "backingStorageSize": 116127114,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "after-final-download",
+          "usedSize": 27105360,
+          "totalSize": 43778048,
+          "embedderHeapUsedSize": 2743848,
+          "backingStorageSize": 119136833,
+          "wasmHeapBytes": 24248320
+        }
+      ],
+      "retainedSamples": [
+        {
+          "bytes": 1615553,
+          "pages": 1
+        },
+        {
+          "bytes": 2442408,
+          "pages": 2
+        },
+        {
+          "bytes": 2442408,
+          "pages": 2
+        },
+        {
+          "bytes": 2442692,
+          "pages": 2
+        },
+        {
+          "bytes": 1615876,
+          "pages": 1
+        },
+        {
+          "bytes": 2443677,
+          "pages": 2
+        },
+        {
+          "bytes": 2443677,
+          "pages": 2
+        },
+        {
+          "bytes": 2443961,
+          "pages": 2
+        },
+        {
+          "bytes": 1616880,
+          "pages": 1
+        },
+        {
+          "bytes": 2444124,
+          "pages": 2
+        },
+        {
+          "bytes": 2444124,
+          "pages": 2
+        },
+        {
+          "bytes": 2444408,
+          "pages": 2
+        }
+      ],
+      "validation": {
+        "pages": 6,
+        "annotations": 48,
+        "externalLinks": 30,
+        "internalTextLinks": 12,
+        "prototypeLinks": 6,
+        "localLinks": 9,
+        "remoteLinks": 9,
+        "actualFourChannelPixels": 66355200,
+        "textShows": 60,
+        "pathPaints": 18
+      },
+      "durationMs": 18844,
+      "outputBytes": 7278269,
+      "peakSampledJsHeapBytes": 28450916,
+      "peakSampledBackingStorageBytes": 119212122,
+      "peakSampledWasmHeapBytes": 24248320,
+      "peakMeasuredRetainedPdfBytes": 2444408
+    },
+    {
+      "name": "cancel-during-image-conversion",
+      "pagesPerPart": 6,
+      "status": "passed",
+      "pages": [],
+      "parts": [],
+      "warnings": [],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 6470572,
+          "totalSize": 16875520,
+          "embedderHeapUsedSize": 1437936,
+          "backingStorageSize": 34195835,
+          "wasmHeapBytes": 20185088
+        },
+        {
+          "label": "during-real-image-conversion",
+          "usedSize": 11380720,
+          "totalSize": 32489472,
+          "embedderHeapUsedSize": 1204976,
+          "backingStorageSize": 159739729,
+          "wasmHeapBytes": 24248320
+        },
+        {
+          "label": "after-cancel-cleanup",
+          "usedSize": 11552500,
+          "totalSize": 32489472,
+          "embedderHeapUsedSize": 1504096,
+          "backingStorageSize": 159740137,
+          "wasmHeapBytes": 24248320
+        }
+      ],
+      "retainedSamples": [],
+      "cleanup": {
+        "activeJob": null,
+        "prepared": 1,
+        "closed": 1,
+        "imageConversions": 1,
+        "completedChunkChecks": 16,
+        "imageConversionActive": false,
+        "closeDuringImageConversion": false,
+        "liveUrls": 0,
+        "anchorDownloads": 0
+      },
+      "durationMs": 2326,
+      "outputBytes": 0,
+      "peakSampledJsHeapBytes": 11552500,
+      "peakSampledBackingStorageBytes": 159740137,
+      "peakSampledWasmHeapBytes": 24248320,
+      "peakMeasuredRetainedPdfBytes": 0
+    }
+  ],
+  "browser": "141.0.7390.37",
+  "durationMs": 39438,
+  "timingScope": "Scenario duration includes isolated UI setup, sequential message delivery, conversion, downloads and Node-side saved-PDF validation. Per-page assemblyToHandshakeMs covers delivery through the UI acknowledgement or part-ready message; it excludes later part validation. No Figma export time is included.",
+  "packagedUiSha256": "c844c78229a9a2a8d6520771005943b12fa3b04b7b731fcba56dc74eec949f38",
+  "packagingNote": "Final packaged HTML adds only the JPEG decoder copyright/license comment. Removing that one comment exactly reproduces the tested HTML bytes; no executable code changed. Full194-test suite rerun on packaged HTML."
+}

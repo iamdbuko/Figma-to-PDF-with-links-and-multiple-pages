@@ -1,59 +1,66 @@
-// Main plugin code that runs in Figma's sandbox
-// Enhanced with Hybrid Vector/Raster Export following Figma's Engineering Approach
+// Figma PDF export: whole-frame rendering, one acknowledged page at a time.
+// Keep output color mode separate from Figma's rendering profile. Legacy file
+// colors stay DOCUMENT; the assembler reads each page's actual color metadata.
+figma.showUI(__html__, { width: 520, height: 650 });
 
-// Show UI
-figma.showUI(__html__, { width: 400, height: 600 });
-
-// Store frame data and connections - only for selected frames
 let frameData = [];
 let connections = [];
+let activeExportJob = null;
+let listRevision = 0;
+const usedJobIds = new Set();
 
-// Listen for messages from UI
+// Provisional v9 safety limits. Raster pixels are measured after scaling.
+// The transfer cap includes a page's annotation PDF and any color-profile probe,
+// not historical traffic. CMYK beta uses 8 MP to bound conversion buffers.
+// The UI separately bounds retained PDF resources and saves parts.
+// Optional fitting changes raster resolution only, never PDF page dimensions.
+const EXPORT_LIMITS = Object.freeze({
+  maxRasterPixels: 32000000,
+  maxCmykRasterPixels: 8000000,
+  maxRasterSide: 16384,
+  maxPageTransferBytes: 128 * 1024 * 1024,
+  acknowledgementTimeoutMs: 120000,
+  partContinuationTimeoutMs: 15 * 60 * 1000,
+  finishTimeoutMs: 120000
+});
+
 figma.ui.onmessage = async (msg) => {
-  if (msg.type === 'clear-list') {
-    clearFrameList();
+  if (!msg || typeof msg.type !== 'string') return;
+  if (msg.type === 'ui-ready') {
+    // The UI may finish loading after the initial selection was scanned.
+    sendFrameList([]);
   } else if (msg.type === 'export-pdf') {
-    await exportToPDF(msg.frameOrder, msg.selectedFrames, msg.qualityScale || 1.5, msg.quality || 'high', msg.exportType || 'raster');
-  } else if (msg.type === 'export-batch') {
-    // Export a specific batch
-    const batch = msg.batch;
-    const batchFrames = frameData.filter(frame => batch.frameIds.includes(frame.id));
-    const orderedBatchFrames = batch.frameIds.map(id => batchFrames.find(f => f.id === id)).filter(Boolean);
-
-    await performExport(
-      orderedBatchFrames,
-      batch.frameIds,
-      batch.frameIds,
-      msg.qualityScale,
-      msg.quality,
-      {
-        current: msg.batchNumber,
-        total: msg.totalBatches
-      },
-      msg.exportType || 'raster'
-    );
-  } else if (msg.type === 'request-png-fallback') {
-    // UI requested PNG fallback for a specific frame that failed validation
-    await handlePngFallbackRequest(msg.frameId, msg.frameIndex, msg.qualityScale || 1.5);
-  } else if (msg.type === 'cancel') {
-    figma.closePlugin();
+    await startExport(msg);
+  } else if (msg.type === 'page-ack') {
+    await acknowledgePage(msg);
+  } else if (msg.type === 'part-ready') {
+    pauseForSavedPart(msg);
+  } else if (msg.type === 'export-cancel') {
+    const job = matchingJob(msg.jobId);
+    if (job) terminateJob(job, 'export-cancelled');
+  } else if (msg.type === 'export-failed') {
+    const job = matchingJob(msg.jobId);
+    if (job) terminateJob(job, 'export-error', msg.error || msg.message || 'PDF generation failed.');
+  } else if (msg.type === 'export-finished') {
+    const job = matchingJob(msg.jobId);
+    if (job && job.phase === 'awaiting-finish') {
+      clearJobTimer(job);
+      activeExportJob = null;
+    }
+  } else if (!activeExportJob && msg.type === 'clear-list') {
+    clearFrameList();
+  } else if (!activeExportJob && msg.type === 'remove-frame') {
+    const revision = ++listRevision;
+    frameData = frameData.filter(frame => frame.id !== msg.frameId);
+    connections = connections.filter(link => link.fromFrameId !== msg.frameId && link.toFrameId !== msg.frameId);
+    sendFrameList([]);
+    await refreshListedConnections(frameData.map(frame => frame.id), revision, []);
   }
 };
 
-// Listen for selection changes
 figma.on('selectionchange', async () => {
-  console.log('Selection changed in Figma');
-  const selectedNodes = figma.currentPage.selection;
-  const selectedFrames = selectedNodes.filter(node => node.type === 'FRAME');
-
-  console.log('Found ' + selectedFrames.length + ' selected frames:', selectedFrames.map(f => f.name));
-
-  // Auto-add selected frames to the list
-  if (selectedFrames.length > 0) {
-    await autoAddSelectedFrames(selectedFrames);
-  }
-
-  // Always send selection update
+  const selectedFrames = figma.currentPage.selection.filter(node => node.type === 'FRAME');
+  if (!activeExportJob) await autoAddSelectedFrames(selectedFrames);
   figma.ui.postMessage({
     type: 'selection-changed',
     selectedFrameIds: selectedFrames.map(frame => frame.id),
@@ -61,1466 +68,808 @@ figma.on('selectionchange', async () => {
   });
 });
 
-// Auto-add selected frames to the list (called on selection change)
-async function autoAddSelectedFrames(selectedFrames) {
-  console.log('autoAddSelectedFrames called with:', selectedFrames.length, 'frames');
-  let newFramesAdded = [];
-
-  // Add new frames to the list (avoid duplicates)
-  for (const frame of selectedFrames) {
-    const existingFrame = frameData.find(f => f.id === frame.id);
-    console.log('Checking frame "' + frame.name + '" (' + frame.id + '):', existingFrame ? 'already exists' : 'new frame');
-
-    if (!existingFrame) {
-      const newFrame = {
-        id: frame.id,
-        name: frame.name,
-        width: frame.width,
-        height: frame.height,
-        parent: frame.parent ? frame.parent.name : 'Page'
-      };
-
-      frameData.push(newFrame);
-      console.log('Added frame to frameData:', newFrame);
-
-      // Scan for prototype connections in this new frame
-      await scanNodeForConnections(frame, frame.id, 0);
-      newFramesAdded.push(frame.id);
-    }
-  }
-
-  // Always send update to UI
-  console.log('Sending frames-updated message. Total frames: ' + frameData.length + ', New frames: ' + newFramesAdded.length);
-
-  figma.ui.postMessage({
-    type: 'frames-updated',
-    frames: frameData,
-    connections: connections,
-    justAdded: newFramesAdded
-  });
-}
-
-// Clear the frame list
-function clearFrameList() {
-  frameData = [];
-  connections = [];
-
-  figma.ui.postMessage({
-    type: 'frames-updated',
-    frames: [],
-    connections: [],
-    justAdded: []
-  });
-}
-
-// Recursively scan nodes for prototype connections AND text hyperlinks
-async function scanNodeForConnections(node, frameId, depth) {
-  const indent = '  '.repeat(depth);
-  console.log(indent + 'Scanning node: ' + node.type + ' "' + node.name + '" (depth ' + depth + ')');
-
-  // Check if this node has reactions (prototype connections)
-  if (node.reactions && node.reactions.length > 0) {
-    console.log(indent + 'Found ' + node.reactions.length + ' reactions on ' + node.type + ' "' + node.name + '"');
-    for (const reaction of node.reactions) {
-      if (reaction.action) {
-        if (reaction.action.type === 'NODE' && reaction.action.destinationId) {
-          // Internal frame link
-          const destinationNode = await figma.getNodeByIdAsync(reaction.action.destinationId);
-          if (destinationNode && destinationNode.type === 'FRAME') {
-            const bounds = getAbsoluteBounds(node, frameId);
-            console.log(indent + '✅ Found internal prototype link: ' + node.name + ' -> ' + destinationNode.name);
-
-            connections.push({
-              fromFrameId: frameId,
-              toFrameId: reaction.action.destinationId,
-              elementBounds: bounds,
-              elementName: node.name || 'Unnamed element',
-              type: 'internal'
-            });
-          }
-        } else if (reaction.action.type === 'URL' && reaction.action.url) {
-          // External URL link from prototype
-          const bounds = getAbsoluteBounds(node, frameId);
-          console.log(indent + '✅ Found external prototype link: ' + node.name + ' -> ' + reaction.action.url);
-
-          connections.push({
-            fromFrameId: frameId,
-            toUrl: reaction.action.url,
-            elementBounds: bounds,
-            elementName: node.name || 'Unnamed element',
-            type: 'external'
-          });
-        }
-      }
-    }
-  }
-
-  // Check if this is a TEXT node with hyperlinks
-  if (node.type === 'TEXT') {
-    const textPreview = node.characters ? node.characters.substring(0, 50) : 'no characters';
-    console.log(indent + 'Found TEXT node: "' + node.name + '" with characters: "' + textPreview + '"');
-
-    let hasSegmentHyperlinks = false;
-
-    // Check for character-level hyperlinks (rich text)
-    try {
-      if (node.getStyledTextSegments) {
-        const segments = node.getStyledTextSegments(['hyperlink']);
-        console.log(indent + 'Found ' + segments.length + ' styled text segments');
-
-        for (let i = 0; i < segments.length; i++) {
-          const segment = segments[i];
-          console.log(indent + 'Segment ' + i + ' has hyperlink: ' + (segment.hyperlink ? 'yes' : 'no'));
-
-          if (segment.hyperlink && segment.hyperlink.value) {
-            hasSegmentHyperlinks = true;
-            const segmentLabel = segment.characters ? segment.characters.substring(0, 30) : 'unknown';
-            const boundsList = getTextRangeBounds(node, frameId, segment.start, segment.end);
-
-            if (segment.hyperlink.type === 'URL') {
-              console.log(indent + '✅ Found styled text hyperlink: "' + segmentLabel + '" -> ' + segment.hyperlink.value);
-              for (const bounds of boundsList) {
-                connections.push({
-                  fromFrameId: frameId,
-                  toUrl: segment.hyperlink.value,
-                  elementBounds: bounds,
-                  elementName: node.name || ('Text Link: "' + (segment.characters ? segment.characters.substring(0, 20) : 'unknown') + '"'),
-                  type: 'external'
-                });
-              }
-            } else if (segment.hyperlink.type === 'NODE') {
-              const destinationNode = await figma.getNodeByIdAsync(segment.hyperlink.value);
-              if (destinationNode && destinationNode.type === 'FRAME') {
-                console.log(indent + '✅ Found styled text link to frame: "' + segmentLabel + '" -> ' + destinationNode.name);
-                for (const bounds of boundsList) {
-                  connections.push({
-                    fromFrameId: frameId,
-                    toFrameId: segment.hyperlink.value,
-                    elementBounds: bounds,
-                    elementName: node.name || ('Text Link: "' + (segment.characters ? segment.characters.substring(0, 20) : 'unknown') + '"'),
-                    type: 'internal'
-                  });
-                }
-              }
-            }
-          }
-        }
-      } else {
-        console.log(indent + 'getStyledTextSegments not available');
-      }
-    } catch (error) {
-      console.log(indent + 'Error checking styled text segments: ' + error.message);
-    }
-
-    // Check for simple hyperlink property (only when no segment hyperlinks)
-    if (!hasSegmentHyperlinks) {
-      if (node.hyperlink) {
-        console.log(indent + 'TEXT node has hyperlink property:', {
-          type: node.hyperlink.type,
-          value: node.hyperlink.value
-        });
-
-        const bounds = getAbsoluteBounds(node, frameId);
-
-        if (node.hyperlink.type === 'URL' && node.hyperlink.value) {
-          const textSample = node.characters ? node.characters.substring(0, 30) : 'unknown';
-          console.log(indent + '✅ Found text hyperlink: "' + textSample + '" -> ' + node.hyperlink.value);
-          connections.push({
-            fromFrameId: frameId,
-            toUrl: node.hyperlink.value,
-            elementBounds: bounds,
-            elementName: node.name || ('Text: "' + (node.characters ? node.characters.substring(0, 20) : 'unknown') + ((node.characters && node.characters.length > 20) ? '...' : '') + '"'),
-            type: 'external'
-          });
-        } else if (node.hyperlink.type === 'NODE' && node.hyperlink.value) {
-          // Text hyperlink to another frame
-          const destinationNode = await figma.getNodeByIdAsync(node.hyperlink.value);
-          if (destinationNode && destinationNode.type === 'FRAME') {
-            const textSample = node.characters ? node.characters.substring(0, 30) : 'unknown';
-            console.log(indent + '✅ Found text link to frame: "' + textSample + '" -> ' + destinationNode.name);
-            connections.push({
-              fromFrameId: frameId,
-              toFrameId: node.hyperlink.value,
-              elementBounds: bounds,
-              elementName: node.name || ('Text: "' + (node.characters ? node.characters.substring(0, 20) : 'unknown') + ((node.characters && node.characters.length > 20) ? '...' : '') + '"'),
-              type: 'internal'
-            });
-          }
-        }
-      } else {
-        console.log(indent + 'TEXT node has no hyperlink property');
-      }
-    }
-  }
-
-  // Recursively check children
-  if ('children' in node && node.children.length > 0) {
-    console.log(indent + 'Checking ' + node.children.length + ' children of ' + node.type + ' "' + node.name + '"');
-    for (const child of node.children) {
-      await scanNodeForConnections(child, frameId, depth + 1);
-    }
-  }
-}
-
-// Get absolute bounds of an element relative to its frame
-function getAbsoluteBounds(node, frameId) {
-  let x = 0;
-  let y = 0;
-  let current = node;
-
-  // Walk up the tree until we reach the frame
-  while (current && current.id !== frameId) {
-    x += current.x || 0;
-    y += current.y || 0;
-    current = current.parent;
-  }
-
+function describeFrame(frame) {
+  const bounds = getFrameExportBounds(frame);
   return {
-    x: x,
-    y: y,
-    width: node.width || 0,
-    height: node.height || 0
+    id: frame.id,
+    name: frame.name,
+    width: bounds.width,
+    height: bounds.height,
+    parent: frame.parent ? frame.parent.name : 'Page'
   };
 }
 
-function getNodeOffsetToFrame(node, frameId) {
-  let x = 0;
-  let y = 0;
-  let current = node;
+function sendFrameList(justAdded) {
+  figma.ui.postMessage({ type: 'frames-updated', frames: frameData, connections, justAdded });
+}
 
-  while (current && current.id !== frameId) {
-    x += current.x || 0;
-    y += current.y || 0;
-    current = current.parent;
+async function autoAddSelectedFrames(selectedFrames) {
+  if (activeExportJob) return;
+  const revision = ++listRevision;
+  const justAdded = [];
+  for (const frame of selectedFrames) {
+    const existing = frameData.findIndex(item => item.id === frame.id);
+    if (existing < 0) {
+      frameData.push(describeFrame(frame));
+      justAdded.push(frame.id);
+    } else {
+      frameData[existing] = describeFrame(frame);
+    }
+  }
+  // Metadata is available immediately; link scans cannot mutate an active job.
+  sendFrameList(justAdded);
+  // Adding a destination can make links in previously listed sources eligible.
+  // A selection-only refresh can keep its narrower scan when membership is stable.
+  const refreshIds = justAdded.length ? frameData.map(frame => frame.id) : selectedFrames.map(frame => frame.id);
+  await refreshListedConnections(refreshIds, revision, justAdded, new Map(selectedFrames.map(frame => [frame.id, frame])));
+}
+
+async function refreshListedConnections(frameIds, revision, justAdded, knownFrames = new Map()) {
+  const freshLinks = [];
+  const listedIds = new Set(frameData.map(frame => frame.id));
+  for (const id of frameIds) {
+    if (activeExportJob || revision !== listRevision) return;
+    const frame = knownFrames.get(id) || await figma.getNodeByIdAsync(id);
+    if (activeExportJob || revision !== listRevision) return;
+    if (!frame || frame.removed || frame.type !== 'FRAME') continue;
+    await scanNodeForConnections(frame, frame.id, 0, listedIds, freshLinks);
+    if (activeExportJob || revision !== listRevision) return;
+  }
+  const refreshedIds = new Set(frameIds);
+  connections = connections.filter(link => !refreshedIds.has(link.fromFrameId)).concat(freshLinks);
+  sendFrameList(justAdded);
+}
+
+function clearFrameList() {
+  listRevision++;
+  frameData = [];
+  connections = [];
+  sendFrameList([]);
+}
+
+// Recursively scan nodes for prototype connections AND text hyperlinks.
+// Partial text rectangles come from Figma's native PDF annotations. The plugin
+// API does not expose character-range geometry; whole-layer bounds are metadata.
+const linkKeysBySink = new WeakMap();
+
+async function scanNodeForConnections(node, frameId, depth = 0, exportedFrameIds, sink = connections) {
+  if (!node || node.removed || !isLinkNodeVisible(node)) return;
+  const roots = exportedFrameIds || new Set(frameData.map(frame => frame.id));
+  const bounds = getAbsoluteBounds(node, frameId);
+
+  if (bounds) {
+    for (const reaction of node.reactions || []) {
+      const actions = Array.isArray(reaction.actions) ? reaction.actions : (reaction.action ? [reaction.action] : []);
+      for (const action of actions) {
+        if (!action) continue;
+        if (action.type === 'URL' && typeof action.url === 'string' && action.url.trim()) {
+          appendExtractedLink(sink, {
+            fromFrameId: frameId, toUrl: action.url, elementBounds: bounds,
+            elementName: node.name || 'Unnamed element', type: 'external', source: 'prototype'
+          });
+        } else if (action.type === 'NODE' && action.destinationId) {
+          const targetId = await resolveExportedLinkTarget(action.destinationId, roots);
+          if (targetId) {
+            appendExtractedLink(sink, {
+              fromFrameId: frameId, toFrameId: targetId, elementBounds: bounds,
+              elementName: node.name || 'Unnamed element', type: 'internal', source: 'prototype'
+            });
+          }
+        }
+      }
+    }
+
+    if (node.type === 'TEXT') {
+      let segments = [];
+      try {
+        if (typeof node.getStyledTextSegments === 'function') {
+          segments = node.getStyledTextSegments(['hyperlink']);
+        }
+      } catch (error) {
+        console.warn('Could not read text hyperlinks:', error.message);
+      }
+      const linkedSegments = segments.filter(segment => segment.hyperlink && segment.hyperlink.value);
+      if (linkedSegments.length === 0 && node.hyperlink && node.hyperlink.value) {
+        linkedSegments.push({ start: 0, end: (node.characters || '').length,
+          characters: node.characters || '', hyperlink: node.hyperlink });
+      }
+
+      for (const segment of linkedSegments) {
+        const hyperlink = segment.hyperlink;
+        const textLength = (node.characters || '').length;
+        const start = Number.isInteger(segment.start) ? segment.start : 0;
+        const end = Number.isInteger(segment.end) ? segment.end : textLength;
+        if (start < 0 || end <= start || end > textLength) continue;
+        const needsTextGeometry = start !== 0 || end !== textLength;
+        const metadata = {
+          fromFrameId: frameId, elementBounds: bounds,
+          elementName: node.name || 'Text link', source: 'text',
+          textNodeId: node.id, textStart: start, textEnd: end,
+          textContent: segment.characters || (node.characters || '').slice(start, end),
+          needsTextGeometry
+        };
+        if (hyperlink.type === 'URL' && typeof hyperlink.value === 'string' && hyperlink.value.trim()) {
+          appendExtractedLink(sink, { ...metadata, toUrl: hyperlink.value, type: 'external' });
+        } else if (hyperlink.type === 'NODE') {
+          const targetId = await resolveExportedLinkTarget(hyperlink.value, roots);
+          if (targetId) {
+            appendExtractedLink(sink, { ...metadata, toFrameId: targetId,
+              toNodeId: hyperlink.value, type: 'internal' });
+          }
+        }
+      }
+    }
   }
 
-  return { x, y };
+  // A child can extend outside its parent's own bounds when it is not clipped.
+  // Therefore an empty parent intersection alone must not prune this traversal.
+  for (const child of node.children || []) {
+    await scanNodeForConnections(child, frameId, depth + 1, roots, sink);
+  }
+}
+
+function appendExtractedLink(sink, link) {
+  let state = linkKeysBySink.get(sink);
+  if (!state || sink.length < state.length) {
+    state = { keys: new Set(), length: sink.length };
+    linkKeysBySink.set(sink, state);
+  }
+  const b = link.elementBounds;
+  const key = JSON.stringify([link.fromFrameId, link.type, link.toUrl || link.toFrameId,
+    link.source, link.textNodeId, link.textStart, link.textEnd,
+    b && b.x, b && b.y, b && b.width, b && b.height]);
+  if (state.keys.has(key)) return;
+  state.keys.add(key);
+  sink.push(link);
+  state.length = sink.length;
+}
+
+async function resolveExportedLinkTarget(nodeId, exportedFrameIds) {
+  if (exportedFrameIds.has(nodeId)) return nodeId;
+  let target;
+  try { target = await figma.getNodeByIdAsync(nodeId); } catch (_) { return null; }
+  while (target) {
+    if (exportedFrameIds.has(target.id)) return target.id;
+    target = target.parent;
+  }
+  return null;
+}
+
+function isLinkNodeVisible(node) {
+  for (let current = node; current; current = current.parent) {
+    if (current.removed || current.visible === false || current.opacity === 0) return false;
+  }
+  return true;
+}
+
+function multiplyLinkTransforms(a, b) {
+  return [
+    [a[0][0] * b[0][0] + a[0][1] * b[1][0],
+      a[0][0] * b[0][1] + a[0][1] * b[1][1],
+      a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2]],
+    [a[1][0] * b[0][0] + a[1][1] * b[1][0],
+      a[1][0] * b[0][1] + a[1][1] * b[1][1],
+      a[1][0] * b[0][2] + a[1][1] * b[1][2] + a[1][2]]
+  ];
+}
+
+function getLinkTransformToFrame(node, frameId) {
+  let transform = [[1, 0, 0], [0, 1, 0]];
+  let current = node;
+  while (current && current.id !== frameId) {
+    const relative = current.relativeTransform || [[1, 0, current.x || 0], [0, 1, current.y || 0]];
+    transform = multiplyLinkTransforms(relative, transform);
+    current = current.parent;
+  }
+  if (!current) return null;
+  const bounds = getFrameExportBounds(current);
+  const worldTransform = multiplyLinkTransforms(getFrameWorldTransform(current), transform);
+  return multiplyLinkTransforms([[1, 0, -bounds.x], [0, 1, -bounds.y]], worldTransform);
+}
+
+function getFrameWorldTransform(frame) {
+  if (Array.isArray(frame.absoluteTransform)) return frame.absoluteTransform;
+  let transform = [[1, 0, 0], [0, 1, 0]];
+  for (let current = frame; current; current = current.parent) {
+    const relative = current.relativeTransform || [[1, 0, current.x || 0], [0, 1, current.y || 0]];
+    transform = multiplyLinkTransforms(relative, transform);
+  }
+  return transform;
+}
+
+function getFrameExportBounds(frame) {
+  const bounds = frame.absoluteBoundingBox;
+  if (bounds && [bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)
+      && bounds.width > 0 && bounds.height > 0) {
+    return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+  }
+  const matrix = getFrameWorldTransform(frame);
+  const points = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(([x, y]) => ({
+    x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2],
+    y: matrix[1][0] * x + matrix[1][1] * y + matrix[1][2]
+  }));
+  const xs = points.map(point => point.x), ys = points.map(point => point.y);
+  const x = Math.min(...xs), y = Math.min(...ys);
+  return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+}
+
+function getLinkNodePolygon(node, frameId) {
+  const width = Number(node.width);
+  const height = Number(node.height);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return [];
+  const matrix = getLinkTransformToFrame(node, frameId);
+  if (!matrix) return [];
+  return [[0, 0], [width, 0], [width, height], [0, height]].map(([x, y]) => ({
+    x: matrix[0][0] * x + matrix[0][1] * y + matrix[0][2],
+    y: matrix[1][0] * x + matrix[1][1] * y + matrix[1][2]
+  }));
+}
+
+// Intersect convex polygons before converting to the axis-aligned PDF hit area.
+// This honors rotated clipping frames instead of moving off-page links inward.
+function clipLinkPolygon(subject, clip) {
+  if (!subject.length || clip.length < 3) return [];
+  const signedArea = clip.reduce((sum, p, i) => {
+    const q = clip[(i + 1) % clip.length];
+    return sum + p.x * q.y - q.x * p.y;
+  }, 0);
+  if (Math.abs(signedArea) < 1e-8) return [];
+  const orientation = Math.sign(signedArea);
+  let result = subject;
+  for (let i = 0; i < clip.length && result.length; i++) {
+    const a = clip[i], b = clip[(i + 1) % clip.length];
+    const side = p => orientation * ((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x));
+    const input = result;
+    result = [];
+    let previous = input[input.length - 1];
+    let previousSide = side(previous);
+    for (const point of input) {
+      const pointSide = side(point);
+      const previousInside = previousSide >= -1e-8;
+      const pointInside = pointSide >= -1e-8;
+      if (previousInside !== pointInside) {
+        const amount = previousSide / (previousSide - pointSide);
+        result.push({ x: previous.x + amount * (point.x - previous.x),
+          y: previous.y + amount * (point.y - previous.y) });
+      }
+      if (pointInside) result.push(point);
+      previous = point;
+      previousSide = pointSide;
+    }
+  }
+  return result;
+}
+
+// Figma exports the source frame's axis-aligned world bounding box, including
+// its rotation. Express every hit area relative to that same export origin.
+function getAbsoluteBounds(node, frameId) {
+  let polygon = getLinkNodePolygon(node, frameId);
+  if (!polygon.length) return null;
+  let current = node;
+  while (current) {
+    if (current.id === frameId || (current !== node && current.clipsContent)) {
+      polygon = clipLinkPolygon(polygon, getLinkNodePolygon(current, frameId));
+      if (!polygon.length) return null;
+    }
+    if (current.id === frameId) break;
+    current = current.parent;
+  }
+  if (!current) return null;
+  const xs = polygon.map(point => point.x), ys = polygon.map(point => point.y);
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const width = Math.max(...xs) - x, height = Math.max(...ys) - y;
+  return [x, y, width, height].every(Number.isFinite) && width > 1e-8 && height > 1e-8
+    ? { x, y, width, height } : null;
 }
 
 function getTextRangeBounds(node, frameId, start, end) {
-  const fallback = [getAbsoluteBounds(node, frameId)];
-  const offset = getNodeOffsetToFrame(node, frameId);
+  // Only whole-node links have safe fallback geometry. Partial text ranges must
+  // use the exact annotations in the native PDF, never an overlapping rectangle.
+  if (start !== 0 || end !== (node.characters || '').length) return [];
+  const bounds = getAbsoluteBounds(node, frameId);
+  return bounds ? [bounds] : [];
+}
 
+// ============================================================================
+// Sequential export protocol
+// ============================================================================
+
+function matchingJob(jobId) {
+  return activeExportJob && activeExportJob.id === jobId ? activeExportJob : null;
+}
+
+function jobIsRunning(job) {
+  return !!job && activeExportJob === job && !job.terminal;
+}
+
+function clearJobTimer(job) {
+  if (job.timer !== null) clearTimeout(job.timer);
+  job.timer = null;
+}
+
+function removeSourceWatchers(job) {
+  if (job.styleWatcher && typeof figma.off === 'function') figma.off('stylechange', job.styleWatcher);
+  job.styleWatcher = null;
+  for (const page of job.watchedPages) {
+    if (typeof page.off === 'function') page.off('nodechange', job.nodeWatcher);
+  }
+  job.watchedPages.clear();
+}
+
+function watchSourcePage(job, node) {
+  let page = node;
+  while (page && page.type !== 'PAGE') page = page.parent;
+  if (!page || job.watchedPages.has(page) || typeof page.on !== 'function') return;
+  page.on('nodechange', job.nodeWatcher);
+  job.watchedPages.add(page);
+}
+
+function finalizeTerminalJob(job) {
+  if (!job.terminal || job.operations > 0 || activeExportJob !== job) return;
+  clearJobTimer(job);
+  removeSourceWatchers(job);
+  job.pending = null;
+  activeExportJob = null;
+  figma.ui.postMessage({ type: job.terminal.type, jobId: job.id, error: job.terminal.error });
+}
+
+function terminateJob(job, type, error) {
+  if (activeExportJob !== job || job.terminal) return;
+  clearJobTimer(job);
+  job.pending = null;
+  job.terminal = { type, error: error ? String(error) : undefined };
+  // Native Figma export cannot be interrupted. Keep the job reserved until the
+  // current await settles, then acknowledge cancellation and allow a new job.
+  finalizeTerminalJob(job);
+}
+
+async function runJobOperation(job, operation) {
+  if (!jobIsRunning(job)) return;
+  job.operations++;
   try {
-    if (typeof node.getRangeBounds === 'function') {
-      const rangeBounds = node.getRangeBounds(start, end);
-      if (Array.isArray(rangeBounds)) {
-        const rects = rangeBounds
-          .filter(rect => rect && rect.width > 0 && rect.height > 0)
-          .map(rect => ({
-            x: offset.x + rect.x,
-            y: offset.y + rect.y,
-            width: rect.width,
-            height: rect.height
-          }));
-        return rects.length > 0 ? rects : fallback;
-      }
-      if (rangeBounds && rangeBounds.width > 0 && rangeBounds.height > 0) {
-        return [{
-          x: offset.x + rangeBounds.x,
-          y: offset.y + rangeBounds.y,
-          width: rangeBounds.width,
-          height: rangeBounds.height
-        }];
-      }
-    }
+    await operation();
   } catch (error) {
-    console.log('Error getting text range bounds: ' + error.message);
+    if (jobIsRunning(job)) terminateJob(job, 'export-error', error.message || String(error));
+  } finally {
+    job.operations--;
+    finalizeTerminalJob(job);
   }
-
-  return fallback;
 }
 
-// ============================================================================
-// HYBRID VECTOR/RASTER DETECTION - Following Figma's Engineering Approach
-// ============================================================================
-
-// Effects that MUST be rasterized (cannot be represented as vectors in PDF)
-const MUST_RASTERIZE_EFFECTS = [
-  'LAYER_BLUR',
-  'BACKGROUND_BLUR'
-];
-
-// Effects that SHOULD be rasterized for best quality
-const SHOULD_RASTERIZE_EFFECTS = [
-  'DROP_SHADOW',
-  'INNER_SHADOW'
-];
-
-// Blend modes that may cause issues in PDF
-const PROBLEMATIC_BLEND_MODES = [
-  'MULTIPLY',
-  'SCREEN',
-  'OVERLAY',
-  'DARKEN',
-  'LIGHTEN',
-  'COLOR_DODGE',
-  'COLOR_BURN',
-  'HARD_LIGHT',
-  'SOFT_LIGHT',
-  'DIFFERENCE',
-  'EXCLUSION',
-  'HUE',
-  'SATURATION',
-  'COLOR',
-  'LUMINOSITY',
-  'PLUS_DARKER',
-  'PLUS_LIGHTER'
-];
-
-const RASTERIZE_EFFECTS = MUST_RASTERIZE_EFFECTS.concat(SHOULD_RASTERIZE_EFFECTS);
-
-function hasVisiblePaints(paints) {
-  if (!Array.isArray(paints)) return false;
-  return paints.some((paint) => paint && paint.visible !== false);
+function failNewJob(jobId, error) {
+  figma.ui.postMessage({ type: 'export-error', jobId, error });
 }
 
-function nodeHasRenderableSelf(node) {
-  if (node.type === 'TEXT') return true;
-  if ('fills' in node && hasVisiblePaints(node.fills)) return true;
-  if ('strokes' in node && hasVisiblePaints(node.strokes)) return true;
-  return false;
-}
-
-function nodeNeedsRaster(node) {
-  if (node.effects && node.effects.length > 0) {
-    for (const effect of node.effects) {
-      if (effect.visible !== false && RASTERIZE_EFFECTS.includes(effect.type)) {
-        return true;
-      }
+function orderedSelectedIds(frameOrder, selectedFrames) {
+  if (!Array.isArray(frameOrder) || !Array.isArray(selectedFrames)) {
+    throw new Error('Choose frames before exporting.');
+  }
+  if (selectedFrames.some(id => typeof id !== 'string' || !id)) {
+    throw new Error('The selected frame list is invalid. Add the frames again.');
+  }
+  const selected = new Set(selectedFrames);
+  const seen = new Set();
+  const ordered = [];
+  for (const id of frameOrder) {
+    if (selected.has(id) && !seen.has(id)) {
+      seen.add(id);
+      ordered.push(id);
     }
   }
-
-  if (node.blendMode && PROBLEMATIC_BLEND_MODES.includes(node.blendMode)) {
-    return true;
+  if (ordered.length === 0) throw new Error('Select at least one frame to export.');
+  if (ordered.length !== selected.size) {
+    throw new Error('Some selected frames are missing from the page order. Add them again.');
   }
-
-  if (node.isMask && node.effects && node.effects.length > 0) {
-    return true;
-  }
-
-  return false;
+  return ordered;
 }
 
-function collectAllNodes(root) {
-  const nodes = [];
-  if (!root) return nodes;
+function validateFrameSize(frame) {
+  if (!Number.isFinite(frame.width) || !Number.isFinite(frame.height) || frame.width <= 0 || frame.height <= 0) {
+    throw new Error(`“${frame.name}” has invalid dimensions. Give the frame a positive width and height.`);
+  }
+}
 
-  const stack = [root];
-  while (stack.length > 0) {
+function validateRasterSize(frame, scale, outputColorMode = 'RGB') {
+  const maxPixels = outputColorMode === 'CMYK' ? EXPORT_LIMITS.maxCmykRasterPixels : EXPORT_LIMITS.maxRasterPixels;
+  const width = Math.ceil(frame.width * scale);
+  const height = Math.ceil(frame.height * scale);
+  if (!Number.isFinite(width) || !Number.isFinite(height) ||
+      width < 1 || height < 1 ||
+      width > EXPORT_LIMITS.maxRasterSide || height > EXPORT_LIMITS.maxRasterSide ||
+      width * height > maxPixels) {
+    const limit = outputColorMode === 'CMYK' ? 'CMYK beta is limited to 8 million pixels' : 'Raster export is limited to 32 million pixels';
+    throw new Error(`“${frame.name}” would render at ${width}×${height} pixels. ${limit} and 16,384 pixels per side. Lower the quality, enable Fit oversized pages, or reduce this frame’s size.`);
+  }
+  return { scale, width, height };
+}
+
+function rasterPlan(frame, requestedScale, fitOversized, outputColorMode = 'RGB') {
+  const maxPixels = outputColorMode === 'CMYK' ? EXPORT_LIMITS.maxCmykRasterPixels : EXPORT_LIMITS.maxRasterPixels;
+  const fits = scale => {
+    const width = Math.ceil(frame.width * scale), height = Math.ceil(frame.height * scale);
+    return width >= 1 && height >= 1 && width <= EXPORT_LIMITS.maxRasterSide &&
+      height <= EXPORT_LIMITS.maxRasterSide && width * height <= maxPixels;
+  };
+  if (!fitOversized || fits(requestedScale)) return validateRasterSize(frame, requestedScale, outputColorMode);
+  // The continuous limit can round up to too many pixels. Search below it using
+  // the same integer dimensions as the guard, including extreme aspect ratios.
+  let high = Math.min(requestedScale, EXPORT_LIMITS.maxRasterSide / frame.width,
+    EXPORT_LIMITS.maxRasterSide / frame.height,
+    Math.sqrt(maxPixels) / Math.sqrt(frame.width) / Math.sqrt(frame.height));
+  if (fits(high)) return validateRasterSize(frame, high, outputColorMode);
+  let low = 0;
+  for (let i = 0; i < 64; i++) {
+    const middle = low + (high - low) / 2;
+    if (fits(middle)) low = middle;
+    else high = middle;
+  }
+  return validateRasterSize(frame, low, outputColorMode);
+}
+
+function unsupportedPdfBlendMode(frame) {
+  const unsupported = new Set(['LINEAR_BURN', 'LINEAR_DODGE', 'PLUS_DARKER', 'PLUS_LIGHTER']);
+  const stack = [frame];
+  while (stack.length) {
     const node = stack.pop();
-    nodes.push(node);
-
-    if ('children' in node && node.children) {
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        stack.push(node.children[i]);
-      }
-    }
-  }
-
-  return nodes;
-}
-
-function collectSubtreeNodes(node) {
-  const nodes = [];
-  const stack = [node];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    nodes.push(current);
-    if ('children' in current && current.children) {
-      for (let i = current.children.length - 1; i >= 0; i--) {
-        stack.push(current.children[i]);
-      }
-    }
-  }
-  return nodes;
-}
-
-function getAncestorChain(node, stopNode) {
-  const ancestors = [];
-  let current = node.parent;
-  while (current && current !== stopNode) {
-    ancestors.push(current);
-    current = current.parent;
-  }
-  if (stopNode) {
-    ancestors.push(stopNode);
-  }
-  return ancestors;
-}
-
-function buildFrameSegments(frame) {
-  const segments = [];
-  let currentVectorNodes = [];
-
-  function flushVector() {
-    if (currentVectorNodes.length === 0) return;
-    const uniqueNodes = Array.from(new Set(currentVectorNodes));
-    segments.push({ type: 'vector', nodes: uniqueNodes });
-    currentVectorNodes = [];
-  }
-
-  function visit(node) {
-    if (!node || node.visible === false) return;
-
-    if (nodeNeedsRaster(node)) {
-      flushVector();
-      segments.push({ type: 'raster', nodes: collectSubtreeNodes(node) });
-      return;
-    }
-
-    if (nodeHasRenderableSelf(node)) {
-      currentVectorNodes.push(node);
-    }
-
-    if ('children' in node && node.children && node.children.length > 0) {
-      for (const child of node.children) {
-        visit(child);
-      }
-    }
-  }
-
-  if (frame && 'children' in frame && frame.children) {
-    for (const child of frame.children) {
-      visit(child);
-    }
-  }
-
-  flushVector();
-  return segments;
-}
-
-function captureNodeState(nodes) {
-  const visibility = new Map();
-  const fills = new Map();
-  const strokes = new Map();
-
-  for (const node of nodes) {
-    visibility.set(node.id, node.visible);
-    if ('fills' in node && node.fills !== figma.mixed) {
-      fills.set(node.id, node.fills);
-    }
-    if ('strokes' in node && node.strokes !== figma.mixed) {
-      strokes.set(node.id, node.strokes);
-    }
-  }
-
-  return { visibility, fills, strokes };
-}
-
-function restoreNodeState(nodes, state) {
-  for (const node of nodes) {
-    if (state.visibility.has(node.id)) {
-      node.visible = state.visibility.get(node.id);
-    }
-    if (state.fills.has(node.id)) {
-      node.fills = state.fills.get(node.id);
-    }
-    if (state.strokes.has(node.id)) {
-      node.strokes = state.strokes.get(node.id);
-    }
-  }
-}
-
-function applySegmentState(frame, nodes, segmentNodes, state) {
-  const renderSet = new Set();
-  for (const node of segmentNodes) {
-    renderSet.add(node.id);
-  }
-
-  const showSet = new Set();
-  for (const node of segmentNodes) {
-    showSet.add(node.id);
-    for (const ancestor of getAncestorChain(node, frame)) {
-      showSet.add(ancestor.id);
-    }
-  }
-
-  for (const node of nodes) {
-    const originalVisible = state.visibility.get(node.id) !== false;
-    node.visible = originalVisible && showSet.has(node.id);
-
-    if ('fills' in node && node.fills !== figma.mixed) {
-      if (renderSet.has(node.id)) {
-        if (state.fills.has(node.id)) {
-          node.fills = state.fills.get(node.id);
-        }
-      } else {
-        node.fills = [];
-      }
-    }
-
-    if ('strokes' in node && node.strokes !== figma.mixed) {
-      if (renderSet.has(node.id)) {
-        if (state.strokes.has(node.id)) {
-          node.strokes = state.strokes.get(node.id);
-        }
-      } else {
-        node.strokes = [];
-      }
-    }
-  }
-}
-/**
- * Detailed layer analysis - determines if individual layers need rasterization
- * Following Figma's approach: keep vectors where possible, rasterize only what's needed
- */
-async function analyzeFrameLayers(node, depth = 0, results = null) {
-  if (results === null) {
-    results = {
-      totalLayers: 0,
-      vectorLayers: 0,
-      rasterLayers: 0,
-      details: [],
-      hasCriticalEffects: false,
-      frameStrategy: 'vector' // vector, hybrid, or raster
-    };
-  }
-
-  const indent = '  '.repeat(depth);
-  let layerNeedsRaster = false;
-  const layerIssues = [];
-
-  // Analyze this layer
-  if (node.type !== 'DOCUMENT' && node.type !== 'PAGE') {
-    results.totalLayers++;
-
-    // Check for effects that MUST be rasterized
-    if (node.effects && node.effects.length > 0) {
-      for (const effect of node.effects) {
-        if (effect.visible !== false) {
-          if (MUST_RASTERIZE_EFFECTS.includes(effect.type)) {
-            layerNeedsRaster = true;
-            results.hasCriticalEffects = true;
-            layerIssues.push({
-              type: 'CRITICAL_EFFECT',
-              effect: effect.type,
-              reason: 'Cannot be represented as vector'
-            });
-            console.log(indent + `🔴 MUST RASTERIZE: "${node.name}" has ${effect.type}`);
-          } else if (SHOULD_RASTERIZE_EFFECTS.includes(effect.type)) {
-            // Shadows can sometimes work as vector, but quality is better rasterized
-            layerIssues.push({
-              type: 'SHADOW_EFFECT',
-              effect: effect.type,
-              reason: 'Better quality when rasterized'
-            });
-            console.log(indent + `🟡 Recommended raster: "${node.name}" has ${effect.type}`);
-          }
+    if (!node || node.visible === false || node.opacity === 0) continue;
+    if (unsupported.has(node.blendMode)) return node.blendMode;
+    for (const property of ['fills', 'strokes', 'effects']) {
+      if (!Array.isArray(node[property])) continue;
+      for (const entry of node[property]) {
+        if (entry && entry.visible !== false && entry.opacity !== 0 && unsupported.has(entry.blendMode)) {
+          return entry.blendMode;
         }
       }
     }
-
-    // Check blend modes
-    if (node.blendMode && PROBLEMATIC_BLEND_MODES.includes(node.blendMode)) {
-      layerNeedsRaster = true;
-      layerIssues.push({
-        type: 'BLEND_MODE',
-        mode: node.blendMode,
-        reason: 'Not fully supported in PDF'
-      });
-      console.log(indent + `🔴 MUST RASTERIZE: "${node.name}" has blend mode ${node.blendMode}`);
-    }
-
-    // Check for masks with effects
-    if (node.isMask && node.effects && node.effects.length > 0) {
-      layerNeedsRaster = true;
-      layerIssues.push({
-        type: 'MASKED_EFFECTS',
-        reason: 'Mask + effects combination'
-      });
-    }
-
-    // Record this layer's status
-    if (layerNeedsRaster) {
-      results.rasterLayers++;
-      results.details.push({
-        name: node.name,
-        type: node.type,
-        needsRaster: true,
-        issues: layerIssues,
-        depth: depth
-      });
-    } else if (layerIssues.length > 0) {
-      // Layer can be vector but has minor issues
-      results.vectorLayers++;
-      results.details.push({
-        name: node.name,
-        type: node.type,
-        needsRaster: false,
-        warnings: layerIssues,
-        depth: depth
-      });
-    } else {
-      // Pure vector layer
-      results.vectorLayers++;
-      console.log(indent + `✅ VECTOR: "${node.name}" (${node.type})`);
+    if ('children' in node) {
+      for (const child of node.children) stack.push(child);
     }
   }
-
-  // Recursively analyze children
-  if ('children' in node && node.children) {
-    for (const child of node.children) {
-      await analyzeFrameLayers(child, depth + 1, results);
-    }
-  }
-
-  // Determine overall strategy (only at root level)
-  if (depth === 0) {
-    if (results.rasterLayers === 0) {
-      results.frameStrategy = 'vector';
-      console.log(`📊 Frame is 100% VECTOR SAFE (${results.vectorLayers} layers)`);
-    } else if (results.vectorLayers === 0) {
-      results.frameStrategy = 'raster';
-      console.log(`📊 Frame is 100% RASTER (${results.rasterLayers} layers)`);
-    } else {
-      results.frameStrategy = 'hybrid';
-      console.log(`📊 Frame is HYBRID: ${results.vectorLayers} vector, ${results.rasterLayers} raster`);
-    }
-  }
-
-  return results;
+  return null;
 }
 
-/**
- * Simplified detection for backward compatibility
- * Returns issues array in the old format
- */
-async function scanForProblematicEffects(node, depth = 0) {
-  const analysis = await analyzeFrameLayers(node, 0);
-
-  // Convert to old format for compatibility
-  const issues = [];
-
-  for (const detail of analysis.details) {
-    if (detail.needsRaster || detail.warnings) {
-      const layerIssues = detail.needsRaster ? detail.issues : detail.warnings;
-
-      for (const issue of layerIssues) {
-        issues.push({
-          nodeName: detail.name,
-          nodeType: detail.type,
-          issue: issue.effect || issue.mode || issue.type,
-          severity: issue.type === 'CRITICAL_EFFECT' || issue.type === 'BLEND_MODE' ? 'high' :
-                   issue.type === 'SHADOW_EFFECT' ? 'medium' : 'low',
-          reason: issue.reason
-        });
-      }
-    }
+function readDocumentColorProfile() {
+  const profile = figma.root && figma.root.documentColorProfile;
+  if (profile !== 'LEGACY' && profile !== 'SRGB' && profile !== 'DISPLAY_P3') {
+    throw new Error('The document color profile is unavailable or unsupported. Reopen the file in an updated Figma version before exporting.');
   }
-
-  return issues;
+  return profile;
 }
 
-/**
- * Determine export strategy with hybrid support
- * Following Figma's approach: vector when possible, PNG only when needed
- */
-function determineExportStrategy(issues, layerAnalysis = null) {
-  // Use detailed layer analysis if available
-  if (layerAnalysis) {
-    const { frameStrategy, vectorLayers, rasterLayers, hasCriticalEffects } = layerAnalysis;
-
-    if (frameStrategy === 'vector') {
-      return {
-        strategy: 'vector',
-        reason: `100% vector safe (${vectorLayers} layers)`,
-        stats: { vectorLayers, rasterLayers, total: vectorLayers + rasterLayers }
-      };
-    } else if (frameStrategy === 'raster') {
-      return {
-        strategy: 'png',
-        reason: `All layers need rasterization (${rasterLayers} layers)`,
-        stats: { vectorLayers, rasterLayers, total: vectorLayers + rasterLayers }
-      };
-    } else {
-      // Hybrid case - for now, we'll use PNG if there are critical effects
-      // In future, could implement true layer-by-layer hybrid
-      if (hasCriticalEffects) {
-        return {
-          strategy: 'png',
-          reason: `Hybrid frame with critical effects (${vectorLayers} vector, ${rasterLayers} raster) - using high-quality PNG`,
-          stats: { vectorLayers, rasterLayers, total: vectorLayers + rasterLayers }
-        };
-      } else {
-        return {
-          strategy: 'vector-with-fallback',
-          reason: `Hybrid frame (${vectorLayers} vector, ${rasterLayers} raster) - attempting vector with PNG fallback`,
-          stats: { vectorLayers, rasterLayers, total: vectorLayers + rasterLayers }
-        };
-      }
-    }
-  }
-
-  // Fallback to old logic if no layer analysis
-  if (issues.length === 0) {
-    return { strategy: 'vector', reason: 'No problematic effects detected' };
-  }
-
-  const highSeverityCount = issues.filter(i => i.severity === 'high').length;
-  const mediumSeverityCount = issues.filter(i => i.severity === 'medium').length;
-
-  if (highSeverityCount > 0) {
-    return {
-      strategy: 'png',
-      reason: `${highSeverityCount} critical issue(s) requiring rasterization`,
-      issues: issues
-    };
-  }
-
-  if (mediumSeverityCount >= 3) {
-    return {
-      strategy: 'png',
-      reason: `${mediumSeverityCount} issues - better quality with PNG`,
-      issues: issues
-    };
-  }
-
-  return {
-    strategy: 'vector-with-fallback',
-    reason: `${issues.length} minor issue(s) - attempting vector with PNG fallback`,
-    issues: issues
-  };
+function resolveExportColorProfile(requested, sourceProfile) {
+  if (requested === 'CMYK') return 'SRGB';
+  if (requested === 'SRGB' || requested === 'DISPLAY_P3_V4') return requested;
+  if (requested !== 'DOCUMENT') throw new Error('Choose sRGB, Display P3, the document color profile, or CMYK.');
+  if (sourceProfile === 'SRGB') return 'SRGB';
+  if (sourceProfile === 'DISPLAY_P3') return 'DISPLAY_P3_V4';
+  // LEGACY can follow a preference that the API does not expose. Keep Figma's
+  // DOCUMENT behavior and preserve actual exported metadata, without guessing
+  // or promising that this otherwise invisible preference is frozen per job.
+  return 'DOCUMENT';
 }
 
-// ============================================================================
-// PDF VALIDATION
-// ============================================================================
-
-// Validate PDF data structure after export
-function validatePDFData(pdfData, frameName) {
-  const validationResult = {
-    isValid: true,
-    errors: [],
-    warnings: []
-  };
-
-  // Check minimum size
-  if (!pdfData || pdfData.length < 100) {
-    validationResult.isValid = false;
-    validationResult.errors.push(`PDF too small (${pdfData ? pdfData.length : 0} bytes)`);
-    return validationResult;
-  }
-
-  // Check PDF header signature
-  const header = String.fromCharCode(pdfData[0], pdfData[1], pdfData[2], pdfData[3], pdfData[4]);
-  if (!header.startsWith('%PDF')) {
-    validationResult.isValid = false;
-    validationResult.errors.push(`Invalid PDF header: "${header}"`);
-    return validationResult;
-  }
-
-  // Check for EOF marker (should be near the end)
-  const tailLength = Math.min(100, pdfData.length);
-  const tailBytes = pdfData.slice(-tailLength);
-  const tailStr = String.fromCharCode.apply(null, tailBytes);
-
-  if (!tailStr.includes('%%EOF')) {
-    validationResult.warnings.push('Missing %%EOF marker - PDF may be truncated');
-  }
-
-  // Check for required PDF structures in first 2KB
-  const headerLength = Math.min(2000, pdfData.length);
-  const headerBytes = pdfData.slice(0, headerLength);
-  const headerStr = String.fromCharCode.apply(null, headerBytes);
-
-  // Look for signs of a valid PDF structure
-  const hasObj = headerStr.includes(' obj') || headerStr.includes('\nobj');
-  const hasStream = headerStr.includes('stream');
-
-  if (!hasObj) {
-    validationResult.warnings.push('No PDF objects found in header - structure may be malformed');
-  }
-
-  // Check for common corruption patterns
-  if (headerStr.includes('undefined') || headerStr.includes('NaN')) {
-    validationResult.isValid = false;
-    validationResult.errors.push('PDF contains JavaScript error artifacts (undefined/NaN)');
-  }
-
-  // Check for suspiciously repetitive data (sign of encoding error)
-  const middleStart = Math.floor(pdfData.length / 2);
-  const sampleSize = Math.min(100, pdfData.length - middleStart);
-  const middleSample = pdfData.slice(middleStart, middleStart + sampleSize);
-
-  let repetitionCount = 0;
-  for (let i = 1; i < middleSample.length; i++) {
-    if (middleSample[i] === middleSample[i-1]) repetitionCount++;
-  }
-
-  if (repetitionCount > sampleSize * 0.8) {
-    validationResult.warnings.push('PDF contains highly repetitive data - may be corrupted');
-  }
-
-  // Log validation result
-  if (validationResult.isValid) {
-    if (validationResult.warnings.length > 0) {
-      console.log(`⚠️ PDF validation for "${frameName}": passed with warnings - ${validationResult.warnings.join(', ')}`);
-    } else {
-      console.log(`✓ PDF validation for "${frameName}": passed`);
-    }
-  } else {
-    console.error(`✗ PDF validation for "${frameName}" FAILED: ${validationResult.errors.join(', ')}`);
-  }
-
-  return validationResult;
-}
-
-// ============================================================================
-// EXPORT FUNCTIONS
-// ============================================================================
-
-// Export selected frames to PDF with quality support and batch handling
-async function exportToPDF(frameOrder, selectedFrameIds, qualityScale = 1.5, qualityString = 'high', exportType = 'raster') {
+function verifySourceColorProfile(job) {
+  if (!jobIsRunning(job)) return false;
   try {
-    const selectedFrames = frameData.filter(frame => selectedFrameIds.includes(frame.id));
-    const orderedFrames = frameOrder.map(id => selectedFrames.find(frame => frame.id === id)).filter(Boolean);
-
-    // Vector export doesn't need batching (no memory concerns for frame data)
-    if (exportType === 'vector') {
-      console.log('Starting HYBRID vector/PNG PDF export for', orderedFrames.length, 'frames at quality scale', qualityScale);
-      await performVectorExport(orderedFrames, frameOrder, selectedFrameIds, qualityScale);
-      return;
+    if (readDocumentColorProfile() !== job.sourceColorProfile) {
+      throw new Error('The document color profile changed during export. Start a new export so every page uses the same source colors.');
     }
-
-    // Raster export - existing batching logic
-    // Calculate memory requirements and determine if batching is needed
-    const BYTES_PER_PIXEL = 4; // RGBA
-    const SAFE_MEMORY_LIMIT = 400 * 1024 * 1024; // 400MB limit
-
-    // Lower quality = better compression (less detail = smaller files)
-    let PNG_COMPRESSION_ESTIMATE;
-    if (qualityScale >= 3.0) {
-      PNG_COMPRESSION_ESTIMATE = 0.50;
-    } else if (qualityScale >= 2.0) {
-      PNG_COMPRESSION_ESTIMATE = 0.45;
-    } else if (qualityScale >= 1.5) {
-      PNG_COMPRESSION_ESTIMATE = 0.35;
-    } else if (qualityScale >= 1.0) {
-      PNG_COMPRESSION_ESTIMATE = 0.30;
-    } else {
-      PNG_COMPRESSION_ESTIMATE = 0.25;
-    }
-
-    console.log('Using memory limit:', (SAFE_MEMORY_LIMIT / 1024 / 1024).toFixed(0) + 'MB',
-                'PNG compression estimate:', (PNG_COMPRESSION_ESTIMATE * 100) + '%',
-                'for quality scale:', qualityScale);
-
-    let totalEstimatedMemory = 0;
-    const frameMemoryEstimates = [];
-
-    for (const frame of orderedFrames) {
-      const scaledWidth = frame.width * qualityScale;
-      const scaledHeight = frame.height * qualityScale;
-      const estimatedBytes = scaledWidth * scaledHeight * BYTES_PER_PIXEL * PNG_COMPRESSION_ESTIMATE;
-
-      frameMemoryEstimates.push({
-        frame: frame,
-        estimatedBytes: estimatedBytes
-      });
-
-      totalEstimatedMemory += estimatedBytes;
-    }
-
-    console.log('Memory estimate:', {
-      totalMB: (totalEstimatedMemory / 1024 / 1024).toFixed(2),
-      limitMB: (SAFE_MEMORY_LIMIT / 1024 / 1024).toFixed(2),
-      frameCount: orderedFrames.length,
-      scale: qualityScale
-    });
-
-    // Check if batching is needed
-    if (totalEstimatedMemory > SAFE_MEMORY_LIMIT) {
-      let batches = [];
-      let currentBatch = [];
-      let currentBatchMemory = 0;
-
-      for (const frameEst of frameMemoryEstimates) {
-        if (currentBatchMemory + frameEst.estimatedBytes > SAFE_MEMORY_LIMIT && currentBatch.length > 0) {
-          batches.push(currentBatch.slice());
-          currentBatch = [frameEst.frame];
-          currentBatchMemory = frameEst.estimatedBytes;
-        } else {
-          currentBatch.push(frameEst.frame);
-          currentBatchMemory += frameEst.estimatedBytes;
-        }
-      }
-
-      if (currentBatch.length > 0) {
-        batches.push(currentBatch);
-      }
-
-      figma.ui.postMessage({
-        type: 'batch-warning',
-        totalMemoryMB: (totalEstimatedMemory / 1024 / 1024).toFixed(1),
-        limitMB: (SAFE_MEMORY_LIMIT / 1024 / 1024).toFixed(1),
-        batchCount: batches.length,
-        batches: batches.map((batch, idx) => ({
-          batchNumber: idx + 1,
-          frameCount: batch.length,
-          frameNames: batch.map(f => f.name)
-        })),
-        exportData: {
-          frameOrder: frameOrder,
-          selectedFrameIds: selectedFrameIds,
-          qualityScale: qualityScale,
-          qualityString: qualityString
-        }
-      });
-
-      return;
-    }
-
-    await performExport(orderedFrames, frameOrder, selectedFrameIds, qualityScale, qualityString, null, 'raster');
-
+    return true;
   } catch (error) {
-    figma.ui.postMessage({
-      type: 'error',
-      message: 'Failed to export frames: ' + error.message
-    });
+    // Terminal state rather than a thrown error prevents native-PDF fallback
+    // and auxiliary-annotation catches from swallowing a changed profile.
+    terminateJob(job, 'export-error', error.message || String(error));
+    return false;
   }
 }
 
-// Perform hybrid vector/PNG PDF export with detailed layer analysis
-// Perform hybrid vector/PNG PDF export - SIMPLIFIED VERSION
-// Due to pdf-lib limitations with Figma PDFs, we export as PNG but with smart analysis
-// Perform hybrid vector/PNG PDF export with MuPDF.js
-async function performVectorExport(orderedFrames, frameOrder, selectedFrameIds, pngFallbackScale = 1.5) {
-  console.log('═══════════════════════════════════════════════════');
-  console.log('HYBRID VECTOR/PNG EXPORT with MuPDF.js');
-  console.log('  Frames:', orderedFrames.length);
-  console.log('  PNG fallback quality:', pngFallbackScale + 'x');
-  console.log('═══════════════════════════════════════════════════');
-
-  figma.ui.postMessage({
-    type: 'vector-export-progress',
-    message: 'Analyzing frames for vector compatibility...',
-    current: 0,
-    total: orderedFrames.length
-  });
-
-  const exportResults = [];
-  const frameAnalysis = [];
-
-  // Phase 1: Detailed layer analysis
-  console.log('\n--- PHASE 1: Layer-by-Layer Analysis ---');
-  for (let i = 0; i < orderedFrames.length; i++) {
-    const frameInfo = orderedFrames[i];
-    const frame = await figma.getNodeByIdAsync(frameInfo.id);
-
-    if (!frame || frame.type !== 'FRAME') {
-      frameAnalysis.push({
-        frameInfo: frameInfo,
-        strategy: 'skip',
-        reason: 'Frame not found or invalid type'
-      });
-      continue;
-    }
-
-    figma.ui.postMessage({
-      type: 'vector-export-progress',
-      message: `Analyzing ${i + 1}/${orderedFrames.length}: ${frameInfo.name}`,
-      current: i,
-      total: orderedFrames.length,
-      phase: 'analysis'
-    });
-
-    const layerAnalysis = await analyzeFrameLayers(frame);
-    const decision = determineExportStrategy([], layerAnalysis);
-
-    frameAnalysis.push({
-      frameInfo: frameInfo,
-      frame: frame,
-      layerAnalysis: layerAnalysis,
-      strategy: decision.strategy,
-      reason: decision.reason,
-      stats: decision.stats
-    });
-
-    console.log(`Frame "${frameInfo.name}":`);
-    console.log(`  Strategy: ${decision.strategy}`);
-    console.log(`  Reason: ${decision.reason}`);
-    if (decision.stats) {
-      console.log(`  Layers: ${decision.stats.vectorLayers} vector, ${decision.stats.rasterLayers} raster`);
-    }
+async function startExport(msg) {
+  if (typeof msg.jobId !== 'string' || !msg.jobId) {
+    failNewJob(msg.jobId, 'The export request is missing its job ID. Please try again.');
+    return;
   }
+  if (activeExportJob) {
+    // A repeated start for the same job must not terminate the live UI job.
+    if (activeExportJob.id !== msg.jobId) failNewJob(msg.jobId, 'Another export is still running. Cancel it or wait for it to finish.');
+    return;
+  }
+  if (usedJobIds.has(msg.jobId)) {
+    failNewJob(msg.jobId, 'This export request has already finished. Start a new export.');
+    return;
+  }
+  const job = {
+    id: msg.jobId,
+    phase: 'preflight',
+    operations: 0,
+    terminal: null,
+    timer: null,
+    pending: null,
+    frames: [],
+    connections: [],
+    nextIndex: 0,
+    watchedPages: new Set(),
+    nodeWatcher: null,
+    styleWatcher: null,
+    transferredBytes: 0,
+    scale: msg.qualityScale === undefined ? 1.5 : msg.qualityScale,
+    exportType: msg.exportType || 'raster',
+    rasterFormat: msg.rasterFormat === undefined ? 'PNG' : msg.rasterFormat,
+    fitOversized: msg.fitOversized === undefined ? false : msg.fitOversized,
+    requestedColorProfile: msg.colorProfile === undefined ? 'DOCUMENT' : msg.colorProfile,
+    sourceColorProfile: null,
+    exportColorProfile: null,
+    outputColorMode: msg.colorProfile === 'CMYK' ? 'CMYK' : 'RGB'
+  };
+  activeExportJob = job;
+  usedJobIds.add(job.id);
+  listRevision++;
 
-  // Phase 2: Export based on strategy (PDF or PNG)
-  console.log('\n--- PHASE 2: Export ---');
-
-  let totalVectorLayers = 0;
-  let totalRasterLayers = 0;
-
-  for (let i = 0; i < frameAnalysis.length; i++) {
-    const analysis = frameAnalysis[i];
-    const frameInfo = analysis.frameInfo;
-
-    if (analysis.strategy === 'skip') {
-      exportResults.push({
-        id: frameInfo.id,
-        name: frameInfo.name,
-        width: frameInfo.width,
-        height: frameInfo.height,
-        error: analysis.reason,
-        skipped: true
-      });
-      continue;
+  await runJobOperation(job, async () => {
+    job.sourceColorProfile = readDocumentColorProfile();
+    job.exportColorProfile = resolveExportColorProfile(job.requestedColorProfile, job.sourceColorProfile);
+    const sourceChanged = () => {
+      if (jobIsRunning(job) && job.phase !== 'awaiting-finish') {
+        if (!verifySourceColorProfile(job)) return;
+        terminateJob(job, 'export-error', 'The design changed during export. Wait until editing is finished, then export again so all pages and links match.');
+      }
+    };
+    job.nodeWatcher = sourceChanged;
+    job.styleWatcher = sourceChanged;
+    figma.on('stylechange', sourceChanged);
+    // Page-level events work with dynamic-page access; documentchange would
+    // require loading the entire document, which is costly for large files.
+    watchSourcePage(job, figma.currentPage);
+    if (!Number.isFinite(job.scale) || job.scale <= 0) throw new Error('Export quality must be a positive number.');
+    if (job.exportType !== 'vector' && job.exportType !== 'raster') throw new Error('Choose Vector or Rasterized export.');
+    if (job.rasterFormat !== 'PNG' && job.rasterFormat !== 'JPG') throw new Error('Choose PNG or JPG for raster pages.');
+    if (typeof job.fitOversized !== 'boolean') throw new Error('Fit oversized pages must be enabled or disabled.');
+    if (job.outputColorMode === 'CMYK') {
+      // The UI converts explicit sRGB samples with the chosen printer profile.
+      // Raster CMYK uses PNG; vector CMYK must retain its native PDF or fail.
+      job.rasterFormat = 'PNG';
     }
-
-    figma.ui.postMessage({
-      type: 'vector-export-progress',
-      message: `Exporting ${i + 1}/${orderedFrames.length}: ${frameInfo.name}`,
-      current: i + 1,
-      total: orderedFrames.length,
-      phase: 'export',
-      strategy: analysis.strategy
-    });
-
-    const frame = analysis.frame;
-
-    // Count layer stats
-    if (analysis.stats) {
-      totalVectorLayers += analysis.stats.vectorLayers || 0;
-      totalRasterLayers += analysis.stats.rasterLayers || 0;
-    }
-
-    const hasRasterLayers = analysis.layerAnalysis && analysis.layerAnalysis.rasterLayers > 0;
-
-    if (hasRasterLayers) {
-      console.log(`🧩 Layered export: "${frameInfo.name}" (${analysis.reason})`);
-
-      if (analysis.layerAnalysis && analysis.layerAnalysis.vectorLayers === 0) {
-        console.log(`📷 PNG Export: "${frameInfo.name}" (all raster layers)`);
-        try {
-          const pngData = await frame.exportAsync({
-            format: 'PNG',
-            constraint: { type: 'SCALE', value: pngFallbackScale }
-          });
-          exportResults.push({
-            id: frameInfo.id,
-            name: frameInfo.name,
-            width: frameInfo.width,
-            height: frameInfo.height,
-            pngData: pngData,
-            isPng: true,
-            reason: 'All layers rasterized',
-            layerStats: analysis.stats
-          });
-          console.log(`✓ PNG: ${pngData.length} bytes`);
-        } catch (error) {
-          console.error(`✗ PNG export failed:`, error);
-          exportResults.push({
-            id: frameInfo.id,
-            name: frameInfo.name,
-            width: frameInfo.width,
-            height: frameInfo.height,
-            error: error.message,
-            skipped: true
-          });
-        }
+    const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
+    const selectedIds = new Set(ids);
+    const liveFrames = [];
+    const unavailableIds = new Set();
+    for (const id of ids) {
+      const frame = await figma.getNodeByIdAsync(id);
+      if (!verifySourceColorProfile(job)) return;
+      if (!frame || frame.removed || frame.type !== 'FRAME') {
+        unavailableIds.add(id);
         continue;
       }
-
-      const segments = buildFrameSegments(frame);
-      const hasRasterSegments = segments.some(segment => segment.type === 'raster');
-
-      if (!hasRasterSegments) {
-        console.log(`📄 Vector PDF Export: "${frameInfo.name}" (no raster segments detected)`);
-        try {
-          const pdfData = await frame.exportAsync({ format: 'PDF' });
-          exportResults.push({
-            id: frameInfo.id,
-            name: frameInfo.name,
-            width: frameInfo.width,
-            height: frameInfo.height,
-            pdfData: pdfData,
-            isPng: false,
-            layerStats: analysis.stats
-          });
-          console.log(`✓ Vector PDF: ${pdfData.length} bytes`);
-        } catch (error) {
-          console.error(`✗ Vector PDF export failed, trying PNG fallback:`, error);
-          try {
-            const pngData = await frame.exportAsync({
-              format: 'PNG',
-              constraint: { type: 'SCALE', value: pngFallbackScale }
-            });
-            exportResults.push({
-              id: frameInfo.id,
-              name: frameInfo.name,
-              width: frameInfo.width,
-              height: frameInfo.height,
-              pngData: pngData,
-              isPng: true,
-              reason: `PDF export failed: ${error.message}`,
-              layerStats: analysis.stats
-            });
-            console.log(`✓ PNG fallback: ${pngData.length} bytes`);
-          } catch (pngError) {
-            console.error(`✗ PNG fallback also failed:`, pngError);
-            exportResults.push({
-              id: frameInfo.id,
-              name: frameInfo.name,
-              width: frameInfo.width,
-              height: frameInfo.height,
-              error: `Both PDF and PNG failed: ${error.message}`,
-              skipped: true
-            });
-          }
-        }
-        continue;
+      watchSourcePage(job, frame);
+      liveFrames.push(frame);
+    }
+    if (unavailableIds.size) {
+      // Discard only nodes that were proven unavailable. Keep every valid list
+      // entry so a failed preflight does not force the user to rebuild the list.
+      listRevision++;
+      frameData = frameData.filter(frame => !unavailableIds.has(frame.id));
+      connections = connections.filter(link => !unavailableIds.has(link.fromFrameId) && !unavailableIds.has(link.toFrameId));
+      sendFrameList([]);
+      throw new Error(`Removed ${unavailableIds.size} unavailable frame${unavailableIds.size === 1 ? '' : 's'} from the export list. Review the remaining frames and export again.`);
+    }
+    for (const frame of liveFrames) {
+      validateFrameSize(frame);
+      const metadata = describeFrame(frame);
+      validateFrameSize(metadata);
+      const unsupportedMode = unsupportedPdfBlendMode(frame);
+      if (unsupportedMode && job.outputColorMode === 'CMYK' && job.exportType === 'vector') {
+        throw new Error(`“${metadata.name}” uses a blend mode that Figma cannot export as vector PDF. Choose Rasterized to export this frame in CMYK.`);
       }
+      if (job.exportType === 'raster' || unsupportedMode) rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
+      job.frames.push(metadata);
+    }
+    for (const frame of liveFrames) {
+      await scanNodeForConnections(frame, frame.id, 0, selectedIds, job.connections);
+      if (!verifySourceColorProfile(job)) return;
+    }
+    job.connections = job.connections.filter(link =>
+      selectedIds.has(link.fromFrameId) && (link.type === 'external' || selectedIds.has(link.toFrameId))
+    );
+    // Refresh list metadata too, without changing the user's export order.
+    const freshById = new Map(job.frames.map(frame => [frame.id, frame]));
+    frameData = frameData.map(frame => freshById.get(frame.id) || frame);
+    connections = connections.filter(link => !selectedIds.has(link.fromFrameId)).concat(job.connections);
+    figma.ui.postMessage({ type: 'export-start', jobId: job.id, frames: job.frames, connections: job.connections, exportColorProfile: job.exportColorProfile, outputColorMode: job.outputColorMode, warnings: [] });
+    if (!jobIsRunning(job)) return;
+    await exportPage(job, 0);
+  });
+}
 
-      const nodes = collectAllNodes(frame);
-      const state = captureNodeState(nodes);
-      const segmentExports = [];
-      const hasFrameBackground = ('fills' in frame && hasVisiblePaints(frame.fills)) ||
-                                 ('strokes' in frame && hasVisiblePaints(frame.strokes));
+function assertUnchangedDimensions(frame, metadata) {
+  const bounds = frame.removed ? null : getFrameExportBounds(frame);
+  if (!bounds || bounds.width !== metadata.width || bounds.height !== metadata.height) {
+    throw new Error(`“${metadata.name}” changed size during export. Start the export again to use its current dimensions.`);
+  }
+}
 
+function checkedExportBytes(data, name) {
+  if (!(data instanceof Uint8Array) || data.byteLength === 0) {
+    throw new Error(`Figma returned no usable export data for “${name}”.`);
+  }
+  return data;
+}
+
+function colorProfileProbeScale(frame) {
+  // This image is only a color-metadata carrier, never a PDF page image.
+  let scale = Math.min(1, 64 / Math.max(frame.width, frame.height));
+  if (Math.ceil(frame.width * scale) > 64 || Math.ceil(frame.height * scale) > 64) {
+    scale *= 1 - Number.EPSILON;
+  }
+  if (!Number.isFinite(scale) || scale <= 0 || Math.ceil(frame.width * scale) > 64 || Math.ceil(frame.height * scale) > 64) {
+    throw new Error(`Could not obtain a bounded color-profile sample for “${frame.name}”. Choose sRGB or Display P3 explicitly.`);
+  }
+  return scale;
+}
+
+function checkedColorProfileProbe(data, name) {
+  checkedExportBytes(data, name);
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82];
+  const read32 = offset => data[offset] * 16777216 + data[offset + 1] * 65536 + data[offset + 2] * 256 + data[offset + 3];
+  if (data.byteLength < 33 || signature.some((byte, index) => data[index] !== byte) ||
+      read32(16) < 1 || read32(16) > 64 || read32(20) < 1 || read32(20) > 64) {
+    throw new Error(`Figma returned an invalid color-profile sample for “${name}”. Choose sRGB or Display P3 explicitly.`);
+  }
+  // The assembler validates CRCs, ICC data and sRGB metadata before using it.
+  return data;
+}
+
+async function exportPage(job, index, options = {}) {
+  if (!verifySourceColorProfile(job)) return;
+  job.phase = 'exporting';
+  const metadata = job.frames[index];
+  const frame = await figma.getNodeByIdAsync(metadata.id);
+  if (!verifySourceColorProfile(job)) return;
+  if (!frame || frame.type !== 'FRAME') throw new Error(`“${metadata.name}” is no longer available. Start the export again.`);
+  assertUnchangedDimensions(frame, metadata);
+  const warnings = [];
+  const unsupportedMode = unsupportedPdfBlendMode(frame);
+  const vectorCmyk = job.outputColorMode === 'CMYK' && job.exportType === 'vector';
+  if (vectorCmyk && (unsupportedMode || options.forceRaster)) {
+    throw new Error(`“${metadata.name}” cannot be exported as vector CMYK. Choose Rasterized to export this frame in CMYK.`);
+  }
+  let format = job.exportType === 'raster' || options.forceRaster || unsupportedMode ? job.rasterFormat : 'PDF';
+  let data;
+  let annotationPdfData = options.annotationPdfData;
+  let colorProfilePngData;
+  let nativeExportFailed = false;
+  if (unsupportedMode && job.exportType === 'vector') {
+    warnings.push(`“${metadata.name}” uses ${unsupportedMode === 'PLUS_DARKER' || unsupportedMode === 'LINEAR_BURN' ? 'Plus darker' : 'Plus lighter'}, which Figma does not support in PDF. This page is rasterized.`);
+  }
+  if (options.forceRaster) warnings.push(`“${metadata.name}” was rasterized because its native PDF could not be merged.`);
+  if (format === 'PDF') {
+    try {
+      data = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true, colorProfile: job.exportColorProfile });
+      if (!verifySourceColorProfile(job)) return;
+      data = checkedExportBytes(data, metadata.name);
+    } catch (error) {
+      if (!verifySourceColorProfile(job)) return;
+      if (vectorCmyk) throw new Error(`Figma could not export the native PDF for “${metadata.name}”: ${error.message || error}. Choose Rasterized to export this frame in CMYK.`);
+      nativeExportFailed = true;
+      format = job.rasterFormat;
+      warnings.push(`“${metadata.name}” was rasterized because Figma could not export its PDF: ${error.message || error}`);
+    }
+  }
+  if (format === 'PNG' || format === 'JPG') {
+    const plan = rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
+    if (plan.scale < job.scale) {
+      const limit = job.outputColorMode === 'CMYK' ? ' CMYK beta is limited to 8 million pixels and 16,384 pixels per side.' : '';
+      warnings.push(`“${metadata.name}” was fitted to ${plan.width}×${plan.height} pixels: requested ${Number(job.scale.toPrecision(4))}×, actual ${Number(plan.scale.toPrecision(4))}×. Its PDF page dimensions are unchanged.${limit}`);
+    }
+    const settings = { format, useAbsoluteBounds: true, colorProfile: job.exportColorProfile, constraint: { type: 'SCALE', value: plan.scale } };
+    data = await frame.exportAsync(settings);
+    if (!verifySourceColorProfile(job)) return;
+    data = checkedExportBytes(data, metadata.name);
+    if (format === 'JPG' && job.exportColorProfile === 'DOCUMENT') {
+      // Figma's legacy JPEG export may omit ICC metadata. A tiny PNG exported
+      // with the same DOCUMENT setting lets the UI identify actual colors.
       try {
-        if (hasFrameBackground) {
-          applySegmentState(frame, nodes, [frame], state);
-          const bgPdf = await frame.exportAsync({ format: 'PDF' });
-          segmentExports.push({
-            type: 'vector',
-            pdfData: bgPdf,
-            reason: 'frame background'
-          });
-          console.log(`✓ Background vector segment: ${bgPdf.length} bytes`);
-        }
-
-        for (let s = 0; s < segments.length; s++) {
-          const segment = segments[s];
-          applySegmentState(frame, nodes, segment.nodes, state);
-
-          if (segment.type === 'raster') {
-            const pngData = await frame.exportAsync({
-              format: 'PNG',
-              constraint: { type: 'SCALE', value: pngFallbackScale }
-            });
-            segmentExports.push({
-              type: 'png',
-              pngData: pngData
-            });
-            console.log(`✓ Raster segment ${s + 1}/${segments.length}: ${pngData.length} bytes`);
-          } else {
-            const pdfData = await frame.exportAsync({ format: 'PDF' });
-            segmentExports.push({
-              type: 'vector',
-              pdfData: pdfData
-            });
-            console.log(`✓ Vector segment ${s + 1}/${segments.length}: ${pdfData.length} bytes`);
-          }
-        }
-
-        exportResults.push({
-          id: frameInfo.id,
-          name: frameInfo.name,
-          width: frameInfo.width,
-          height: frameInfo.height,
-          segments: segmentExports,
-          layerStats: analysis.stats
-        });
+        colorProfilePngData = await frame.exportAsync({ format: 'PNG', useAbsoluteBounds: true,
+          colorProfile: 'DOCUMENT', constraint: { type: 'SCALE', value: colorProfileProbeScale(metadata) } });
+        if (!verifySourceColorProfile(job)) return;
+        colorProfilePngData = checkedColorProfileProbe(colorProfilePngData, metadata.name);
       } catch (error) {
-        console.error(`✗ Layered export failed:`, error);
-        exportResults.push({
-          id: frameInfo.id,
-          name: frameInfo.name,
-          width: frameInfo.width,
-          height: frameInfo.height,
-          error: `Layered export failed: ${error.message}`,
-          skipped: true
-        });
-      } finally {
-        restoreNodeState(nodes, state);
+        if (!verifySourceColorProfile(job)) return;
+        throw new Error(`Could not verify the JPEG color profile for “${metadata.name}”: ${error.message || error}. Choose sRGB or Display P3 explicitly.`);
       }
-    } else {
-      // Export as vector PDF
-      console.log(`📄 Vector PDF Export: "${frameInfo.name}" (${analysis.reason})`);
-
+    }
+    const hasTextLinks = job.connections.some(link => link.fromFrameId === metadata.id && link.source === 'text');
+    if (!hasTextLinks) annotationPdfData = undefined;
+    if (hasTextLinks && !annotationPdfData && !nativeExportFailed) {
       try {
-        const pdfData = await frame.exportAsync({ format: 'PDF' });
-
-        exportResults.push({
-          id: frameInfo.id,
-          name: frameInfo.name,
-          width: frameInfo.width,
-          height: frameInfo.height,
-          pdfData: pdfData,
-          isPng: false,
-          layerStats: analysis.stats
-        });
-
-        console.log(`✓ Vector PDF: ${pdfData.length} bytes`);
-
+        annotationPdfData = await frame.exportAsync({ format: 'PDF', useAbsoluteBounds: true, colorProfile: job.exportColorProfile });
+        if (!verifySourceColorProfile(job)) return;
+        annotationPdfData = checkedExportBytes(annotationPdfData, metadata.name);
       } catch (error) {
-        console.error(`✗ Vector PDF export failed, trying PNG fallback:`, error);
-
-        try {
-          const pngData = await frame.exportAsync({
-            format: 'PNG',
-            constraint: { type: 'SCALE', value: pngFallbackScale }
-          });
-
-          exportResults.push({
-            id: frameInfo.id,
-            name: frameInfo.name,
-            width: frameInfo.width,
-            height: frameInfo.height,
-            pngData: pngData,
-            isPng: true,
-            reason: `PDF export failed: ${error.message}`,
-            layerStats: analysis.stats
-          });
-
-          console.log(`✓ PNG fallback: ${pngData.length} bytes`);
-        } catch (pngError) {
-          console.error(`✗ PNG fallback also failed:`, pngError);
-          exportResults.push({
-            id: frameInfo.id,
-            name: frameInfo.name,
-            width: frameInfo.width,
-            height: frameInfo.height,
-            error: `Both PDF and PNG failed: ${error.message}`,
-            skipped: true
-          });
-        }
+        if (!verifySourceColorProfile(job)) return;
+        annotationPdfData = undefined;
+        warnings.push(`Precise text links could not be recovered for “${metadata.name}”: ${error.message || error}`);
       }
+    } else if (hasTextLinks && nativeExportFailed) {
+      warnings.push(`Precise text links could not be recovered for “${metadata.name}” because its native PDF export failed.`);
     }
   }
-
-  // Summary
-  const successfulExports = exportResults.filter(r => !r.skipped);
-  const pngExports = exportResults.filter(r => r.isPng);
-  const vectorExports = exportResults.filter(r => r.pdfData && !r.isPng);
-  let pngSegments = 0;
-  let vectorSegments = 0;
-  for (const result of exportResults) {
-    if (result.segments) {
-      for (const segment of result.segments) {
-        if (segment.type === 'png') {
-          pngSegments++;
-        } else if (segment.type === 'vector') {
-          vectorSegments++;
-        }
-      }
+  if (!verifySourceColorProfile(job)) return;
+  assertUnchangedDimensions(frame, metadata);
+  const transferBytes = data.byteLength + (annotationPdfData ? annotationPdfData.byteLength : 0) + (colorProfilePngData ? colorProfilePngData.byteLength : 0);
+  if (transferBytes > EXPORT_LIMITS.maxPageTransferBytes) {
+    throw new Error(`“${metadata.name}” exceeds the provisional 128 MiB per-page transfer limit, including its text-link and color-profile data. Reduce raster quality or simplify this frame.`);
+  }
+  job.transferredBytes += transferBytes;
+  const pending = { index, format, nativePdfData: format === 'PDF' ? data : null };
+  job.pending = pending;
+  job.phase = 'awaiting-ack';
+  job.timer = setTimeout(() => {
+    if (jobIsRunning(job) && job.pending === pending) {
+      terminateJob(job, 'export-error', `PDF processing did not acknowledge page ${index + 1} within two minutes. Start a new export.`);
     }
-  }
-  const failedExports = exportResults.filter(r => r.skipped);
+  }, EXPORT_LIMITS.acknowledgementTimeoutMs);
+  const message = { type: 'export-page', jobId: job.id, index, frame: metadata, format, data, exportColorProfile: job.exportColorProfile, outputColorMode: job.outputColorMode, warnings };
+  if (annotationPdfData) message.annotationPdfData = annotationPdfData;
+  if (colorProfilePngData) message.colorProfilePngData = colorProfilePngData;
+  figma.ui.postMessage(message);
+}
 
-  console.log('\n═══════════════════════════════════════════════════');
-  console.log('HYBRID EXPORT SUMMARY:');
-  console.log(`  Total pages: ${orderedFrames.length}`);
-  console.log(`  Pure vector PDFs: ${vectorExports.length}`);
-  console.log(`  High-quality PNGs: ${pngExports.length} (@ ${pngFallbackScale}x)`);
-  if (vectorSegments > 0 || pngSegments > 0) {
-    console.log(`  Vector segments: ${vectorSegments}`);
-    console.log(`  Raster segments: ${pngSegments}`);
-  }
-  console.log(`  Failed: ${failedExports.length}`);
-  console.log(`  Total layers kept as vector: ${totalVectorLayers}`);
-  console.log(`  Total layers rasterized: ${totalRasterLayers}`);
-  console.log('═══════════════════════════════════════════════════\n');
+function pauseForSavedPart(msg) {
+  const job = matchingJob(msg.jobId);
+  if (!jobIsRunning(job) || job.phase !== 'awaiting-ack' || !job.pending || job.pending.index !== msg.index) return;
+  if (!verifySourceColorProfile(job)) return;
+  clearJobTimer(job);
+  job.pending.nativePdfData = null;
+  job.phase = 'awaiting-part';
+  // The page has been accepted into a completed part. Keep its document snapshot
+  // guarded while the user saves/continues, without an unbounded reserved job.
+  job.timer = setTimeout(() => {
+    if (jobIsRunning(job) && job.phase === 'awaiting-part') {
+      terminateJob(job, 'export-error', 'Continuing the next PDF part did not start within 15 minutes. Start a new export to continue.');
+    }
+  }, EXPORT_LIMITS.partContinuationTimeoutMs);
+}
 
-  if (successfulExports.length === 0) {
-    figma.ui.postMessage({
-      type: 'error',
-      message: 'No frames could be exported. Try using Rasterized mode.'
-    });
+async function acknowledgePage(msg) {
+  const job = matchingJob(msg.jobId);
+  if (!jobIsRunning(job) || !job.pending || job.pending.index !== msg.index ||
+      (job.phase !== 'awaiting-ack' && job.phase !== 'awaiting-part')) return;
+  const pending = job.pending;
+  // A saved part cannot be rewritten, and raster replacements cannot retry.
+  if (msg.fallback === true && (job.phase === 'awaiting-part' || pending.format !== 'PDF')) return;
+  if (msg.fallback === true && job.outputColorMode === 'CMYK' && job.exportType === 'vector') {
+    terminateJob(job, 'export-error', 'This page could not be processed as vector CMYK. Choose Rasterized to export it in CMYK.');
     return;
   }
-
-  // Filter connections
-  const exportedFrameIds = successfulExports.map(b => b.id);
-  const relevantConnections = connections.filter(conn =>
-    exportedFrameIds.includes(conn.fromFrameId) &&
-    (conn.type === 'external' || exportedFrameIds.includes(conn.toFrameId))
-  );
-
-  console.log(`Sending ${successfulExports.length} exports to MuPDF.js (${vectorExports.length} vector, ${pngExports.length} PNG)`);
-
-  const summary = {
-    total: orderedFrames.length,
-    vector: vectorExports.length,
-    png: pngExports.length,
-    vectorSegments: vectorSegments,
-    rasterSegments: pngSegments,
-    failed: failedExports.length,
-    vectorLayers: totalVectorLayers,
-    rasterLayers: totalRasterLayers,
-    quality: pngFallbackScale
-  };
-
-  const getByteLength = (value) => {
-    if (!value) return 0;
-    if (typeof value.byteLength === 'number') return value.byteLength;
-    if (typeof value.length === 'number') return value.length;
-    return 0;
-  };
-
-  const estimateExportBytes = (result) => {
-    let total = 0;
-    total += getByteLength(result.pdfData);
-    total += getByteLength(result.pngData);
-    if (result.segments) {
-      for (const segment of result.segments) {
-        total += getByteLength(segment.pdfData);
-        total += getByteLength(segment.pngData);
-      }
+  if (!verifySourceColorProfile(job)) return;
+  const annotationPdfData = msg.fallback === true &&
+    job.connections.some(link => link.fromFrameId === job.frames[msg.index].id && link.source === 'text')
+    ? pending.nativePdfData : undefined;
+  pending.nativePdfData = null;
+  clearJobTimer(job);
+  job.pending = null;
+  await runJobOperation(job, async () => {
+    if (msg.fallback === true) {
+      await exportPage(job, msg.index, { forceRaster: true, annotationPdfData });
+      return;
     }
-    return total;
-  };
-
-  const MAX_CHUNK_BYTES = 20 * 1024 * 1024;
-  const exportChunks = [];
-  let currentChunk = [];
-  let currentBytes = 0;
-
-  for (const result of successfulExports) {
-    const size = estimateExportBytes(result);
-    if (currentChunk.length > 0 && currentBytes + size > MAX_CHUNK_BYTES) {
-      exportChunks.push(currentChunk);
-      currentChunk = [result];
-      currentBytes = size;
+    job.nextIndex = msg.index + 1;
+    if (job.nextIndex < job.frames.length) {
+      await exportPage(job, job.nextIndex);
     } else {
-      currentChunk.push(result);
-      currentBytes += size;
+      job.phase = 'awaiting-finish';
+      removeSourceWatchers(job);
+      job.timer = setTimeout(() => {
+        if (jobIsRunning(job) && job.phase === 'awaiting-finish') {
+          terminateJob(job, 'export-error', 'Saving the PDF did not finish within two minutes. Start a new export.');
+        }
+      }, EXPORT_LIMITS.finishTimeoutMs);
+      figma.ui.postMessage({ type: 'export-complete', jobId: job.id });
     }
-  }
-
-  if (currentChunk.length > 0) {
-    exportChunks.push(currentChunk);
-  }
-
-  if (exportChunks.length <= 1) {
-    figma.ui.postMessage({
-      type: 'merge-vector-pdfs',
-      pdfBuffers: successfulExports,
-      connections: relevantConnections,
-      frameOrder: frameOrder,
-      failedFrames: failedExports,
-      summary: summary
-    });
-    return;
-  }
-
-  figma.ui.postMessage({
-    type: 'merge-vector-pdfs-start',
-    totalChunks: exportChunks.length,
-    totalBuffers: successfulExports.length,
-    connections: relevantConnections,
-    frameOrder: frameOrder,
-    failedFrames: failedExports,
-    summary: summary
-  });
-
-  for (let i = 0; i < exportChunks.length; i++) {
-    figma.ui.postMessage({
-      type: 'merge-vector-pdfs-chunk',
-      chunkIndex: i + 1,
-      totalChunks: exportChunks.length,
-      pdfBuffers: exportChunks[i]
-    });
-  }
-
-  figma.ui.postMessage({
-    type: 'merge-vector-pdfs-end'
   });
 }
 
-// Handle PNG fallback request from UI (when pdf-lib fails to parse)
-async function handlePngFallbackRequest(frameId, frameIndex, qualityScale = 1.5) {
-  console.log(`UI requested PNG fallback for frame ${frameId} at ${qualityScale}x quality`);
-
-  const frame = await figma.getNodeByIdAsync(frameId);
-
-  if (!frame || frame.type !== 'FRAME') {
-    figma.ui.postMessage({
-      type: 'png-fallback-result',
-      frameId: frameId,
-      frameIndex: frameIndex,
-      success: false,
-      error: 'Frame not found'
-    });
-    return;
-  }
-
-  try {
-    const pngData = await frame.exportAsync({
-      format: 'PNG',
-      constraint: { type: 'SCALE', value: qualityScale }
-    });
-
-    figma.ui.postMessage({
-      type: 'png-fallback-result',
-      frameId: frameId,
-      frameIndex: frameIndex,
-      success: true,
-      pngData: pngData,
-      width: frame.width,
-      height: frame.height,
-      name: frame.name
-    });
-
-    console.log(`✓ PNG fallback sent for "${frame.name}" at ${qualityScale}x (${pngData.length} bytes)`);
-  } catch (error) {
-    figma.ui.postMessage({
-      type: 'png-fallback-result',
-      frameId: frameId,
-      frameIndex: frameIndex,
-      success: false,
-      error: error.message
-    });
-  }
+figma.ui.postMessage({ type: 'plugin-ready', message: 'Select frames in Figma to add them to the export list' });
+const initiallySelectedFrames = figma.currentPage.selection.filter(node => node.type === 'FRAME');
+if (initiallySelectedFrames.length) {
+  autoAddSelectedFrames(initiallySelectedFrames).catch(error => console.warn('Could not refresh the initial selection:', error));
 }
-
-// Perform the actual raster export (extracted for reuse in batch mode)
-async function performExport(orderedFrames, frameOrder, selectedFrameIds, qualityScale, qualityString, batchInfo = null, exportType = 'raster') {
-  console.log('Exporting PDF with quality scale:', qualityScale, 'quality string:', qualityString, 'type:', exportType);
-
-  const frameImages = [];
-  for (let i = 0; i < orderedFrames.length; i++) {
-    const frameInfo = orderedFrames[i];
-    const frame = await figma.getNodeByIdAsync(frameInfo.id);
-
-    if (frame && frame.type === 'FRAME') {
-      const progressMsg = batchInfo
-        ? `Exporting batch ${batchInfo.current}/${batchInfo.total}: frame ${i + 1}/${orderedFrames.length}`
-        : `Exporting frame ${i + 1}/${orderedFrames.length}`;
-
-      console.log(progressMsg);
-
-      const imageData = await frame.exportAsync({
-        format: 'PNG',
-        constraint: { type: 'SCALE', value: qualityScale }
-      });
-
-      frameImages.push({
-        id: frameInfo.id,
-        name: frameInfo.name,
-        width: frameInfo.width,
-        height: frameInfo.height,
-        imageData: imageData
-      });
-    }
-  }
-
-  const relevantConnections = connections.filter(conn =>
-    selectedFrameIds.includes(conn.fromFrameId) && (conn.type === 'external' || selectedFrameIds.includes(conn.toFrameId))
-  );
-
-  figma.ui.postMessage({
-    type: 'generate-pdf',
-    frames: frameImages,
-    connections: relevantConnections,
-    frameOrder: frameOrder,
-    quality: qualityString,
-    batchInfo: batchInfo
-  });
-}
-
-// Initialize - start with empty list
-figma.ui.postMessage({
-  type: 'plugin-ready',
-  message: 'Select frames in Figma to add them to the export list'
-});

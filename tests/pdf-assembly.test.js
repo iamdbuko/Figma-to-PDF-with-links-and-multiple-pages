@@ -1,0 +1,383 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const PDFLib = require('pdf-lib');
+const { createPdfColorManagement } = require('../src/color-profiles.js');
+const { createPdfLoader } = require('../src/pdf-loader.js');
+const { createVectorCmykConverter } = require('../src/vector-cmyk.js');
+const { createPdfImageResampler } = require('../src/pdf-image-resolution.js');
+
+const root = path.resolve(__dirname, '..');
+const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
+const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
+const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
+const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfLoader', 'createPdfColorManagement', 'createVectorCmykConverter', 'createPdfImageResampler', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfLoader, createPdfColorManagement, createVectorCmykConverter, createPdfImageResampler);
+const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
+const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
+const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));
+const frame = { id: 'first', name: 'Native links', width: 600, height: 400 };
+const textLinks = ['first', 'second', 'third'].map(name => ({
+  fromFrameId: 'first', type: 'external', source: 'text', textNodeId: 'text1', needsTextGeometry: true,
+  toUrl: `https://example.com/${name}`, elementBounds: { x: 40, y: 59, width: 280, height: 120 }
+}));
+const plainRecords = (doc, page) => JSON.parse(JSON.stringify(nativeLinkRecords(doc, page).map(({ target, rect }) => ({ target, rect }))));
+
+test('native vector import preserves five exact Figma text rectangles without whole-node overlays', async () => {
+  const source = await PDFLib.PDFDocument.load(fixture);
+  const expected = plainRecords(source, source.getPage(0));
+  assert.equal(expected.length, 5);
+  assert.equal(expected.filter(record => record.target.endsWith('/third')).length, 3);
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: fixture });
+  const result = await addExportLinks(output, [page], [frame], textLinks);
+  assert.equal(result.added, 0);
+  assert.equal(result.skipped, 0);
+  const reloaded = await PDFLib.PDFDocument.load(await output.save());
+  assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), expected);
+  assert.ok(expected[0].rect[2] < expected[1].rect[0], 'neighboring URLs keep separate clickable regions');
+});
+
+test('raster pages retain precise native text annotations without copying the native page contents', async () => {
+  const source = await PDFLib.PDFDocument.load(fixture);
+  const expected = plainRecords(source, source.getPage(0));
+  const output = await PDFLib.PDFDocument.create();
+  const { page, warnings } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: fixture });
+  assert.equal(warnings.length, 0);
+  assert.deepEqual(page.getSize(), { width: 600, height: 400 });
+  await addExportLinks(output, [page], [frame], textLinks);
+  assert.deepEqual(plainRecords(output, page), expected);
+  const saved = await output.save();
+  assert.ok(saved.length < fixture.length / 2, 'only annotation geometry, not vector content, was copied');
+});
+
+test('Vector image resolution changes saved RGB and CMYK image pixels without changing native links or page dimensions', async () => {
+  const source = await PDFLib.PDFDocument.load(fixture), nativePage = source.getPage(0), name = PDFLib.PDFName.of;
+  const expectedLinks = plainRecords(source, nativePage);
+  const image = source.context.register(source.context.flateStream(new Uint8Array(800 * 400 * 3).fill(192), {
+    Type: 'XObject', Subtype: 'Image', Width: 800, Height: 400, BitsPerComponent: 8, ColorSpace: 'DeviceRGB'
+  }));
+  const resources = nativePage.node.Resources();
+  if (!resources.has(name('XObject'))) resources.set(name('XObject'), source.context.obj({}));
+  resources.lookup(name('XObject')).set(name('ResolutionImage'), image);
+  nativePage.pushOperators(PDFLib.pushGraphicsState(), PDFLib.concatTransformationMatrix(100, 0, 0, 50, 350, 200), PDFLib.drawObject('ResolutionImage'), PDFLib.popGraphicsState());
+  const bytes = await source.save();
+  const constants = await import('lcms-wasm');
+  const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
+  const { createCmykExporter } = require('../src/cmyk.js');
+  const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc')));
+  try {
+    for (const outputColorMode of ['RGB', 'CMYK']) for (const imageDpi of [null, 72, 144]) {
+      const output = await PDFLib.PDFDocument.create();
+      const { page } = await appendExportPage(output, { frame, format: 'PDF', data: bytes, exportColorProfile: 'SRGB', outputColorMode }, { imageDpi, cmykSession: outputColorMode === 'CMYK' ? session : undefined });
+      const saved = await PDFLib.PDFDocument.load(await output.save()), resultPage = saved.getPage(0);
+      assert.deepEqual(plainRecords(saved, resultPage), expectedLinks);
+      assert.deepEqual(resultPage.getSize(), page.getSize());
+      const resultImage = resultPage.node.Resources().lookup(name('XObject')).lookup(name('ResolutionImage'));
+      assert.equal(resultImage.dict.lookup(name('Width')).asNumber(), imageDpi === null ? 800 : 100 * imageDpi / 72);
+      assert.equal(resultImage.dict.lookup(name('Height')).asNumber(), imageDpi === null ? 400 : 50 * imageDpi / 72);
+      const space = resultImage.dict.lookup(name('ColorSpace'));
+      if (outputColorMode === 'CMYK') assert.equal(saved.context.lookup(space.get(1)).dict.lookup(name('N')).asNumber(), 4);
+      else assert.equal(space.toString(), '/DeviceRGB');
+    }
+  } finally { session.close(); }
+});
+
+test('real CMYK assembly retains exact native text-link rectangles in vector and raster modes', async () => {
+  const constants = await import('lcms-wasm');
+  const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
+  const { createCmykExporter } = require('../src/cmyk.js');
+  const profile = fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
+  const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(profile);
+  try {
+    for (const format of ['PDF', 'PNG']) {
+    const output = await PDFLib.PDFDocument.create();
+    const { page, warnings } = await appendExportPage(output, { frame, format, data: format === 'PDF' ? fixture : png, annotationPdfData: format === 'PNG' ? fixture : undefined, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session });
+    assert.deepEqual(warnings, []);
+    await addExportLinks(output, [page], [frame], textLinks);
+    const reloaded = await PDFLib.PDFDocument.load(await output.save());
+    const original = await PDFLib.PDFDocument.load(fixture);
+    assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), plainRecords(original, original.getPage(0)));
+    assert.deepEqual(reloaded.getPage(0).getSize(), { width: 600, height: 400 });
+    const profiles = reloaded.context.enumerateIndirectObjects().map(([, object]) => object).filter(object => object instanceof PDFLib.PDFRawStream && object.dict.has(PDFLib.PDFName.of('N')));
+    assert.equal(profiles.length, 1);
+    assert.equal(profiles[0].dict.get(PDFLib.PDFName.of('N')).asNumber(), 4);
+    }
+  } finally { session.close(); }
+});
+
+test('missing partial-text geometry is reported instead of creating overlapping whole-node links', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PNG', data: png });
+  const result = await addExportLinks(output, [page], [frame], textLinks);
+  assert.equal(result.skipped, 3);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(plainRecords(output, page).length, 0);
+});
+
+async function internalFixture() {
+  const doc = await PDFLib.PDFDocument.create();
+  const page = doc.addPage([600, 400]);
+  context.appendLinkAnnotation(doc, page, [40, 300, 190, 330], null, '');
+  return doc.save();
+}
+
+async function nativeUriFixture(records) {
+  const doc = await PDFLib.PDFDocument.create();
+  const page = doc.addPage([600, 400]);
+  for (const { rect, uri } of records) context.appendLinkAnnotation(doc, page, rect, null, uri);
+  return doc.save();
+}
+
+test('desktop Figma NODE URLs become exact internal destinations for vector and raster pages', async () => {
+  const uri = 'https://www.figma.com/design/yKf6bZSYBB3tZoWz5qMmen/PDF-Export-v9-%E2%80%94-Regression---Stress-Tests?node-id=1-2';
+  const rect = [40, 210.977, 314.7898, 240.0227];
+  const bytes = await nativeUriFixture([{ uri, rect }]);
+  for (const format of ['PDF', 'PNG']) {
+    const output = await PDFLib.PDFDocument.create();
+    const { page } = await appendExportPage(output, { frame, format,
+      data: format === 'PDF' ? bytes : png,
+      annotationPdfData: format === 'PNG' ? bytes : undefined });
+    const destination = output.addPage([400, 300]);
+    const target = { id: 'target', width: 400, height: 300 };
+    const link = { source: 'text', type: 'internal', fromFrameId: frame.id,
+      toFrameId: target.id, toNodeId: '1:2', textNodeId: 'node1',
+      elementBounds: { x: 40, y: 150, width: 300, height: 50 } };
+    const result = await addExportLinks(output, [page, destination], [frame, target], [link]);
+    assert.equal(result.added, 1, format);
+    assert.equal(result.skipped, 0, format);
+    const reloaded = await PDFLib.PDFDocument.load(await output.save());
+    assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), [
+      { target: `page:${reloaded.getPage(1).ref}`, rect }
+    ], format);
+    assert.equal(nativeLinkRecords(output, page)[0].annotation.has(PDFLib.PDFName.of('A')), false,
+      'the web action must be replaced, not kept alongside Dest');
+  }
+});
+
+test('node IDs in Figma URLs disambiguate multiple destinations within one text node', async () => {
+  const rects = [[40, 300, 150, 330], [170, 300, 280, 330]];
+  const bytes = await nativeUriFixture([
+    { uri: 'https://figma.com/file/abc123/Design?node-id=1%3A2', rect: rects[0] },
+    { uri: 'https://www.figma.com/design/abc123/Design?node-id=9-10', rect: rects[1] }
+  ]);
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: bytes });
+  const pages = [page, output.addPage([400, 300]), output.addPage([400, 300])];
+  const frames = [frame, { id: 'target1', width: 400, height: 300 }, { id: 'target2', width: 400, height: 300 }];
+  const links = ['1:2', '9:10'].map((toNodeId, index) => ({ source: 'text', type: 'internal',
+    fromFrameId: frame.id, toFrameId: frames[index + 1].id, toNodeId, textNodeId: 'shared-text',
+    elementBounds: { x: 40, y: 70, width: 240, height: 35 } }));
+  const result = await addExportLinks(output, pages, frames, links);
+  assert.equal(result.added, 2);
+  assert.equal(result.skipped, 0);
+  assert.deepEqual(plainRecords(output, page), rects.map((rect, index) => ({ target: `page:${pages[index + 1].ref}`, rect })));
+});
+
+test('a Figma URL to a descendant maps to its exported ancestor frame', async () => {
+  const rect = [40, 300, 190, 330];
+  const bytes = await nativeUriFixture([{ uri: 'https://www.figma.com/design/abc123/Design?node-id=I9-10%3B1-2', rect }]);
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: bytes });
+  const destination = output.addPage([400, 300]);
+  const target = { id: '9:10', width: 400, height: 300 };
+  const link = { source: 'text', type: 'internal', fromFrameId: frame.id,
+    toFrameId: target.id, toNodeId: 'I9:10;1:2', textNodeId: 'node1',
+    elementBounds: { x: 40, y: 70, width: 200, height: 35 } };
+  const result = await addExportLinks(output, [page, destination], [frame, target], [link]);
+  assert.equal(result.skipped, 0);
+  assert.deepEqual(plainRecords(output, page), [{ target: `page:${destination.ref}`, rect }]);
+});
+
+test('unrelated domains, Figma routes, node IDs and text regions retain their web actions', async () => {
+  const cases = [
+    ['https://www.figma.com.evil.example/design/abc123/Design?node-id=1-2', [40, 300, 190, 330]],
+    ['https://example.com/design/abc123/Design?node-id=1-2', [40, 300, 190, 330]],
+    ['https://www.figma.com/proto/abc123/Design?node-id=1-2', [40, 300, 190, 330]],
+    ['https://www.figma.com/design/?node-id=1-2', [40, 300, 190, 330]],
+    ['https://www.figma.com/design/abc123/Design?node-id=2-4', [40, 300, 190, 330]],
+    ['https://www.figma.com/design/abc123/Design?node-id=1-2&node-id=2-4', [40, 300, 190, 330]],
+    ['https://www.figma.com/design/abc123/Design?node-id=1-2', [340, 300, 490, 330]]
+  ];
+  for (const [uri, rect] of cases) {
+    const output = await PDFLib.PDFDocument.create();
+    const { page } = await appendExportPage(output, { frame, format: 'PDF', data: await nativeUriFixture([{ uri, rect }]) });
+    const destination = output.addPage([400, 300]);
+    const target = { id: 'target', width: 400, height: 300 };
+    const link = { source: 'text', type: 'internal', fromFrameId: frame.id,
+      toFrameId: target.id, toNodeId: '1:2', textNodeId: 'node1',
+      elementBounds: { x: 40, y: 70, width: 200, height: 35 } };
+    const result = await addExportLinks(output, [page, destination], [frame, target], [link]);
+    assert.equal(result.added, 0, uri);
+    assert.deepEqual(plainRecords(output, page), [{ target: normalizeUrl(uri), rect }], uri);
+  }
+});
+
+test('an explicitly external text URL in the same region is not converted into a page jump', async () => {
+  const uri = 'https://www.figma.com/design/abc123/Design?node-id=1-2';
+  const rect = [40, 300, 190, 330];
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: await nativeUriFixture([{ uri, rect }]) });
+  const destination = output.addPage([400, 300]);
+  const target = { id: 'target', width: 400, height: 300 };
+  const common = { source: 'text', fromFrameId: frame.id, textNodeId: 'shared-text',
+    elementBounds: { x: 40, y: 70, width: 200, height: 35 } };
+  const result = await addExportLinks(output, [page, destination], [frame, target], [
+    { ...common, type: 'internal', toFrameId: target.id, toNodeId: '1:2' },
+    { ...common, type: 'external', toUrl: uri }
+  ]);
+  assert.equal(result.added, 0);
+  assert.equal(result.skipped, 1, 'the ambiguous internal range is reported instead of hijacking the web link');
+  assert.deepEqual(plainRecords(output, page), [{ target: uri, rect }]);
+});
+
+test('empty native NODE URI becomes an exact internal destination in exported page order', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: await internalFixture() });
+  const destination = output.addPage([400, 300]);
+  const targetFrame = { id: 'target', width: 400, height: 300 };
+  const link = { source: 'text', type: 'internal', fromFrameId: frame.id, toFrameId: 'target', textNodeId: 'node1', elementBounds: { x: 40, y: 70, width: 200, height: 35 } };
+  const result = await addExportLinks(output, [page, destination], [frame, targetFrame], [link]);
+  assert.equal(result.added, 1);
+  assert.equal(result.skipped, 0);
+  assert.deepEqual(plainRecords(output, page), [{ target: `page:${destination.ref}`, rect: [40, 300, 190, 330] }]);
+});
+
+test('multiple destinations within one text node are omitted rather than guessed', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PDF', data: await internalFixture() });
+  const pages = [page, output.addPage([400, 300]), output.addPage([400, 300])];
+  const frames = [frame, { id: 'target1', width: 400, height: 300 }, { id: 'target2', width: 400, height: 300 }];
+  const links = ['target1', 'target2'].map(toFrameId => ({ source: 'text', type: 'internal', fromFrameId: frame.id, toFrameId, textNodeId: 'node1', elementBounds: { x: 40, y: 70, width: 200, height: 35 } }));
+  const result = await addExportLinks(output, pages, frames, links);
+  assert.equal(result.skipped, 2);
+  assert.equal(plainRecords(output, page).length, 0);
+});
+
+test('prototype links use exact clipped bounds and preserve safe URL schemes', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  const page = output.addPage([600, 400]);
+  const result = await addExportLinks(output, [page], [frame], [
+    { fromFrameId: frame.id, source: 'prototype', type: 'external', toUrl: 'mailto:hello@example.com', elementBounds: { x: -5, y: 20, width: 10, height: 2 } },
+    { fromFrameId: frame.id, source: 'prototype', type: 'external', toUrl: 'javascript:alert(1)', elementBounds: { x: 0, y: 0, width: 10, height: 10 } },
+    { fromFrameId: frame.id, source: 'prototype', type: 'external', toUrl: 'https://example.com', elementBounds: { x: 700, y: 0, width: 10, height: 10 } }
+  ]);
+  assert.equal(result.added, 1);
+  assert.equal(result.skipped, 2);
+  assert.deepEqual(plainRecords(output, page), [{ target: 'mailto:hello@example.com', rect: [0, 378, 5, 380] }]);
+  assert.equal(normalizeUrl('tel:+48123456789'), 'tel:+48123456789');
+  assert.equal(normalizeUrl('data:text/html,hello'), null);
+  assert.equal(normalizeUrl('https://example.com/\nunsafe'), null);
+  assert.equal(calculateLinkBounds({ x: 700, y: 1, width: 10, height: 10 }, 600, 400), null);
+});
+
+test('corrupt page data and unexpected PDF dimensions cannot create successful blank pages', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  await assert.rejects(appendExportPage(output, { frame, format: 'PNG', data: Uint8Array.of(1, 2, 3) }));
+  await assert.rejects(appendExportPage(output, { frame: { ...frame, width: 700 }, format: 'PDF', data: fixture }), /dimensions differ/);
+  assert.equal(output.getPageCount(), 0);
+});
+
+test('offset native page boxes cannot silently shift text links on a raster fallback', async () => {
+  const cases = [
+    { label: 'offset MediaBox with inherited CropBox', media: [20, 30, 600, 400] },
+    { label: 'offset CropBox', media: [0, 0, 600, 400], crop: [20, 30, 600, 400] },
+    { label: 'offset MediaBox with explicit zero-origin CropBox', media: [20, 30, 600, 400], crop: [0, 0, 600, 400] }
+  ];
+  for (const geometry of cases) {
+    const source = await PDFLib.PDFDocument.create();
+    const sourcePage = source.addPage([600, 400]);
+    sourcePage.setMediaBox(...geometry.media);
+    if (geometry.crop) sourcePage.setCropBox(...geometry.crop);
+    context.appendLinkAnnotation(source, sourcePage, [60, 330, 190, 360], null, 'https://example.com/link');
+    const bytes = await source.save();
+    const output = await PDFLib.PDFDocument.create();
+    await assert.rejects(appendExportPage(output, { frame, format: 'PDF', data: bytes }), /dimensions differ/, geometry.label);
+    assert.equal(output.getPageCount(), 0, geometry.label);
+    const { page, warnings } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: bytes });
+    assert.equal(output.getPageCount(), 1, 'the raster page remains usable');
+    assert.match(warnings.join(' '), /precise text-link geometry could not be imported/, geometry.label);
+    assert.deepEqual(plainRecords(output, page), [], geometry.label);
+    const result = await addExportLinks(output, [page], [frame], [{
+      source: 'text', type: 'external', fromFrameId: frame.id, toUrl: 'https://example.com/link',
+      elementBounds: { x: 40, y: 70, width: 150, height: 30 }
+    }]);
+    assert.equal(result.skipped, 1, 'missing precision is reported instead of creating a displaced link');
+  }
+});
+
+test('many pages with duplicate names preserve count, ID mapping, and exact dimensions', async () => {
+  const output = await PDFLib.PDFDocument.create();
+  const pages = [], frames = [];
+  for (let i = 0; i < 80; i++) {
+    const item = { id: `frame-${i}`, name: 'Same name', width: 200 + i, height: 300 };
+    const { page } = await appendExportPage(output, { frame: item, format: 'PNG', data: png });
+    frames.push(item); pages.push(page);
+  }
+  await addExportLinks(output, pages, frames, [{ fromFrameId: 'frame-0', toFrameId: 'frame-79', type: 'internal', source: 'prototype', elementBounds: { x: 1, y: 2, width: 3, height: 4 } }]);
+  const saved = await output.save();
+  const reloaded = await PDFLib.PDFDocument.load(saved);
+  assert.equal(reloaded.getPageCount(), 80);
+  assert.equal(reloaded.getPage(79).getWidth(), 279);
+  assert.equal(plainRecords(output, pages[0])[0].target, `page:${pages[79].ref}`);
+});
+
+test('part plans are deterministic, use frame IDs, and address zero-based pages in each file', () => {
+  const frames = Array.from({ length: 5 }, (_, i) => ({ id: `id-${i}`, name: 'Repeated name' }));
+  const plan = context.createOutputPlan(frames, 2, 'unique-job');
+  assert.deepEqual(plan.parts, [
+    { index: 0, start: 0, end: 2, filename: 'unique-job-part-1-of-3.pdf' },
+    { index: 1, start: 2, end: 4, filename: 'unique-job-part-2-of-3.pdf' },
+    { index: 2, start: 4, end: 5, filename: 'unique-job-part-3-of-3.pdf' }
+  ]);
+  assert.deepEqual(plan.destinations.get('id-3'), { partIndex: 1, pageIndex: 1, filename: 'unique-job-part-2-of-3.pdf' });
+  assert.deepEqual(context.createOutputPlan(frames, 2, 'unique-job').parts, plan.parts);
+  assert.equal(context.createOutputPlan(frames, 5, 'single').parts[0].filename, 'single.pdf');
+});
+
+test('prototype and native text links cross part files with exact GoToR destinations', async () => {
+  const frames = [frame, { id: 'same-part', name: frame.name, width: 600, height: 400 }, { id: 'third', name: frame.name }, { id: 'fourth', name: frame.name }];
+  const plan = context.createOutputPlan(frames, 2, 'unique-job');
+  const nativeRect = [40, 300, 190, 330];
+  for (const uri of ['', 'https://www.figma.com/design/abc123/Example?node-id=9-10']) {
+    for (const format of ['PDF', 'PNG']) {
+      const output = await PDFLib.PDFDocument.create();
+      const annotationBytes = await nativeUriFixture([{ uri, rect: nativeRect }]);
+      const { page } = await appendExportPage(output, { frame, format, data: format === 'PDF' ? annotationBytes : png, annotationPdfData: format === 'PNG' ? annotationBytes : undefined });
+      const local = output.addPage([600, 400]);
+      const result = await addExportLinks(output, [page, local], frames.slice(0, 2), [
+        { fromFrameId: frame.id, source: 'text', type: 'internal', textNodeId: 'text', toNodeId: '9:10', toFrameId: 'fourth', elementBounds: { x: 40, y: 70, width: 150, height: 30 } },
+        { fromFrameId: frame.id, source: 'prototype', type: 'internal', toFrameId: 'third', elementBounds: { x: 10, y: 10, width: 20, height: 20 } },
+        { fromFrameId: frame.id, source: 'prototype', type: 'internal', toFrameId: 'same-part', elementBounds: { x: 100, y: 10, width: 20, height: 20 } }
+      ], () => true, plan.destinations);
+      assert.equal(result.skipped, 0);
+      const reloaded = await PDFLib.PDFDocument.load(await output.save());
+      assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), [
+        { target: 'remote:unique-job-part-2-of-2.pdf:1', rect: nativeRect },
+        { target: 'remote:unique-job-part-2-of-2.pdf:0', rect: [10, 370, 30, 390] },
+        { target: `page:${reloaded.getPage(1).ref}`, rect: [100, 370, 120, 390] }
+      ]);
+      const annotation = nativeLinkRecords(reloaded, reloaded.getPage(0))[0].annotation;
+      const action = annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict);
+      assert.equal(annotation.has(PDFLib.PDFName.of('Dest')), false);
+      assert.equal(action.get(PDFLib.PDFName.of('S')).toString(), '/GoToR');
+      assert.equal(action.lookup(PDFLib.PDFName.of('F')).decodeText(), plan.parts[1].filename);
+      assert.equal(action.lookup(PDFLib.PDFName.of('D'), PDFLib.PDFArray).get(1).toString(), '/Fit');
+    }
+  }
+});
+
+test('retained PDF budgeting excludes temporary annotation bytes but includes orphaned retained streams', async () => {
+  const auxiliary = await PDFLib.PDFDocument.load(fixture);
+  auxiliary.context.register(auxiliary.context.stream(new Uint8Array(2 * 1024 * 1024)));
+  const auxiliaryBytes = await auxiliary.save({ useObjectStreams: false });
+  assert.ok(auxiliaryBytes.byteLength > 2 * 1024 * 1024);
+  const output = await PDFLib.PDFDocument.create();
+  const { page } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: auxiliaryBytes });
+  assert.equal(nativeLinkRecords(output, page).length, 5);
+  const retained = context.assertPdfBudget(output, 20000);
+  assert.ok(retained < 20000, 'only imported annotations and raster page are retained');
+  output.context.register(output.context.stream(new Uint8Array(24000)));
+  assert.ok(context.estimatePdfBytes(output) > retained + 24000, 'unreferenced streams still consume the document budget');
+  assert.throws(() => context.assertPdfBudget(output, 20000), /retained-data allowance/);
+});

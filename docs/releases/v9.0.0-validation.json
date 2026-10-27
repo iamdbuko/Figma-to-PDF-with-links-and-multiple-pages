@@ -1,0 +1,30 @@
+{
+  "version": "9.0.0",
+  "preparedDate": "2026-10-28",
+  "developmentCheckpoint": "cb28b49d8494ee28383037a80ccd331864b722cc",
+  "automatedTests": 264,
+  "testFailures": 0,
+  "testDurationMs": 29688.739625,
+  "packagingChanges": "Runtime dependency license notices embedded in generated UI; executable script bodies and non-script HTML unchanged from dev.9.",
+  "runtimeFiles": {
+    "code.js": {
+      "bytes": 40036,
+      "sha256": "830cdf4f7aeaa31ef0225ba289c5c058959346bef3e8092934848f99a6b57607"
+    },
+    "ui.html": {
+      "bytes": 2617152,
+      "sha256": "fe3d735bc5f46ccfb53249f158aacdc78d0e07e17d333a911dcb198fd8584a97"
+    },
+    "manifest.json": {
+      "bytes": 319,
+      "sha256": "e150bee029d90a646a3e587313314abde4c94e7610c453039c77285a3cf9166f"
+    }
+  },
+  "nativeVerification": "dev.9 native macOS smoke test and historical 156-page RGB/CMYK exports; see linked evidence. Final runtime code unchanged.",
+  "evidence": [
+    "../INTERFACE.md",
+    "../interface-dev9-results.json",
+    "../FUNCTIONALITY-AUDIT.md",
+    "../report-audit-results.json"
+  ]
+}

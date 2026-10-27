@@ -12,8 +12,7 @@
   ],
   "networkAccess": {
     "allowedDomains": [
-      "https://cdnjs.cloudflare.com",
-      "https://unpkg.com"
+      "none"
     ]
   }
 }

@@ -1,0 +1,735 @@
+{
+  "recordedAt": "2026-10-27T13:36:51.711Z",
+  "browser": "141.0.7390.37",
+  "platform": "darwin",
+  "builtUiSha256": "aeab7595e027ebca145f651ca5d38cf3f6f4905b937cde7f62e1307073e5aa8e",
+  "productionRetainedDataBudgetBytes": 134217728,
+  "scope": "Actual built plugin UI and bundled pdf-lib in isolated headless Chromium. The harness supplies synthetic raster export-page messages and performs the backend handshake. It does not run Figma exportAsync, document traversal, or the backend sandbox. Production retained-object checks run unchanged for single-file and production multipart scenarios. The optional small-budget multipart scenario changes only the default budget in the in-memory test document, explicitly recorded per scenario; it does not modify the built file or expose a production test setting.",
+  "memoryScope": "CDP Runtime.getHeapUsage sampled after page acknowledgements, before/after part downloads, and after final download. V8 usedSize and backingStorageSize are separate values, not whole-browser, native decoder, GPU, Figma, or peak resident memory. Samples can miss transient peaks. The renderer also contains the deterministic fixture canvas and one encoded input; no forced garbage collection is used. Node-side PDF validation is outside these renderer samples.",
+  "rasterSource": "The same deterministic full-resolution gradients, twelve curved terrain layers, and smoothly enlarged 192x108 seeded noise field as the earlier detailed PNG benchmark. Every page differs. Both encodings start from identical canvas pixels, checked by a full-pixel FNV-1a fingerprint for corresponding pages. This is a synthetic compressible landscape, not a photo corpus or worst-case entropy workload.",
+  "jpegEncoding": "Browser canvas.toBlob(image/jpeg, 0.9), at the same 5760x3240 pixels as PNG. Lossy compression; no claim that this matches Figma native JPG quality or file sizes. The PDF must retain the exact supplied JPEG bytes as a DCT stream.",
+  "historicalBaseline": "docs/stress-results.json remains the historical result: the prior cumulative 128 MiB input rule stopped the detailed PNG workload after 10 pages. This benchmark does not enforce that obsolete input-total rule.",
+  "scenarios": [
+    {
+      "name": "30 identical-content 5760x3240 JPEG pages, one PDF",
+      "format": "JPG",
+      "requestedPages": 30,
+      "pagesPerPart": 30,
+      "builtUiSha256": "aeab7595e027ebca145f651ca5d38cf3f6f4905b937cde7f62e1307073e5aa8e",
+      "retainedDataBudgetBytes": 134217728,
+      "testOnlyBudgetOverride": false,
+      "pageDimensions": {
+        "width": 3840,
+        "height": 2160
+      },
+      "rasterDimensions": {
+        "width": 5760,
+        "height": 3240,
+        "scale": 1.5
+      },
+      "status": "passed",
+      "pages": [
+        {
+          "index": 0,
+          "inputBytes": 375869,
+          "sourcePixelFingerprint": "51a0d7d2",
+          "encodedFingerprint": "4975b447",
+          "generationMs": 748,
+          "assemblyMs": 12,
+          "acknowledged": true
+        },
+        {
+          "index": 1,
+          "inputBytes": 376105,
+          "sourcePixelFingerprint": "3c9e89c2",
+          "encodedFingerprint": "f18aac8b",
+          "generationMs": 708,
+          "assemblyMs": 7,
+          "acknowledged": true
+        },
+        {
+          "index": 2,
+          "inputBytes": 377837,
+          "sourcePixelFingerprint": "a0220314",
+          "encodedFingerprint": "ba4ea521",
+          "generationMs": 703,
+          "assemblyMs": 14,
+          "acknowledged": true
+        },
+        {
+          "index": 3,
+          "inputBytes": 377182,
+          "sourcePixelFingerprint": "aeec262f",
+          "encodedFingerprint": "1372111b",
+          "generationMs": 699,
+          "assemblyMs": 5,
+          "acknowledged": true
+        },
+        {
+          "index": 4,
+          "inputBytes": 377186,
+          "sourcePixelFingerprint": "61ab2225",
+          "encodedFingerprint": "7ab78f5d",
+          "generationMs": 697,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 5,
+          "inputBytes": 377430,
+          "sourcePixelFingerprint": "6e1ddf60",
+          "encodedFingerprint": "b64530c8",
+          "generationMs": 700,
+          "assemblyMs": 16,
+          "acknowledged": true
+        },
+        {
+          "index": 6,
+          "inputBytes": 380297,
+          "sourcePixelFingerprint": "40c2c996",
+          "encodedFingerprint": "3e1fa22b",
+          "generationMs": 700,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 7,
+          "inputBytes": 379579,
+          "sourcePixelFingerprint": "2f617e40",
+          "encodedFingerprint": "bce0bbe1",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 8,
+          "inputBytes": 379686,
+          "sourcePixelFingerprint": "783f7eda",
+          "encodedFingerprint": "ec463200",
+          "generationMs": 695,
+          "assemblyMs": 4,
+          "acknowledged": true
+        },
+        {
+          "index": 9,
+          "inputBytes": 378316,
+          "sourcePixelFingerprint": "4dcefa8b",
+          "encodedFingerprint": "945d7840",
+          "generationMs": 696,
+          "assemblyMs": 21,
+          "acknowledged": true
+        },
+        {
+          "index": 10,
+          "inputBytes": 378462,
+          "sourcePixelFingerprint": "0d91989b",
+          "encodedFingerprint": "fd99f1b8",
+          "generationMs": 706,
+          "assemblyMs": 11,
+          "acknowledged": true
+        },
+        {
+          "index": 11,
+          "inputBytes": 380836,
+          "sourcePixelFingerprint": "d09b7523",
+          "encodedFingerprint": "00716286",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 12,
+          "inputBytes": 376980,
+          "sourcePixelFingerprint": "533881b1",
+          "encodedFingerprint": "d83e6470",
+          "generationMs": 696,
+          "assemblyMs": 20,
+          "acknowledged": true
+        },
+        {
+          "index": 13,
+          "inputBytes": 381507,
+          "sourcePixelFingerprint": "39cbfe74",
+          "encodedFingerprint": "185110d8",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 14,
+          "inputBytes": 381878,
+          "sourcePixelFingerprint": "7d1db99e",
+          "encodedFingerprint": "8823816b",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 15,
+          "inputBytes": 386694,
+          "sourcePixelFingerprint": "31a5e345",
+          "encodedFingerprint": "0538fe82",
+          "generationMs": 702,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 16,
+          "inputBytes": 386420,
+          "sourcePixelFingerprint": "4fbb66b1",
+          "encodedFingerprint": "64661ab7",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 17,
+          "inputBytes": 385450,
+          "sourcePixelFingerprint": "2b8bcf4a",
+          "encodedFingerprint": "4c23360c",
+          "generationMs": 712,
+          "assemblyMs": 3,
+          "acknowledged": true
+        },
+        {
+          "index": 18,
+          "inputBytes": 383573,
+          "sourcePixelFingerprint": "0b43ed9c",
+          "encodedFingerprint": "c403e092",
+          "generationMs": 704,
+          "assemblyMs": 14,
+          "acknowledged": true
+        },
+        {
+          "index": 19,
+          "inputBytes": 381931,
+          "sourcePixelFingerprint": "852362a0",
+          "encodedFingerprint": "af50b143",
+          "generationMs": 704,
+          "assemblyMs": 11,
+          "acknowledged": true
+        },
+        {
+          "index": 20,
+          "inputBytes": 379618,
+          "sourcePixelFingerprint": "1054959b",
+          "encodedFingerprint": "9ce3bdea",
+          "generationMs": 699,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 21,
+          "inputBytes": 378851,
+          "sourcePixelFingerprint": "3969c3d3",
+          "encodedFingerprint": "165f265c",
+          "generationMs": 699,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 22,
+          "inputBytes": 381855,
+          "sourcePixelFingerprint": "80a723b7",
+          "encodedFingerprint": "bcbb89e0",
+          "generationMs": 700,
+          "assemblyMs": 16,
+          "acknowledged": true
+        },
+        {
+          "index": 23,
+          "inputBytes": 379454,
+          "sourcePixelFingerprint": "39a386e3",
+          "encodedFingerprint": "b311e484",
+          "generationMs": 702,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 24,
+          "inputBytes": 383049,
+          "sourcePixelFingerprint": "74dffbd9",
+          "encodedFingerprint": "073bb762",
+          "generationMs": 701,
+          "assemblyMs": 16,
+          "acknowledged": true
+        },
+        {
+          "index": 25,
+          "inputBytes": 383014,
+          "sourcePixelFingerprint": "dafd163e",
+          "encodedFingerprint": "3efeef4a",
+          "generationMs": 698,
+          "assemblyMs": 18,
+          "acknowledged": true
+        },
+        {
+          "index": 26,
+          "inputBytes": 381015,
+          "sourcePixelFingerprint": "aaaa2f3f",
+          "encodedFingerprint": "42f53af0",
+          "generationMs": 701,
+          "assemblyMs": 15,
+          "acknowledged": true
+        },
+        {
+          "index": 27,
+          "inputBytes": 380124,
+          "sourcePixelFingerprint": "0920e0f5",
+          "encodedFingerprint": "330d64cd",
+          "generationMs": 703,
+          "assemblyMs": 14,
+          "acknowledged": true
+        },
+        {
+          "index": 28,
+          "inputBytes": 380207,
+          "sourcePixelFingerprint": "2003954c",
+          "encodedFingerprint": "fdfe9152",
+          "generationMs": 699,
+          "assemblyMs": 17,
+          "acknowledged": true
+        },
+        {
+          "index": 29,
+          "inputBytes": 380324,
+          "sourcePixelFingerprint": "b18954e8",
+          "encodedFingerprint": "a63d6dc8",
+          "generationMs": 703,
+          "assemblyMs": 14,
+          "acknowledged": true
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "filename": "figma-export-2026-10-27-mvqqbzjx-74933806.pdf",
+          "startPage": 0,
+          "endPageExclusive": 30,
+          "outputBytes": 11422644,
+          "sha256": "19a395e99fcd4367ab921cb1d71596052589e19af1498180b668056bd944fc3c",
+          "validation": {
+            "pages": 30,
+            "exactPageDimensions": true,
+            "exactRasterDimensions": true,
+            "localLinks": 30,
+            "remoteLinks": 0,
+            "originalJpegStreams": 30,
+            "sharedRgbProfiles": 1
+          }
+        }
+      ],
+      "compressedInputBytes": 11410729,
+      "budgetSamples": [
+        {
+          "bytes": 381538,
+          "pages": 1,
+          "partIndex": 0
+        },
+        {
+          "bytes": 758249,
+          "pages": 2,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1136696,
+          "pages": 3,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1514488,
+          "pages": 4,
+          "partIndex": 0
+        },
+        {
+          "bytes": 1892284,
+          "pages": 5,
+          "partIndex": 0
+        },
+        {
+          "bytes": 2270324,
+          "pages": 6,
+          "partIndex": 0
+        },
+        {
+          "bytes": 2651231,
+          "pages": 7,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3031420,
+          "pages": 8,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3411716,
+          "pages": 9,
+          "partIndex": 0
+        },
+        {
+          "bytes": 3790643,
+          "pages": 10,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4169713,
+          "pages": 11,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4551159,
+          "pages": 12,
+          "partIndex": 0
+        },
+        {
+          "bytes": 4928749,
+          "pages": 13,
+          "partIndex": 0
+        },
+        {
+          "bytes": 5310864,
+          "pages": 14,
+          "partIndex": 0
+        },
+        {
+          "bytes": 5693351,
+          "pages": 15,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6080655,
+          "pages": 16,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6467683,
+          "pages": 17,
+          "partIndex": 0
+        },
+        {
+          "bytes": 6853743,
+          "pages": 18,
+          "partIndex": 0
+        },
+        {
+          "bytes": 7237926,
+          "pages": 19,
+          "partIndex": 0
+        },
+        {
+          "bytes": 7620467,
+          "pages": 20,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8000695,
+          "pages": 21,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8380156,
+          "pages": 22,
+          "partIndex": 0
+        },
+        {
+          "bytes": 8762621,
+          "pages": 23,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9142684,
+          "pages": 24,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9526343,
+          "pages": 25,
+          "partIndex": 0
+        },
+        {
+          "bytes": 9909966,
+          "pages": 26,
+          "partIndex": 0
+        },
+        {
+          "bytes": 10291590,
+          "pages": 27,
+          "partIndex": 0
+        },
+        {
+          "bytes": 10672322,
+          "pages": 28,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11053139,
+          "pages": 29,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11434073,
+          "pages": 30,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11434073,
+          "pages": 30,
+          "partIndex": 0
+        },
+        {
+          "bytes": 11438801,
+          "pages": 30,
+          "partIndex": 0
+        }
+      ],
+      "memorySamples": [
+        {
+          "label": "before-pages",
+          "usedSize": 6276868,
+          "totalSize": 9584640,
+          "embedderHeapUsedSize": 3307848,
+          "backingStorageSize": 2813670
+        },
+        {
+          "label": "page-1-page-ack",
+          "usedSize": 4700088,
+          "totalSize": 10698752,
+          "embedderHeapUsedSize": 2348408,
+          "backingStorageSize": 78864746
+        },
+        {
+          "label": "page-2-page-ack",
+          "usedSize": 4569296,
+          "totalSize": 9912320,
+          "embedderHeapUsedSize": 1887256,
+          "backingStorageSize": 78957575
+        },
+        {
+          "label": "page-3-page-ack",
+          "usedSize": 6120468,
+          "totalSize": 9912320,
+          "embedderHeapUsedSize": 1838096,
+          "backingStorageSize": 79337144
+        },
+        {
+          "label": "page-4-page-ack",
+          "usedSize": 4549084,
+          "totalSize": 10174464,
+          "embedderHeapUsedSize": 1828248,
+          "backingStorageSize": 79713671
+        },
+        {
+          "label": "page-5-page-ack",
+          "usedSize": 6123028,
+          "totalSize": 10174464,
+          "embedderHeapUsedSize": 1788096,
+          "backingStorageSize": 80090861
+        },
+        {
+          "label": "page-6-page-ack",
+          "usedSize": 5847748,
+          "totalSize": 10158080,
+          "embedderHeapUsedSize": 1847584,
+          "backingStorageSize": 79267270
+        },
+        {
+          "label": "page-7-page-ack",
+          "usedSize": 3650488,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1804416,
+          "backingStorageSize": 79650434
+        },
+        {
+          "label": "page-8-page-ack",
+          "usedSize": 3711592,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1786088,
+          "backingStorageSize": 80029295
+        },
+        {
+          "label": "page-9-page-ack",
+          "usedSize": 5336224,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1794568,
+          "backingStorageSize": 80409088
+        },
+        {
+          "label": "page-10-page-ack",
+          "usedSize": 5398764,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1860632,
+          "backingStorageSize": 80786034
+        },
+        {
+          "label": "page-11-page-ack",
+          "usedSize": 5362420,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1809832,
+          "backingStorageSize": 81164641
+        },
+        {
+          "label": "page-12-page-ack",
+          "usedSize": 3817012,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1809720,
+          "backingStorageSize": 81547852
+        },
+        {
+          "label": "page-13-page-ack",
+          "usedSize": 3819944,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1761248,
+          "backingStorageSize": 81920976
+        },
+        {
+          "label": "page-14-page-ack",
+          "usedSize": 3830548,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1809080,
+          "backingStorageSize": 82307009
+        },
+        {
+          "label": "page-15-page-ack",
+          "usedSize": 3844436,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1807768,
+          "backingStorageSize": 82689259
+        },
+        {
+          "label": "page-16-page-ack",
+          "usedSize": 3987180,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1805992,
+          "backingStorageSize": 83080769
+        },
+        {
+          "label": "page-17-page-ack",
+          "usedSize": 3999940,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1750528,
+          "backingStorageSize": 83466914
+        },
+        {
+          "label": "page-18-page-ack",
+          "usedSize": 3878408,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1824400,
+          "backingStorageSize": 83851395
+        },
+        {
+          "label": "page-19-page-ack",
+          "usedSize": 4024768,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1774440,
+          "backingStorageSize": 84233091
+        },
+        {
+          "label": "page-20-page-ack",
+          "usedSize": 4035224,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1754408,
+          "backingStorageSize": 84613380
+        },
+        {
+          "label": "page-21-page-ack",
+          "usedSize": 3898976,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1756032,
+          "backingStorageSize": 84990685
+        },
+        {
+          "label": "page-22-page-ack",
+          "usedSize": 3920752,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1829992,
+          "backingStorageSize": 85368769
+        },
+        {
+          "label": "page-23-page-ack",
+          "usedSize": 3924832,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1779896,
+          "backingStorageSize": 85753628
+        },
+        {
+          "label": "page-24-page-ack",
+          "usedSize": 3934140,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1779216,
+          "backingStorageSize": 86130681
+        },
+        {
+          "label": "page-25-page-ack",
+          "usedSize": 3938056,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1730744,
+          "backingStorageSize": 86517325
+        },
+        {
+          "label": "page-26-page-ack",
+          "usedSize": 4113596,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1778576,
+          "backingStorageSize": 86900304
+        },
+        {
+          "label": "page-27-page-ack",
+          "usedSize": 3948480,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1785448,
+          "backingStorageSize": 87279320
+        },
+        {
+          "label": "page-28-page-ack",
+          "usedSize": 3955236,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1783672,
+          "backingStorageSize": 87658552
+        },
+        {
+          "label": "page-29-page-ack",
+          "usedSize": 4139624,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1728208,
+          "backingStorageSize": 88038843
+        },
+        {
+          "label": "page-30-page-ack",
+          "usedSize": 4152608,
+          "totalSize": 9535488,
+          "embedderHeapUsedSize": 1802080,
+          "backingStorageSize": 88419284
+        },
+        {
+          "label": "after-final-download",
+          "usedSize": 5260564,
+          "totalSize": 10059776,
+          "embedderHeapUsedSize": 2200208,
+          "backingStorageSize": 100704972
+        }
+      ],
+      "finalizeAndDownloadMs": 58,
+      "outputBytes": 11422644,
+      "validation": {
+        "outputPages": 30,
+        "exactPageDimensions": true,
+        "exactRasterPixelDimensions": true,
+        "localLinks": 30,
+        "remoteLinks": 0,
+        "originalJpegStreams": 30,
+        "repeatedNamesResolvedByFrameId": true,
+        "automaticContinue": false,
+        "browserErrors": []
+      },
+      "durationMs": 22416,
+      "acknowledgedPages": 30,
+      "acknowledgedCompressedInputBytes": 11410729,
+      "generationMs": 21064,
+      "pageAssemblyMs": 437,
+      "peakMeasuredRetainedPdfBytes": 11438801,
+      "peakSampledJsHeapBytes": 6276868,
+      "peakSampledBackingStorageBytes": 100704972,
+      "inputExceededHistorical128MiBLimit": false
+    }
+  ]
+}

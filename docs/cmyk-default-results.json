@@ -1,0 +1,129 @@
+{
+  "version": "9.0.0-dev.5",
+  "recordedAt": "2026-10-27T15:05:07.484927+00:00",
+  "builtUiSHA256": "a4795fc47f18f61c6711eed14a874f979e49beb52ae0b149254ee5192c495f6a",
+  "builtUiBytes": 2487349,
+  "codeSHA256": "c6df922d446a61cd317c338c6b22e2e01ecccf7e9eab8573f8dcdb6801df3c6a",
+  "cmykHelperSHA256": "93d7bc8416aedd2aca9cd438680a83c268752bc953cbb02fd09e28d0dd519229",
+  "bundledProfile": {
+    "name": "ISO Coated v2 300% (basICColor)",
+    "file": "assets/color-profiles/ISOcoated_v2_300_bas.ICC",
+    "bytes": 1052612,
+    "sha256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "condition": "FOGRA39 coated printing, 300% total ink",
+    "license": "zlib/libpng",
+    "provenance": "../licenses/basICColor-profile-provenance.md"
+  },
+  "automated": {
+    "tests": 128,
+    "passed": 128,
+    "failed": 0,
+    "newCoverage": [
+      "No-upload default conversion and exact ICC embedding with no runtime network",
+      "Pending custom-file reads cannot replace the built-in selection",
+      "Keyboard-operated offline help for Mac and Windows"
+    ],
+    "retainedCoverage": "Custom profile validity, file-size limits, immutable job snapshots, cancellation, multipart lifecycle, RGB defaults and link behavior."
+  },
+  "uiReview": {
+    "viewportWidth": 400,
+    "longNamesAndPaths": "No horizontal overflow in built-in/custom modes with help expanded",
+    "keyboardHelp": [
+      "Enter",
+      "Space"
+    ],
+    "liveHelpOpenedInFigma": true
+  },
+  "independentConversion": {
+    "referenceEngine": "Pillow native LittleCMS 2.19",
+    "pixels": [
+      300,
+      200
+    ],
+    "channels": 4,
+    "renderingIntent": "relative colorimetric",
+    "blackPointCompensation": true,
+    "maxChannelDifferenceOutOf255": 0,
+    "meanChannelDifferenceOutOf255": 0.0,
+    "exactChannelFraction": 1.0
+  },
+  "assembledPDF": {
+    "input": "native Figma sRGB swatch PNG",
+    "profile": "ISOcoated_v2_300_bas.ICC",
+    "profileBytes": 1052612,
+    "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+    "outputBytes": 802248,
+    "pages": 1,
+    "pageSize": [
+      600,
+      400
+    ],
+    "pixels": [
+      300,
+      200
+    ],
+    "imageColorSpace": "ICCBased",
+    "components": 4,
+    "exactProfilePreserved": true,
+    "transparencyMask": false,
+    "prototypeLinks": 1,
+    "outputIntent": false,
+    "note": "Independent local conversion evidence for the built-in profile. No physical print validation."
+  },
+  "liveFigma": {
+    "fileKey": "yKf6bZSYBB3tZoWz5qMmen",
+    "frameId": "28:3",
+    "defaultObserved": "Same as Figma file",
+    "cmyk": {
+      "status": "passed",
+      "recordedAt": "2026-10-27T15:03:52.538Z",
+      "application": "Figma Desktop on macOS",
+      "file": "live-CMYK-built-in-dev5.pdf",
+      "fileSHA256": "308a41f1c4957a9795d4b7a65ec2e9a2ebc523c1c1d8cb75b81fa340f99a79c4",
+      "bytes": 844157,
+      "pages": 1,
+      "pageSize": {
+        "width": 600,
+        "height": 400
+      },
+      "pixels": [
+        600,
+        400
+      ],
+      "decodedImageBytes": 960000,
+      "imageColorSpace": "ICCBased",
+      "components": 4,
+      "profileSource": "BUNDLED",
+      "profileFile": "ISOcoated_v2_300_bas.ICC",
+      "profileBytes": 1052612,
+      "profileSHA256": "b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886",
+      "exactProfilePreserved": true,
+      "uploadRequired": false,
+      "transparencyMask": false,
+      "links": [
+        {
+          "url": "https://example.com/color",
+          "rect": [
+            300,
+            0,
+            600,
+            160
+          ]
+        }
+      ],
+      "helpOpenedInFigma": true,
+      "visualInspection": {
+        "renderer": "Poppler pdftoppm",
+        "status": "passed",
+        "content": "Swatches, gradient, raster image and alpha-composited region all present; no missing or clipped content."
+      }
+    }
+  },
+  "stressReport": "cmyk-default-stress-results.json",
+  "limits": [
+    "The built-in profile describes an older coated printing condition, not all printers or the latest standard.",
+    "CMYK remains raster-only with white compositing and no PDF/X conformance claim.",
+    "No physical print, Windows Figma or Acrobat verification. Windows folder instructions are checked against vendor documentation.",
+    "Synthetic browser stress uses compressible photo-like content; reported memory samples are not total Figma or process memory."
+  ]
+}

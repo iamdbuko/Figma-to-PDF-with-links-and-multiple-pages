@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PDF Export with Links</title>
+  <style>
+    :root { color-scheme: light; --bg:#fff; --ink:#171717; --muted:#969696; --soft:#f4f4f4; --hover:#f0f0f0; --line:#e4e4e4; --focus:#666; --error:#b3261e; }
+    * { box-sizing:border-box; }
+    html, body { height:100%; }
+    body { margin:0; padding:12px; background:var(--bg); color:var(--ink); font:15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+    button, input, select { font:inherit; color:inherit; }
+    button, select, label[for], summary { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button:disabled, input:disabled, select:disabled { cursor:default; opacity:.4; }
+    button, select { border:0; background:none; }
+    button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible, summary:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+    [hidden] { display:none !important; }
+    .screen { height:100%; min-height:0; display:flex; flex-direction:column; gap:10px; }
+    .frame-card { flex:1; min-height:0; border:1px solid var(--line); border-radius:6px; padding:7px 6px; display:flex; flex-direction:column; }
+    .list-toolbar { display:flex; align-items:center; min-height:30px; padding:0 4px; flex:none; }
+    .sort-select { appearance:none; padding:4px 7px; border-radius:6px; cursor:pointer; width:94px; background:transparent; }
+    .sort-select:hover { background:var(--soft); }
+    .frame-list { flex:1; min-height:0; overflow:auto; scrollbar-width:thin; scrollbar-color:#aaa transparent; }
+    .frame-item { display:flex; align-items:center; gap:16px; min-height:34px; padding:6px 10px; border-radius:8px; cursor:grab; user-select:none; position:relative; }
+    .frame-item:hover, .frame-item.context-open { background:var(--soft); }
+    .frame-item:active { cursor:grabbing; }
+    .frame-item.dragging { opacity:.35; }
+    .frame-item.drag-over { box-shadow:inset 0 2px var(--muted); }
+    .frame-info { flex:1; min-width:0; }
+    .frame-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .connections-count, .no-links { flex:none; padding-right:18px; white-space:nowrap; }
+    .no-links { color:var(--muted); }
+    .empty-state { flex:1; display:grid; place-content:center; text-align:center; color:var(--muted); font-size:14px; }
+    .empty-state p { margin:0; }
+    .footer { display:flex; gap:5px; flex:none; }
+    .footer .btn { width:50%; min-height:36px; padding:6px 12px; border-radius:9px; background:var(--soft); text-align:center; }
+    .footer .btn:hover:not(:disabled) { background:#eaeaea; }
+    .settings-content { flex:1; min-height:0; overflow:auto; padding:4px 7px 12px; scrollbar-width:thin; }
+    .setting-row { display:grid; grid-template-columns:145px minmax(0,1fr); gap:12px; align-items:start; min-height:50px; }
+    .setting-label { padding:8px 0; cursor:help; align-self:start; width:fit-content; border-radius:3px; }
+    .options { display:flex; gap:2px; flex-wrap:wrap; align-items:center; min-width:0; }
+    .pill, .type-choice label { display:inline-block; border-radius:9px; padding:8px 14px; min-height:34px; white-space:nowrap; background:transparent; cursor:pointer; }
+    .pill[aria-pressed="true"], .type-choice input:checked + label { background:var(--soft); }
+    .pill:hover:not(:disabled), .type-choice label:hover { background:var(--hover); }
+    .type-choice { position:relative; }
+    .type-choice input { position:absolute; opacity:0; width:1px; height:1px; }
+    .type-choice input:focus-visible + label { outline:2px solid var(--focus); outline-offset:2px; }
+    .type-choice input:disabled + label { opacity:.4; cursor:default; }
+    .quality-options { position:relative; }
+    .quality-more { display:inline-flex; align-items:center; gap:7px; }
+    .quality-more::after { content:''; width:5px; height:5px; border-right:1px solid; border-bottom:1px solid; transform:rotate(45deg) translateY(-2px); opacity:.55; }
+    .popover { position:fixed; z-index:30; min-width:130px; max-width:calc(100vw - 24px); border:1px solid var(--line); border-radius:9px; padding:5px; background:var(--bg); box-shadow:0 5px 20px #00000015; }
+    .popover button { display:block; width:100%; text-align:left; padding:7px 10px; border-radius:5px; white-space:nowrap; }
+    .popover button:hover, .popover button:focus-visible { background:var(--soft); }
+    .popover button[aria-checked="true"]::after { content:'✓'; margin-left:20px; float:right; }
+    .sub-setting { margin:0 0 8px; }
+    .number-input { width:68px; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+    .help-icon { border-radius:50%; font-size:11px; border:1px solid #b7b7b7; color:#777; width:16px; height:16px; line-height:14px; padding:0; margin-left:6px; vertical-align:middle; }
+    .profile-choice { display:flex; align-items:center; min-width:0; width:100%; }
+    .file-label { display:block; min-width:0; max-width:100%; position:relative; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-label input { position:absolute; width:1px; height:1px; opacity:0; }
+    .file-label:focus-within { outline:2px solid var(--focus); outline-offset:2px; }
+    #cmyk-custom-profile { margin-bottom:10px; }
+    #cmyk-profile-status { font-size:12px; margin:0 0 8px 157px; color:var(--error); overflow-wrap:anywhere; }
+    .help-copy { display:none !important; }
+    .status { display:none; margin:14px 0 0; padding:12px; background:var(--soft); border-radius:9px; font-size:12px; overflow-wrap:anywhere; }
+    .status.error { color:var(--error); }
+    .status-title { font-weight:500; }
+    .status-log { margin-top:5px; max-height:150px; overflow:auto; }
+    .status-log:empty { display:none; }
+    .status-log-line + .status-log-line { margin-top:4px; }
+    #tooltip { position:fixed; z-index:50; max-width:min(320px,calc(100vw - 20px)); padding:9px 11px; font-size:12px; line-height:1.5; white-space:pre-line; overflow-wrap:anywhere; color:#fff; background:#292929; border-radius:7px; box-shadow:0 3px 12px #0002; user-select:text; max-height:calc(100vh - 20px); overflow:auto; }
+    dialog { padding:20px; width:min(420px,calc(100vw - 32px)); max-height:calc(100vh - 40px); overflow:auto; border:1px solid var(--line); border-radius:12px; color:var(--ink); font-size:13px; }
+    dialog::backdrop { background:#0004; }
+    dialog h2 { font-size:16px; margin:0 0 12px; font-weight:600; }
+    dialog p { margin:10px 0; }
+    dialog ul { padding-left:18px; }
+    dialog code { font-size:11px; overflow-wrap:anywhere; }
+    dialog a { color:inherit; }
+    dialog .btn { background:var(--soft); border-radius:8px; padding:7px 15px; float:right; }
+    @media (max-width:440px) { body { font-size:13px; } .setting-row { grid-template-columns:115px minmax(0,1fr); gap:7px; } .pill,.type-choice label { padding:8px 9px; } #cmyk-profile-status { margin-left:122px; } }
+    @media (prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <section id="frames-screen" class="screen" aria-label="Select frames">
+    <div class="frame-card">
+      <div class="list-toolbar"><select id="sort-select" class="sort-select" aria-label="Sort frames" data-tooltip="Sort frame names. You can also drag rows to set the page order."><option value="none" selected>Sort</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option></select></div>
+      <div id="frame-list" class="frame-list" aria-label="Frames to export" hidden></div>
+      <div id="empty-state" class="empty-state"><p>Select frames in Figma</p></div>
+    </div>
+    <footer class="footer"><button id="clear-list-btn" class="btn" data-tooltip="Remove all frames from this list. Your Figma layers stay unchanged.">Clear list</button><button id="open-settings-btn" class="btn" disabled data-tooltip="Choose export settings for the listed frames.">Export</button></footer>
+  </section>
+  <section id="settings-screen" class="screen export-panel" aria-label="Export settings" hidden>
+    <div class="settings-content">
+      <div class="setting-row" data-help="export-help"><span class="setting-label" tabindex="0">Type</span><div class="options" role="radiogroup" aria-label="Type"><span class="type-choice"><input type="radio" id="export-vector" name="export-type" value="vector" checked><label for="export-vector" data-tooltip="Keep supported text and shapes vector. Quality controls embedded images; unsupported RGB pages can use a raster fallback.">Vector</label></span><span class="type-choice"><input type="radio" id="export-raster" name="export-type" value="raster"><label for="export-raster" data-tooltip="Turn each page into an image at the selected quality. Page and web links remain clickable.">Rasterized</label></span></div></div>
+      <div class="setting-row" data-help="color-profile-help cmyk-format-help"><span class="setting-label" tabindex="0">Color profile</span><div class="options" role="group" aria-label="Color profile"><button class="pill" data-setting="color-profile" data-value="DOCUMENT" data-tooltip="Preserve the Figma file’s exported color profile, including older files.">As file</button><button class="pill" data-setting="color-profile" data-value="SRGB" data-tooltip="Use sRGB for broad compatibility across screens and PDF viewers.">sRGB</button><button class="pill" data-setting="color-profile" data-value="DISPLAY_P3_V4" data-tooltip="Use Display P3 for a wider range of colors. Appearance depends on the screen and PDF viewer.">Display P3</button><button class="pill" data-setting="color-profile" data-value="CMYK" data-tooltip="Convert colors using a built-in or custom printer profile. CMYK is experimental; some effects require Rasterized. Review the exported PDF before printing.">CMYK</button></div><select id="color-profile" hidden aria-label="Color profile value"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></div>
+      <div class="setting-row" id="quality-row" data-help="vector-resolution-help export-help"><span class="setting-label" tabindex="0">Quality</span><div class="options quality-options" role="group" aria-label="Quality"><button class="pill" data-dpi="36">36 dpi</button><button class="pill" data-dpi="72">72 dpi</button><button class="pill" data-dpi="108">108 dpi</button><button id="quality-more-btn" class="pill quality-more" aria-haspopup="menu" aria-expanded="false" aria-controls="quality-more-menu">More</button></div></div>
+      <div id="vector-resolution-setting" hidden><select id="vector-image-dpi" aria-label="Image resolution"><option value="original">Original from Figma</option><option value="36">36 DPI</option><option value="72" selected>72 DPI</option><option value="108">108 DPI</option><option value="144">144 DPI</option><option value="216">216 DPI</option><option value="288">288 DPI</option><option value="300">300 DPI</option></select></div>
+      <div id="quality-setting" hidden><label id="quality-label" for="quality-select">Page resolution</label><select id="quality-select"><option value="screen-low">36 DPI</option><option value="screen-medium" selected>72 DPI</option><option value="screen-high">108 DPI</option><option value="print-low">144 DPI</option><option value="print-medium">216 DPI</option><option value="print-high">288 DPI</option><option value="print-highest">300 DPI</option></select></div>
+      <div class="setting-row" id="raster-format-setting" data-help="compression-help"><span class="setting-label" tabindex="0">Compression</span><div class="options" role="group" aria-label="Compression"><button class="pill" data-setting="raster-format" data-value="PNG">PNG</button><button class="pill" data-setting="raster-format" data-value="JPG">JPEG</button></div><select id="raster-format" hidden aria-label="Raster compression value"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></div>
+      <div id="cmyk-settings" hidden>
+        <div class="setting-row" data-help="cmyk-bundled-description cmyk-format-help"><span class="setting-label" tabindex="0">CMYK profile<button id="profile-help-toggle" class="help-icon" aria-label="Where can I find ICC profiles?" data-tooltip="Ask your printer or paper provider for the CMYK profile for your printer and paper. Choose the .icc or .icm file directly; no installation is needed.&#10;&#10;Mac: in Finder, press Shift–Command–G.&#10;/Library/ColorSync/Profiles&#10;~/Library/ColorSync/Profiles&#10;/System/Library/ColorSync/Profiles&#10;&#10;Windows: paste into File Explorer.&#10;%WINDIR%\System32\spool\drivers\color&#10;&#10;Display profiles may be RGB; choose a CMYK output profile. Click to open these instructions and the reference link.">?</button></span><div class="options" role="group" aria-label="CMYK profile"><button class="pill" data-setting="cmyk-profile-source" data-value="BUNDLED">Built-in</button><button class="pill" data-setting="cmyk-profile-source" data-value="CUSTOM">Custom</button></div><select id="cmyk-profile-source" hidden aria-label="CMYK profile value"><option value="BUNDLED">Built-in profile</option><option value="CUSTOM">Custom printer profile</option></select></div>
+        <p id="cmyk-load-error" class="status error" role="alert" hidden></p>
+        <div id="cmyk-custom-profile" hidden><div class="setting-row" data-help="cmyk-file-help"><span class="setting-label" tabindex="0">Profile file</span><div class="profile-choice"><label class="pill file-label" for="cmyk-profile"><span id="profile-file-label">Choose profile</span><input id="cmyk-profile" type="file" accept=".icc,.icm" aria-label="Printer ICC profile"></label></div></div><p id="cmyk-profile-status" role="status" aria-live="polite" hidden></p></div>
+      </div>
+      <div class="setting-row" id="fit-oversized-setting" data-help="fit-oversized-help"><span class="setting-label" tabindex="0">Lower resolution</span><div class="options" role="group" aria-label="Lower resolution"><button class="pill" data-setting="fit-oversized" data-value="false">Don’t allow</button><button class="pill" data-setting="fit-oversized" data-value="true">Allow</button></div><input type="checkbox" id="fit-oversized" hidden aria-label="Fit oversized raster pages"></div>
+      <div class="setting-row" data-help="parts-help budget-help"><span class="setting-label" tabindex="0">Output</span><div class="options" role="group" aria-label="Output"><button class="pill" data-setting="output-mode" data-value="single">Single PDF</button><button class="pill" data-setting="output-mode" data-value="parts">Split</button></div><select id="output-mode" hidden aria-label="Output value"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></div>
+      <label class="setting-row sub-setting" id="part-size-setting" for="pages-per-part" hidden data-help="parts-help"><span class="setting-label">Pages per part</span><input class="number-input" type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
+      <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
+    </div>
+    <footer class="footer"><button id="back-btn" class="btn" data-tooltip="Return to your frame list. Your export settings are kept.">Cancel</button><button id="cancel-btn" class="btn" hidden>Cancel</button><button id="export-btn" class="btn" disabled data-tooltip="Create the PDF using these settings.">Export</button><button id="continue-btn" class="btn" hidden>Continue</button></footer>
+  </section>
+  <div id="quality-more-menu" class="popover" role="menu" aria-label="More resolutions" hidden><button role="menuitemradio" data-dpi="original">Original</button><button role="menuitemradio" data-dpi="144">144 dpi</button><button role="menuitemradio" data-dpi="216">216 dpi</button><button role="menuitemradio" data-dpi="288">288 dpi</button><button role="menuitemradio" data-dpi="300">300 dpi</button></div>
+  <div id="frame-context-menu" class="popover" role="menu" aria-label="Frame actions" hidden><button id="remove-frame-action" role="menuitem">Remove</button></div>
+  <div id="tooltip" role="tooltip" hidden></div>
+  <dialog id="profile-help-dialog" aria-labelledby="profile-help-title"><h2 id="profile-help-title">Find ICC profiles</h2><div id="cmyk-profile-help"><p>Ask your printer or paper provider for the CMYK output profile for your printer and paper. Choose its <code>.icc</code> or <code>.icm</code> file directly from Downloads; installing it is not required.</p><p><strong>Mac</strong> — in Finder, press Shift–Command–G and paste a path:</p><ul><li><code>/Library/ColorSync/Profiles</code></li><li><code>~/Library/ColorSync/Profiles</code></li><li><code>/System/Library/ColorSync/Profiles</code></li></ul><p><strong>Windows</strong> — paste into the File Explorer address bar:</p><p><code>%WINDIR%\System32\spool\drivers\color</code></p><p>Some folders may be empty. Display profiles are often RGB; choose a CMYK printer/output profile.</p><p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p></div><form method="dialog"><button class="btn">Close</button></form></dialog>
+  <div class="help-copy" aria-hidden="true">
+    <p id="selection-info"></p><p id="color-profile-help"></p><p id="color-profile-compatibility"></p>
+    <p id="vector-resolution-help">Lowers the resolution of supported images while keeping text and shapes vector. Never adds detail beyond Figma’s export. Unsupported images keep their original resolution with a warning. Choose Original in More to keep image resolution unchanged.</p>
+    <p id="export-help"></p><p id="compression-help"></p><p id="cmyk-bundled-description"></p><p id="cmyk-format-help"></p>
+    <p id="cmyk-file-help">Choose a CMYK printer profile (.icc or .icm, up to 16 MiB). The profile is validated before export and never uploaded.</p>
+    <p id="fit-oversized-help">Allow lowers resolution only for raster pages above the size limits, including RGB vector fallbacks. PDF page dimensions stay unchanged. Don’t allow stops the export when a page exceeds these limits.</p>
+    <p id="parts-help">Single PDF keeps all pages in one file. Split saves one PDF at a time. Save each part before continuing, within 15 minutes. Keep every part together with its original filename. Links between parts require a compatible desktop PDF viewer.</p>
+    <p id="budget-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. Processing also needs memory beyond the PDF size. JPEG can help RGB raster pages and vector fallbacks.</p>
+  </div>
+
+  <!-- Replaced with the pinned local library by the production build. -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="color-profiles.js"></script>
+  <script src="cmyk.js"></script>
+  <script src="vector-cmyk.js"></script>
+  <script>
+    'use strict';
+    const QUALITY_SETTINGS = {
+      'screen-low': { scale: 0.5 }, 'screen-medium': { scale: 1 }, 'screen-high': { scale: 1.5 },
+      'print-low': { scale: 2 }, 'print-medium': { scale: 3 }, 'print-high': { scale: 4 }, 'print-highest': { scale: 4.17 }
+    };
+    let allFrames = [];
+    let frameOrder = [];
+    let connections = [];
+    let checkedFrames = new Set();
+    let selectedInFigma = new Set();
+    let deferredFrames = null;
+    let draggedFrameId = null;
+    let activeJob = null;
+    let jobSequence = 0;
+    const $ = id => document.getElementById(id);
+    const post = message => parent.postMessage({ pluginMessage: message }, '*');
+    const yieldToBrowser = globalThis.__PDF_EXPORT_YIELD__ = createCooperativeYield();
+
+    // PDF_ASSEMBLY_START: tested against the pinned pdf-lib implementation.
+    const pdfColorManagement = createPdfColorManagement(PDFLib);
+    const pdfLoader = createPdfLoader(PDFLib);
+    const PDF_DOCUMENT_LIMIT = 128 * 1024 * 1024;
+
+    function estimatePdfBytes(pdfDoc) {
+      // Count retained objects, including unreferenced objects left by failed imports.
+      // This estimates serialized data, not total renderer or Figma memory.
+      const objects = pdfDoc.context.enumerateIndirectObjects();
+      let bytes = 4096 + objects.length * 32; // header, trailer, and cross-reference allowance
+      for (const [ref, object] of objects) bytes += ref.sizeInBytes() + object.sizeInBytes() + 12;
+      if (!Number.isSafeInteger(bytes) || bytes < 0) throw new Error('Could not measure the retained PDF data.');
+      return bytes;
+    }
+
+    function assertPdfBudget(pdfDoc, limit = PDF_DOCUMENT_LIMIT) {
+      const bytes = estimatePdfBytes(pdfDoc);
+      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower image/page resolution or split the export into fewer pages per part.');
+      return bytes;
+    }
+
+    function createOutputPlan(frames, pagesPerPart, baseName) {
+      if (!Number.isInteger(pagesPerPart) || pagesPerPart < 1) throw new Error('Invalid pages per part.');
+      const count = Math.ceil(frames.length / pagesPerPart);
+      const digits = String(count).length;
+      const parts = Array.from({ length: count }, (_, index) => ({
+        index, start: index * pagesPerPart, end: Math.min(frames.length, (index + 1) * pagesPerPart),
+        filename: count === 1 ? `${baseName}.pdf` : `${baseName}-part-${String(index + 1).padStart(digits, '0')}-of-${count}.pdf`
+      }));
+      const destinations = new Map();
+      for (const part of parts) for (let index = part.start; index < part.end; index++) {
+        destinations.set(frames[index].id, { partIndex: part.index, pageIndex: index - part.start, filename: part.filename });
+      }
+      return { parts, destinations };
+    }
+
+    function destinationKey(destination) {
+      return destination.ref ? `page:${destination.ref.toString()}` : `remote:${destination.filename}:${destination.pageIndex}`;
+    }
+
+    function setLinkDestination(pdfDoc, annotation, destination) {
+      const { PDFName, PDFString } = PDFLib;
+      annotation.delete(PDFName.of('A'));
+      annotation.delete(PDFName.of('Dest'));
+      if (destination.ref) annotation.set(PDFName.of('Dest'), pdfDoc.context.obj([destination.ref, PDFName.of('Fit')]));
+      else annotation.set(PDFName.of('A'), pdfDoc.context.obj({ S: 'GoToR', F: PDFString.of(destination.filename), D: [destination.pageIndex, PDFName.of('Fit')], NewWindow: true }));
+    }
+
+    function normalizeUrl(value) {
+      if (typeof value !== 'string') return null;
+      const input = value.trim();
+      if (!input || /[\u0000-\u001f\u007f]/.test(input)) return null;
+      const scheme = input.match(/^([a-z][a-z0-9+.-]*):/i);
+      if (scheme && !/^(https?|mailto|tel)$/i.test(scheme[1])) return null;
+      try {
+        const url = new URL(scheme ? input : `https://${input}`);
+        if (!['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol)) return null;
+        if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.hostname) return null;
+        if ((url.protocol === 'mailto:' || url.protocol === 'tel:') && !url.pathname) return null;
+        return url.href;
+      } catch (_) { return null; }
+    }
+
+    function calculateLinkBounds(bounds, width, height) {
+      if (!bounds || ![bounds.x, bounds.y, bounds.width, bounds.height, width, height].every(Number.isFinite)) return null;
+      if (bounds.width <= 0 || bounds.height <= 0 || width <= 0 || height <= 0) return null;
+      const x = Math.max(0, bounds.x), y = Math.max(0, bounds.y);
+      const right = Math.min(width, bounds.x + bounds.width), bottom = Math.min(height, bounds.y + bounds.height);
+      return right > x && bottom > y ? { x, y, width: right - x, height: bottom - y } : null;
+    }
+
+    function rectanglesIntersect(a, b) {
+      return a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+    }
+
+    function nativeFigmaNodeId(uri) {
+      if (typeof uri !== 'string' || !uri) return null;
+      try {
+        const url = new URL(uri);
+        if (!['http:', 'https:'].includes(url.protocol) ||
+            !['figma.com', 'www.figma.com'].includes(url.hostname) ||
+            !/^\/(design|file)\/[a-z0-9]+(?:\/|$)/i.test(url.pathname)) return null;
+        const values = url.searchParams.getAll('node-id');
+        if (values.length !== 1 || !/^(?:I?\d+[:-]\d+)(?:;I?\d+[:-]\d+)*$/.test(values[0])) return null;
+        return values[0].replace(/-/g, ':');
+      } catch (_) { return null; }
+    }
+
+    function nativeLinkRecords(pdfDoc, page) {
+      const { PDFName, PDFArray, PDFDict, PDFString, PDFHexString } = PDFLib;
+      const result = [];
+      const annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+      if (!annotations) return result;
+      for (let i = 0; i < annotations.size(); i++) {
+        try {
+          const annotation = annotations.lookup(i, PDFDict);
+          if (annotation.get(PDFName.of('Subtype'))?.toString() !== '/Link') continue;
+          const box = annotation.lookupMaybe(PDFName.of('Rect'), PDFArray);
+          if (!box || box.size() !== 4) continue;
+          const rect = box.asArray().map(n => pdfDoc.context.lookup(n).asNumber());
+          const action = annotation.lookupMaybe(PDFName.of('A'), PDFDict);
+          let target = null, rawUri = null;
+          if (action?.get(PDFName.of('S'))?.toString() === '/URI') {
+            const uri = action.lookup(PDFName.of('URI'));
+            if (uri instanceof PDFString || uri instanceof PDFHexString) {
+              rawUri = uri.decodeText();
+              target = normalizeUrl(rawUri);
+            }
+          }
+          const destination = annotation.lookupMaybe(PDFName.of('Dest'), PDFArray);
+          if (!target && destination?.size()) target = `page:${destination.get(0).toString()}`;
+          if (action?.get(PDFName.of('S'))?.toString() === '/GoToR') {
+            const file = action.lookup(PDFName.of('F'));
+            const remote = action.lookupMaybe(PDFName.of('D'), PDFArray);
+            if ((file instanceof PDFString || file instanceof PDFHexString) && remote?.size()) target = `remote:${file.decodeText()}:${remote.lookup(0).asNumber()}`;
+          }
+          if (rect.every(Number.isFinite)) result.push({ target, rawUri, rect, annotation, annotationIndex: i });
+        } catch (_) { /* Preserve unrelated annotations we cannot interpret. */ }
+      }
+      return result;
+    }
+
+    function appendLinkAnnotation(pdfDoc, page, rect, targetPage, url) {
+      const { PDFName, PDFArray, PDFString } = PDFLib;
+      const annotation = { Type: 'Annot', Subtype: 'Link', Rect: rect, Border: [0, 0, 0] };
+      if (!targetPage) annotation.A = { Type: 'Action', S: 'URI', URI: PDFString.of(url) };
+      let annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+      if (!annotations) { annotations = pdfDoc.context.obj([]); page.node.set(PDFName.of('Annots'), annotations); }
+      const object = pdfDoc.context.obj(annotation);
+      if (targetPage) setLinkDestination(pdfDoc, object, targetPage);
+      annotations.push(pdfDoc.context.register(object));
+      return object;
+    }
+
+    function nativePageMatchesFrame(page, frame) {
+      if (page.getRotation().angle % 360 !== 0) return false;
+      // Both page contents and annotation rectangles use the PDF coordinate
+      // origin. Equal widths/heights alone do not make offset boxes compatible.
+      return [page.getMediaBox(), page.getCropBox()].every(box =>
+        [box.x, box.y, box.width, box.height].every(Number.isFinite) &&
+        Math.abs(box.x) <= 0.1 && Math.abs(box.y) <= 0.1 &&
+        Math.abs(box.width - frame.width) <= 0.1 && Math.abs(box.height - frame.height) <= 0.1
+      );
+    }
+
+    async function copyNativeUriAnnotations(pdfDoc, page, bytes, frame) {
+      bytes = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+      const source = await pdfLoader.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+      if (source.getPageCount() !== 1) throw new Error('Unexpected annotation page count.');
+      const sourcePage = source.getPage(0);
+      if (!nativePageMatchesFrame(sourcePage, frame)) throw new Error('Text annotation dimensions differ from the frame.');
+      for (const record of nativeLinkRecords(source, sourcePage)) {
+        // Depending on the export context, Figma represents NODE links as an
+        // empty URI or a full Figma node URL. Both retain the exact text rectangle.
+        if (record.rawUri !== null && (record.rawUri === '' || record.target)) appendLinkAnnotation(pdfDoc, page, record.rect, null, record.rawUri);
+      }
+    }
+
+    function deduplicateCmykPageProfiles(pdfDoc, page, session) {
+      const { PDFName, PDFRef, PDFArray, PDFDict, PDFRawStream } = PDFLib;
+      const context = pdfDoc.context;
+      const profiles = new Map();
+      const visited = new Set();
+      const stack = [{ object: page.node.Resources(), depth: 0 }];
+      let visits = 0;
+      const checkBudget = depth => {
+        if (depth > 128 || ++visits > 1000000) throw new Error('The PDF resource graph is too complex to merge safely.');
+      };
+      // Converted pages use the selected destination ICC for every four-channel
+      // color space. Inspect resources only; never decode image or font streams.
+      while (stack.length) {
+        let { object, depth } = stack.pop();
+        checkBudget(depth);
+        if (object instanceof PDFRef) object = context.lookup(object);
+        if (!object || visited.has(object)) continue;
+        visited.add(object);
+        if (object instanceof PDFRawStream) object = object.dict;
+        if (object instanceof PDFArray) {
+          if (object.get(0)?.toString() === '/ICCBased') {
+            const ref = object.get(1), profile = context.lookup(ref);
+            if (profile instanceof PDFRawStream && profile.dict.lookup(PDFName.of('N'))?.asNumber() === 4) {
+              if (!(ref instanceof PDFRef)) throw new Error('The converted CMYK profile must be an indirect PDF object.');
+              profiles.set(ref.toString(), ref);
+            }
+          }
+          for (const child of object.asArray()) stack.push({ object: child, depth: depth + 1 });
+        } else if (object instanceof PDFDict) {
+          for (const [, child] of object.entries()) stack.push({ object: child, depth: depth + 1 });
+        }
+      }
+      if (!profiles.size) return;
+      const canonical = session.destinationProfileRef(pdfDoc);
+      profiles.delete(canonical.toString());
+      if (!profiles.size) return;
+      visited.clear(); visits = 0;
+      // Each indirect object is enumerated independently, so references are only
+      // rewritten here. Traversing through them again would repeat the graph.
+      for (const [, root] of context.enumerateIndirectObjects()) {
+        stack.push({ object: root, depth: 0 });
+        while (stack.length) {
+          let { object, depth } = stack.pop();
+          checkBudget(depth);
+          if (!object || visited.has(object)) continue;
+          visited.add(object);
+          if (object instanceof PDFRawStream) object = object.dict;
+          const entries = object instanceof PDFArray ? object.asArray().map((value, index) => [index, value])
+            : object instanceof PDFDict ? object.entries() : [];
+          for (const [key, child] of entries) {
+            if (child instanceof PDFRef) {
+              if (profiles.has(child.toString())) object.set(key, canonical);
+            } else stack.push({ object: child, depth: depth + 1 });
+          }
+        }
+      }
+      // pdf-lib serializes orphan indirect objects too. Removing duplicate ICC
+      // streams keeps the retained-data allowance and saved parts meaningful.
+      for (const ref of profiles.values()) context.delete(ref);
+    }
+
+    async function appendExportPage(pdfDoc, message, options = {}) {
+      const bytes = message.data instanceof Uint8Array ? message.data : new Uint8Array(message.data);
+      if (!bytes.byteLength) throw new Error('The exported page is empty.');
+      const frame = message.frame;
+      if (!frame || ![frame.width, frame.height].every(n => Number.isFinite(n) && n > 0)) throw new Error('Invalid page dimensions.');
+      const cmyk = message.outputColorMode === 'CMYK';
+      if (cmyk && (!['PDF', 'PNG'].includes(message.format) || message.exportColorProfile !== 'SRGB' || !options.cmykSession)) {
+        throw new Error('CMYK export requires an sRGB PDF or PNG and a prepared printer profile.');
+      }
+      if (message.format === 'PDF') {
+        const source = await pdfLoader.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
+        if (source.getPageCount() !== 1) throw new Error('A frame must produce exactly one PDF page.');
+        const sourcePage = source.getPage(0);
+        if (sourcePage.getRotation().angle % 360 !== 0) throw new Error('Rotated native PDF pages cannot be merged.');
+        // Link coordinates use the frame origin. Unexpected native geometry cannot be copied safely.
+        if (!nativePageMatchesFrame(sourcePage, frame)) {
+          throw new Error('Native PDF dimensions differ from the frame.');
+        }
+        const warnings = [];
+        if (options.imageDpi != null) {
+          if (typeof createPdfImageResampler !== 'function') throw new Error('The image resolution helper is unavailable. Reopen the plugin and try again.');
+          const resized = await createPdfImageResampler(PDFLib, { yieldToBrowser }).resamplePage(source, sourcePage, { dpi: options.imageDpi, stillActive: options.stillActive });
+          if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+          warnings.push(...(resized?.warnings || []));
+        }
+        if (cmyk) {
+          if (typeof createVectorCmykConverter !== 'function') throw new Error('The vector CMYK converter is unavailable. Reopen the plugin and try again.');
+          const converted = await createVectorCmykConverter(PDFLib, { yieldToBrowser }).convertPage(source, sourcePage, options.cmykSession, { stillActive: options.stillActive });
+          if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+          warnings.push(...(converted?.warnings || []));
+        }
+        const [page] = await pdfDoc.copyPages(source, [0]);
+        if (cmyk) deduplicateCmykPageProfiles(pdfDoc, page, options.cmykSession);
+        if (!cmyk) await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
+        pdfDoc.addPage(page);
+        return { page, warnings };
+      }
+      if (!['PNG', 'JPG'].includes(message.format)) throw new Error('Unsupported exported page format.');
+      // JPEG is embedded as its original compressed DCT stream, without RGB expansion.
+      const image = cmyk
+        ? (await options.cmykSession.embedPng(pdfDoc, bytes, { stillActive: options.stillActive })).image
+        : message.format === 'JPG' ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+      if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+      const page = pdfDoc.addPage([frame.width, frame.height]);
+      page.drawImage(image, { x: 0, y: 0, width: frame.width, height: frame.height });
+      // Flush this image now so pdf-lib releases its decoded RGB/alpha buffers before the next page.
+      await image.embed();
+      if (!cmyk) await pdfColorManagement.attachRasterProfile(pdfDoc, image, bytes, message.format, message.exportColorProfile || 'SRGB', message.colorProfilePngData);
+      const warnings = [];
+      if (message.annotationPdfData) {
+        try { await copyNativeUriAnnotations(pdfDoc, page, message.annotationPdfData, frame); }
+        catch (_) { warnings.push(`${frame.name}: precise text-link geometry could not be imported.`); }
+      }
+      return { page, warnings };
+    }
+
+    async function addExportLinks(pdfDoc, pages, frames, links, stillActive = () => true, allDestinations = new Map()) {
+      const { PDFName, PDFArray } = PDFLib;
+      const pageById = new Map(frames.map((frame, index) => [frame.id, pages[index]]));
+      const destinationFor = id => pageById.get(id) || allDestinations.get(id);
+      const linksByFrame = new Map();
+      for (const link of links) {
+        if (!linksByFrame.has(link.fromFrameId)) linksByFrame.set(link.fromFrameId, []);
+        linksByFrame.get(link.fromFrameId).push(link);
+      }
+      let added = 0, skipped = 0;
+      const warnings = [];
+      for (let i = 0; i < frames.length; i++) {
+        if (!stillActive()) return { added, skipped, warnings };
+        const frame = frames[i], page = pages[i];
+        const records = nativeLinkRecords(pdfDoc, page);
+        const frameLinks = linksByFrame.get(frame.id) || [];
+        const toRect = link => {
+          const bounds = calculateLinkBounds(link.elementBounds, frame.width, frame.height);
+          return bounds && [bounds.x, frame.height - bounds.y - bounds.height, bounds.x + bounds.width, frame.height - bounds.y];
+        };
+        const internalText = frameLinks.filter(link => link.source === 'text' && link.type === 'internal');
+        const externalText = frameLinks.filter(link => link.source === 'text' && link.type === 'external');
+        const destinationsByTextNode = new Map();
+        for (const link of internalText) {
+          const node = link.textNodeId || link.elementName;
+          if (!destinationsByTextNode.has(node)) destinationsByTextNode.set(node, new Set());
+          destinationsByTextNode.get(node).add(link.toFrameId);
+        }
+        for (const record of records) {
+          const nodeId = nativeFigmaNodeId(record.rawUri);
+          if (record.rawUri !== '' && !nodeId) continue;
+          // A user-authored web link to Figma can have the same node ID as an
+          // internal NODE link. The scanner distinguishes these; do not turn
+          // an explicitly external URL in this text region into a page jump.
+          if (nodeId && externalText.some(link => {
+            const rect = toRect(link);
+            return normalizeUrl(link.toUrl) === record.target && rect && rectanglesIntersect(rect, record.rect);
+          })) continue;
+          const candidates = internalText.filter(link => {
+            const rect = toRect(link);
+            return rect && rectanglesIntersect(rect, record.rect) &&
+              (!nodeId || link.toNodeId === nodeId);
+          });
+          const targets = new Set(candidates.map(link => link.toFrameId));
+          // Full URLs identify each destination, even when one text node has
+          // several NODE links. Empty URIs still require an unambiguous region.
+          const ambiguousNode = !nodeId && candidates.some(link => destinationsByTextNode.get(link.textNodeId || link.elementName).size !== 1);
+          const destination = targets.size === 1 && !ambiguousNode ? destinationFor([...targets][0]) : null;
+          if (destination) {
+            setLinkDestination(pdfDoc, record.annotation, destination);
+            record.target = destinationKey(destination);
+            added++;
+          }
+        }
+        // Remove unsupported URI actions and unresolved empty NODE links, preserving every other native annotation.
+        const annotations = page.node.lookupMaybe(PDFName.of('Annots'), PDFArray);
+        for (const record of [...records].reverse()) {
+          if (record.rawUri !== null && !record.target) annotations.remove(record.annotationIndex);
+        }
+        for (const link of frameLinks) {
+          const rect = toRect(link);
+          const destination = link.type === 'internal' ? destinationFor(link.toFrameId) : null;
+          const url = link.type === 'external' ? normalizeUrl(link.toUrl) : null;
+          if (!rect || (!destination && !url)) { skipped++; continue; }
+          const target = destination ? destinationKey(destination) : url;
+          if (link.source === 'text') {
+            // The scanner's whole-text rectangle is a search region, never a replacement for range geometry.
+            if (!records.some(record => record.target === target && rectanglesIntersect(rect, record.rect))) {
+              skipped++;
+              const warning = `${frame.name}: some text links could not be mapped precisely and were omitted.`;
+              if (!warnings.includes(warning)) warnings.push(warning);
+            }
+            continue;
+          }
+          if (records.some(record => record.target === target && record.rect.every((n, index) => Math.abs(n - rect[index]) < 0.5))) continue;
+          appendLinkAnnotation(pdfDoc, page, rect, destination, url);
+          records.push({ target, rect });
+          added++;
+        }
+        if (i % 10 === 0) await yieldToBrowser();
+      }
+      return { added, skipped, warnings };
+    }
+    // PDF_ASSEMBLY_END
+
+    const CMYK_PROFILE_LIMIT = 16 * 1024 * 1024;
+    let selectedCmykProfile = null;
+    let bundledCmykProfile = null;
+    let bundledCmykProfileError = null;
+    let readingCmykProfile = false;
+    let cmykProfileReadSequence = 0;
+
+    function loadBundledCmykProfile() {
+      if (bundledCmykProfile) return bundledCmykProfile;
+      if (typeof getBundledCmykProfile !== 'function') throw new Error('The built-in CMYK profile is unavailable. Reopen the plugin or choose a custom printer profile.');
+      const profile = getBundledCmykProfile();
+      if (!(profile?.bytes instanceof Uint8Array) || !profile.bytes.byteLength || profile.bytes.byteLength > CMYK_PROFILE_LIMIT || typeof profile.name !== 'string' || !profile.name.trim() || typeof profile.description !== 'string') {
+        throw new Error('The built-in CMYK profile could not be loaded. Reopen the plugin or choose a custom printer profile.');
+      }
+      // Keep the bundled source separate from asynchronous custom-file reads.
+      bundledCmykProfile = { bytes: profile.bytes.slice(), name: profile.name, description: profile.description };
+      bundledCmykProfileError = null;
+      return bundledCmykProfile;
+    }
+
+    function updateCmykProfileInfo() {
+      const custom = $('cmyk-profile-source').value === 'CUSTOM';
+      $('cmyk-custom-profile').hidden = !custom;
+      $('cmyk-bundled-description').hidden = custom;
+      if (custom) $('cmyk-bundled-description').textContent = 'Use a CMYK output profile supplied for your printer and paper. Choose its .icc or .icm file; no system installation is required.';
+      $('cmyk-load-error').hidden = true;
+      if (!custom && $('color-profile').value === 'CMYK') {
+        try {
+          const profile = loadBundledCmykProfile();
+          $('cmyk-bundled-description').textContent = `${profile.name}${profile.description ? ` — ${profile.description}` : ''}`;
+        } catch (error) {
+          bundledCmykProfileError = error.message;
+          $('cmyk-bundled-description').textContent = bundledCmykProfileError;
+          $('cmyk-load-error').textContent = bundledCmykProfileError;
+          $('cmyk-load-error').hidden = false;
+          $('cmyk-load-error').style.display = 'block';
+        }
+      }
+    }
+
+    async function readCmykProfile() {
+      if (activeJob) return;
+      const sequence = ++cmykProfileReadSequence;
+      const file = $('cmyk-profile').files?.[0];
+      selectedCmykProfile = null;
+      readingCmykProfile = false;
+      $('profile-file-label').textContent = file?.name || 'Choose profile';
+      $('cmyk-profile-status').hidden = true;
+      if (!file) {
+        $('cmyk-profile-status').textContent = 'Choose a CMYK printer profile (.icc or .icm, up to 16 MiB).';
+        updateControls();
+        return;
+      }
+      if (!/\.(icc|icm)$/i.test(file.name) || !file.size || file.size > CMYK_PROFILE_LIMIT) {
+        $('cmyk-profile-status').textContent = 'Choose a non-empty .icc or .icm file no larger than 16 MiB.';
+        $('cmyk-profile-status').hidden = false;
+        updateControls();
+        return;
+      }
+      readingCmykProfile = true;
+      $('cmyk-profile-status').textContent = 'Reading printer profile…';
+      $('cmyk-profile-status').hidden = false;
+      updateControls();
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (sequence !== cmykProfileReadSequence) return;
+        selectedCmykProfile = { name: file.name, bytes };
+        $('cmyk-profile-status').textContent = `${file.name} selected. The printer profile will be validated before export.`;
+        $('cmyk-profile-status').hidden = true;
+      } catch (_) {
+        if (sequence === cmykProfileReadSequence) { $('cmyk-profile-status').textContent = 'Could not read this profile. Choose the file again.'; $('cmyk-profile-status').hidden = false; }
+      } finally {
+        if (sequence === cmykProfileReadSequence) { readingCmykProfile = false; updateControls(); }
+      }
+    }
+
+    function showStatus(message, type = 'info', details = []) {
+      const status = $('status');
+      status.className = `status ${type}`;
+      status.style.display = 'block';
+      $('status-title').textContent = message;
+      $('status-log').replaceChildren();
+      for (const detail of details.slice(-8)) {
+        const line = document.createElement('div');
+        line.className = 'status-log-line';
+        line.textContent = typeof detail === 'string' ? detail : (detail.message || String(detail));
+        $('status-log').appendChild(line);
+      }
+    }
+
+    let currentScreen = 'frames';
+    let contextFrameId = null;
+    const dpiQuality = { '36':'screen-low', '72':'screen-medium', '108':'screen-high', '144':'print-low', '216':'print-medium', '288':'print-high', '300':'print-highest' };
+    let tooltipTarget = null;
+    let tooltipTimer = null;
+
+    function hideTooltip() {
+      clearTimeout(tooltipTimer);
+      if (tooltipTarget) {
+        const ids = (tooltipTarget.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== 'tooltip');
+        ids.length ? tooltipTarget.setAttribute('aria-describedby', ids.join(' ')) : tooltipTarget.removeAttribute('aria-describedby');
+      }
+      tooltipTarget = null;
+      $('tooltip').hidden = true;
+    }
+
+    function tooltipText(target) {
+      if (target.dataset.tooltip) return target.dataset.tooltip;
+      return (target.dataset.help || target.closest('[data-help]')?.dataset.help || '').split(' ').map(id => $(id)?.textContent.trim()).filter(Boolean).join('\n\n');
+    }
+
+    function showTooltip(target, immediate = false) {
+      if (tooltipTarget === target && !$('tooltip').hidden) return;
+      hideTooltip();
+      const text = tooltipText(target);
+      if (!text) return;
+      tooltipTarget = target;
+      const show = () => {
+        if (tooltipTarget !== target || !target.isConnected) return;
+        const tip = $('tooltip');
+        tip.textContent = tooltipText(target); tip.hidden = false;
+        const anchor = target.getBoundingClientRect();
+        const box = tip.getBoundingClientRect();
+        const left = Math.max(10, Math.min(anchor.left, innerWidth - box.width - 10));
+        const top = anchor.bottom + box.height + 10 < innerHeight ? anchor.bottom + 7 : Math.max(10, anchor.top - box.height - 7);
+        tip.style.left = `${left}px`; tip.style.top = `${top}px`;
+        const ids = new Set((target.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+        ids.add('tooltip'); target.setAttribute('aria-describedby', [...ids].join(' '));
+      };
+      immediate ? show() : tooltipTimer = setTimeout(show, 400);
+    }
+
+    function closePopovers(restoreFocus = false) {
+      const qualityOpen = !$('quality-more-menu').hidden;
+      const contextRow = contextFrameId && [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === contextFrameId);
+      $('quality-more-menu').hidden = true; $('quality-more-btn').setAttribute('aria-expanded', 'false');
+      $('frame-context-menu').hidden = true;
+      document.querySelectorAll('.context-open').forEach(row => row.classList.remove('context-open'));
+      contextFrameId = null;
+      if (restoreFocus) (qualityOpen ? $('quality-more-btn') : contextRow)?.focus();
+    }
+
+    function positionPopover(menu, x, y) {
+      menu.hidden = false;
+      const box = menu.getBoundingClientRect();
+      menu.style.left = `${Math.max(8, Math.min(x, innerWidth - box.width - 8))}px`;
+      menu.style.top = `${Math.max(8, Math.min(y, innerHeight - box.height - 8))}px`;
+    }
+
+    function navigateScreen(screen) {
+      if (activeJob || (screen === 'settings' && !frameOrder.length)) return;
+      hideTooltip(); closePopovers();
+      currentScreen = screen;
+      $('frames-screen').hidden = screen !== 'frames';
+      $('settings-screen').hidden = screen !== 'settings';
+      if (screen === 'settings') document.querySelector('input[name="export-type"]:checked').focus();
+      else $('open-settings-btn').focus();
+    }
+
+    function selectDpi(dpi) {
+      if (activeJob) return;
+      const vector = $('export-vector').checked;
+      if (dpi === 'original' && !vector) return;
+      const select = vector ? $('vector-image-dpi') : $('quality-select');
+      select.value = vector ? dpi : dpiQuality[dpi];
+      select.dispatchEvent(new Event('change', { bubbles:true }));
+    }
+
+    function syncSettingButtons() {
+      for (const button of document.querySelectorAll('[data-setting]')) {
+        const input = $(button.dataset.setting);
+        const value = input.type === 'checkbox' ? String(input.checked) : input.value;
+        button.setAttribute('aria-pressed', String(value === button.dataset.value));
+        button.disabled = input.disabled;
+      }
+      const vector = $('export-vector').checked;
+      const dpi = vector ? $('vector-image-dpi').value : Object.keys(dpiQuality).find(dpi => dpiQuality[dpi] === $('quality-select').value);
+      for (const button of document.querySelectorAll('[data-dpi]')) {
+        button.setAttribute(button.getAttribute('role') === 'menuitemradio' ? 'aria-checked' : 'aria-pressed', String(button.dataset.dpi === dpi));
+        button.disabled = Boolean(activeJob);
+        button.hidden = button.dataset.dpi === 'original' && !vector;
+      }
+      const extra = !['36','72','108'].includes(dpi);
+      $('quality-more-btn').textContent = extra ? (dpi === 'original' ? 'Original' : `${dpi} dpi`) : 'More';
+      $('quality-more-btn').setAttribute('aria-pressed', String(extra));
+      $('quality-more-btn').disabled = Boolean(activeJob);
+      $('quality-row').dataset.help = vector ? 'vector-resolution-help' : 'export-help';
+      for (const row of document.querySelectorAll('.setting-row[data-help]')) {
+        const group = row.querySelector('[role="group"], [role="radiogroup"]');
+        group?.setAttribute('aria-describedby', row.dataset.help);
+      }
+    }
+
+    function removeListedFrame(id) {
+      if (activeJob || !frameOrder.includes(id)) return;
+      const index = frameOrder.indexOf(id);
+      hideTooltip(); closePopovers();
+      checkedFrames.delete(id); frameOrder = frameOrder.filter(value => value !== id); allFrames = allFrames.filter(value => value.id !== id);
+      connections = connections.filter(link => link.fromFrameId !== id && link.toFrameId !== id);
+      renderFrameList(); post({ type:'remove-frame', frameId:id });
+      const rows = [...document.querySelectorAll('.frame-item')];
+      (rows[Math.min(index, rows.length - 1)] || $('sort-select')).focus();
+    }
+
+    function openFrameMenu(id, x, y) {
+      if (activeJob) return;
+      hideTooltip(); closePopovers(); contextFrameId = id;
+      const row = [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === id);
+      row?.classList.add('context-open');
+      positionPopover($('frame-context-menu'), x, y);
+      $('remove-frame-action').focus();
+    }
+
+    function bindInterface() {
+      $('open-settings-btn').addEventListener('click', () => navigateScreen('settings'));
+      $('back-btn').addEventListener('click', () => navigateScreen('frames'));
+      for (const button of document.querySelectorAll('[data-setting]')) button.addEventListener('click', () => {
+        const input = $(button.dataset.setting);
+        if (activeJob || input.disabled) return;
+        hideTooltip(); closePopovers();
+        if (input.type === 'checkbox') input.checked = button.dataset.value === 'true';
+        else input.value = button.dataset.value;
+        input.dispatchEvent(new Event('change', { bubbles:true }));
+      });
+      for (const button of document.querySelectorAll('[data-dpi]')) button.addEventListener('click', () => {
+        const fromMenu = button.closest('[role="menu"]');
+        selectDpi(button.dataset.dpi); closePopovers(); hideTooltip();
+        if (fromMenu) $('quality-more-btn').focus();
+      });
+      $('quality-more-btn').addEventListener('click', () => {
+        const wasOpen = !$('quality-more-menu').hidden;
+        hideTooltip(); closePopovers();
+        if (wasOpen || activeJob) return;
+        const anchor = $('quality-more-btn').getBoundingClientRect();
+        positionPopover($('quality-more-menu'), anchor.left, anchor.bottom + 5);
+        $('quality-more-btn').setAttribute('aria-expanded', 'true');
+        const items = [...$('quality-more-menu').querySelectorAll('button:not([hidden])')];
+        (items.find(item => item.getAttribute('aria-checked') === 'true') || items[0]).focus();
+      });
+      $('remove-frame-action').addEventListener('click', () => { if (contextFrameId) removeListedFrame(contextFrameId); });
+      $('profile-help-toggle').addEventListener('click', () => { hideTooltip(); closePopovers(); $('profile-help-dialog').showModal(); });
+      document.addEventListener('pointerdown', event => {
+        hideTooltip();
+        if (!event.target.closest('.popover, #quality-more-btn')) closePopovers();
+      });
+      document.addEventListener('pointerover', event => {
+        const target = event.target.closest('[data-tooltip], [data-help]');
+        if (target && !event.target.closest('.popover') && $('profile-help-dialog').open === false) showTooltip(target);
+      });
+      document.addEventListener('pointerout', event => {
+        if (!tooltipTarget) return;
+        if (event.relatedTarget && (tooltipTarget.contains(event.relatedTarget) || $('tooltip').contains(event.relatedTarget))) return;
+        hideTooltip();
+      });
+      document.addEventListener('focusin', event => {
+        const target = event.target.closest('[data-tooltip], [data-help]');
+        if (target && event.target.matches(':focus-visible') && !event.target.closest('.popover')) showTooltip(event.target, true);
+      });
+      document.addEventListener('focusout', () => hideTooltip());
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          const handled = !$('tooltip').hidden || !$('quality-more-menu').hidden || !$('frame-context-menu').hidden;
+          closePopovers(true); hideTooltip();
+          if (handled && !$('profile-help-dialog').open) event.preventDefault();
+        }
+        const menu = event.target.closest('[role="menu"]');
+        if (!menu) return;
+        const items = [...menu.querySelectorAll('button:not([hidden]):not(:disabled)')];
+        const index = items.indexOf(document.activeElement);
+        let next;
+        if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+        if (event.key === 'ArrowUp') next = (index + items.length - 1) % items.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = items.length - 1;
+        if (next !== undefined) { event.preventDefault(); items[next]?.focus(); }
+        if (event.key === 'Tab') {
+          const anchor = menu.id === 'quality-more-menu' ? $('quality-more-btn') : [...document.querySelectorAll('.frame-item')].find(row => row.dataset.frameId === contextFrameId);
+          const screen = currentScreen === 'settings' ? $('settings-screen') : $('frames-screen');
+          const focusable = [...screen.querySelectorAll('button, input, select, [tabindex]')].filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length);
+          const next = focusable[focusable.indexOf(anchor) + (event.shiftKey ? -1 : 1)];
+          event.preventDefault(); closePopovers(); (next || anchor)?.focus();
+        }
+      });
+      document.querySelectorAll('.settings-content, .frame-list').forEach(element => element.addEventListener('scroll', () => { hideTooltip(); closePopovers(); }));
+      window.addEventListener('resize', () => { hideTooltip(); closePopovers(); });
+    }
+
+
+    function updateExportTypeInfo() {
+      const cmyk = $('color-profile').value === 'CMYK';
+      const vector = $('export-vector').checked;
+      const vectorCmyk = cmyk && vector;
+      $('color-profile-compatibility').hidden = true;
+      $('color-profile-compatibility').textContent = '';
+      $('color-profile-help').hidden = false;
+      $('raster-format-setting').hidden = cmyk;
+      $('quality-setting').hidden = true;
+      $('vector-resolution-setting').hidden = true;
+      $('vector-resolution-help').hidden = !vector;
+      $('fit-oversized-setting').hidden = vectorCmyk;
+      $('fit-oversized-help').hidden = vectorCmyk;
+      $('compression-help').hidden = vectorCmyk;
+      $('quality-label').textContent = 'Page resolution:';
+      $('export-help').textContent = vectorCmyk
+        ? 'Converts native vectors, text and images to the selected CMYK profile. Unsupported content stops the export; pages are never automatically rasterized.'
+        : cmyk
+        ? 'CMYK rasterizes every page at the selected resolution and converts colors using the selected profile. Transparent areas become white.'
+        : vector
+        ? 'Keeps native vectors and text where supported. Pages that require rasterization use the selected image resolution, or 72 DPI when Original is selected.'
+        : 'Creates image pages at the selected resolution. Page links and web links remain clickable.';
+      $('compression-help').textContent = cmyk
+        ? 'CMYK uses lossless image compression. Your RGB export settings are kept for when you switch back.'
+        : $('raster-format').value === 'JPG'
+        ? 'Applies to raster pages and vector fallbacks. JPEG can reduce photo-heavy exports; transparent areas become white and text may soften. Flat graphics can be larger than PNG.'
+        : 'Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.';
+      $('color-profile-help').textContent = {
+        SRGB: 'sRGB works well across most screens and PDF viewers.',
+        DISPLAY_P3_V4: 'Display P3 supports a wider range of colors. Appearance depends on the screen and PDF viewer.',
+        DOCUMENT: 'Preserves the Figma file’s exported color profile, including older files.',
+        CMYK: 'Use the built-in profile or choose a custom profile for your printer and paper. Conversion happens inside the plugin.'
+      }[$('color-profile').value];
+      $('cmyk-settings').hidden = !cmyk;
+      $('cmyk-format-help').textContent = !cmyk ? '' : vector
+        ? 'Vector CMYK is experimental. Some effects require Rasterized. Transparency and gradients may look different; check the exported PDF. Links stay clickable. This is not a PDF/X export.'
+        : 'Raster CMYK uses a white background and keeps links clickable. Maximum 8 million pixels per page; choose Lower resolution → Allow to lower resolution when needed. This is not a PDF/X export.';
+      updateCmykProfileInfo();
+      const parts = $('output-mode').value === 'parts';
+      $('part-size-setting').hidden = !parts;
+      $('parts-help').hidden = !parts;
+      updateControls();
+    }
+
+    function updateControls() {
+      const busy = Boolean(activeJob);
+      for (const input of document.querySelectorAll('#clear-list-btn, #sort-select, .export-panel select, .export-panel input, .frame-checkbox, .remove-btn')) input.disabled = busy;
+      const cmyk = $('color-profile').value === 'CMYK';
+      const cmykProfileReady = $('cmyk-profile-source').value === 'BUNDLED'
+        ? Boolean(bundledCmykProfile && !bundledCmykProfileError)
+        : $('cmyk-profile-source').value === 'CUSTOM' && !readingCmykProfile && Boolean(selectedCmykProfile);
+      $('raster-format').disabled = busy || cmyk;
+      $('quality-select').disabled = busy || $('export-vector').checked;
+      $('vector-image-dpi').disabled = busy || !$('export-vector').checked;
+      $('fit-oversized').disabled = busy || (cmyk && $('export-vector').checked);
+      for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
+      const count = frameOrder.filter(id => checkedFrames.has(id)).length;
+      $('export-btn').disabled = busy || !count || (cmyk && !cmykProfileReady);
+      $('export-btn').textContent = busy ? 'Exporting…' : 'Export';
+      $('open-settings-btn').disabled = busy || !count;
+      $('clear-list-btn').disabled = busy || !frameOrder.length;
+      $('open-settings-btn').setAttribute('aria-label', `Export — settings for ${count} frame${count === 1 ? '' : 's'}`);
+      $('export-btn').setAttribute('aria-label', `Export ${count} frame${count === 1 ? '' : 's'} to PDF`);
+      $('back-btn').hidden = busy; $('back-btn').disabled = busy;
+      $('export-btn').hidden = Boolean(activeJob?.awaitingContinue);
+      $('remove-frame-action').disabled = busy;
+      if (busy) { closePopovers(); hideTooltip(); }
+      syncSettingButtons();
+      $('cancel-btn').hidden = !busy;
+      $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
+      $('cancel-btn').textContent = activeJob?.cancelled ? 'Cancelling…' : 'Cancel';
+      $('continue-btn').hidden = !activeJob?.awaitingContinue;
+      $('continue-btn').disabled = !activeJob?.awaitingContinue || Boolean(activeJob?.cancelled || activeJob?.failed);
+    }
+
+    function handleFramesUpdated(message) {
+      if (activeJob) { deferredFrames = message; return; }
+      const incoming = Array.isArray(message.frames) ? message.frames : [];
+      const previous = new Set(allFrames.map(frame => frame.id));
+      const ids = new Set(incoming.map(frame => frame.id));
+      frameOrder = frameOrder.filter(id => ids.has(id));
+      for (const frame of incoming) {
+        if (!frameOrder.includes(frame.id)) frameOrder.push(frame.id);
+        if (!previous.has(frame.id)) checkedFrames.add(frame.id);
+      }
+      checkedFrames = new Set([...checkedFrames].filter(id => ids.has(id)));
+      allFrames = incoming;
+      connections = Array.isArray(message.connections) ? message.connections : [];
+      renderFrameList();
+    }
+
+    function renderFrameList() {
+      const list = $('frame-list');
+      if (tooltipTarget?.closest('.frame-item')) hideTooltip();
+      if (contextFrameId && !frameOrder.includes(contextFrameId)) closePopovers();
+      list.replaceChildren();
+      list.setAttribute('role', 'list');
+      const byId = new Map(allFrames.map(frame => [frame.id, frame]));
+      const counts = new Map();
+      for (const connection of connections) counts.set(connection.fromFrameId, (counts.get(connection.fromFrameId) || 0) + 1);
+      for (const id of frameOrder) {
+        const frame = byId.get(id);
+        if (!frame) continue;
+        const item = document.createElement('div');
+        item.className = 'frame-item'; item.tabIndex = 0; item.setAttribute('role', 'listitem');
+        item.dataset.frameId = id; item.draggable = !activeJob;
+        item.dataset.tooltip = `${frame.name}\n${Math.round(frame.width)} × ${Math.round(frame.height)} px · ${frame.parent || 'Page'}\nDrag to reorder. Right-click to remove. Keyboard: Alt + ↑/↓ to reorder, Delete to remove.`;
+        const info = document.createElement('div'); info.className = 'frame-info';
+        const name = document.createElement('div'); name.className = 'frame-name'; name.textContent = frame.name; info.append(name);
+        const indicator = document.createElement('span'); indicator.className = counts.has(id) ? 'connections-count' : 'no-links';
+        indicator.textContent = counts.has(id) ? `${counts.get(id)} link${counts.get(id) === 1 ? '' : 's'}` : 'No links';
+        item.append(info, indicator);
+        item.addEventListener('contextmenu', event => { event.preventDefault(); openFrameMenu(id, event.clientX, event.clientY); });
+        item.addEventListener('keydown', event => {
+          if (activeJob) return;
+          if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); removeListedFrame(id); }
+          if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu' || event.key === 'Enter') {
+            event.preventDefault(); const box = item.getBoundingClientRect(); openFrameMenu(id, box.right - 110, box.bottom);
+          }
+          if (event.altKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault(); const from = frameOrder.indexOf(id), to = from + (event.key === 'ArrowUp' ? -1 : 1);
+            if (to >= 0 && to < frameOrder.length) { frameOrder.splice(from, 1); frameOrder.splice(to, 0, id); renderFrameList(); [...list.children].find(row => row.dataset.frameId === id)?.focus(); }
+          }
+        });
+        item.addEventListener('dragstart', event => {
+          if (activeJob) { event.preventDefault(); return; }
+          hideTooltip(); closePopovers(); draggedFrameId = id; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', id); item.classList.add('dragging');
+        });
+        item.addEventListener('dragover', event => {
+          if (!activeJob && draggedFrameId && draggedFrameId !== id) { event.preventDefault(); item.classList.add('drag-over'); }
+        });
+        item.addEventListener('dragleave', event => { if (!item.contains(event.relatedTarget)) item.classList.remove('drag-over'); });
+        item.addEventListener('drop', event => {
+          event.preventDefault();
+          if (activeJob || !draggedFrameId || draggedFrameId === id) return;
+          const from = frameOrder.indexOf(draggedFrameId), to = frameOrder.indexOf(id);
+          if (from < 0 || to < 0) return;
+          frameOrder.splice(from, 1); frameOrder.splice(to, 0, draggedFrameId); draggedFrameId = null; renderFrameList();
+        });
+        item.addEventListener('dragend', () => { draggedFrameId = null; document.querySelectorAll('.dragging, .drag-over').forEach(row => row.classList.remove('dragging', 'drag-over')); });
+        list.appendChild(item);
+      }
+      list.hidden = !frameOrder.length;
+      $('empty-state').hidden = Boolean(frameOrder.length);
+      updateControls();
+    }
+
+    function sortFramesByName(direction) {
+      if (activeJob || !['az', 'za'].includes(direction)) return;
+      const byId = new Map(allFrames.map(frame => [frame.id, frame]));
+      const oldPosition = new Map(frameOrder.map((id, index) => [id, index]));
+      frameOrder.sort((a, b) => {
+        const result = String(byId.get(a)?.name || '').localeCompare(String(byId.get(b)?.name || ''), undefined, { numeric: true, sensitivity: 'base' });
+        return result ? result * (direction === 'az' ? 1 : -1) : oldPosition.get(a) - oldPosition.get(b);
+      });
+      renderFrameList();
+    }
+
+    function isCurrent(job) { return activeJob === job && !job.cancelled && !job.failed; }
+    function addWarnings(job, warnings) {
+      for (const warning of warnings || []) {
+        const value = typeof warning === 'string' ? warning : warning?.message;
+        if (value && !job.warnings.includes(value)) job.warnings.push(value);
+      }
+    }
+    function releaseJob(job) {
+      if (activeJob !== job) return;
+      if (job.blobUrl) { URL.revokeObjectURL(job.blobUrl); job.blobUrl = null; }
+      job.cmykSession?.close();
+      job.cmykSession = null; job.cmykProfileBytes = null;
+      activeJob = null;
+      job.pdf = null; job.pages = []; job.frames = []; job.connections = [];
+      job.destinations?.clear();
+      if (deferredFrames) { const message = deferredFrames; deferredFrames = null; handleFramesUpdated(message); }
+      updateControls();
+    }
+    function finishTerminal(job) {
+      if (activeJob !== job || !job.backendStopped || (!job.cancelled && !job.failed)) return;
+      // Called only after this job's serialized library work has settled.
+      const prior = job.downloadsStarted ? ` Download started for ${job.downloadsStarted} part${job.downloadsStarted === 1 ? '' : 's'}. Links to unfinished parts will not work.` : ' No PDF was downloaded.';
+      showStatus((job.failed ? `Export failed: ${job.failed}` : 'Export cancelled.') + prior, job.failed ? 'error' : 'info', job.downloadedNames);
+      releaseJob(job);
+    }
+    function failJob(job, error, notifyBackend = true) {
+      if (activeJob !== job || job.cancelled || job.failed) return;
+      job.failed = error instanceof Error ? error.message : String(error || 'Unknown error');
+      showStatus(`Export failed: ${job.failed}${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'error', job.downloadedNames);
+      updateControls();
+      if (notifyBackend && job.backendDispatched) post({ type: 'export-failed', jobId: job.id, message: job.failed });
+    }
+    function enqueue(job, task) {
+      job.queue = job.queue.then(async () => {
+        if (isCurrent(job)) await task();
+      }).catch(error => failJob(job, error)).finally(() => finishTerminal(job));
+    }
+
+    function startExport() {
+      if (activeJob) return;
+      if (currentScreen !== 'settings') navigateScreen('settings');
+      hideTooltip(); closePopovers();
+      const selectedFrames = frameOrder.filter(id => checkedFrames.has(id));
+      if (!selectedFrames.length) return;
+      if (!window.PDFLib?.PDFDocument) { showStatus('The PDF library is unavailable. Reopen the plugin and try again.', 'error'); return; }
+      const quality = $('quality-select').value;
+      const requestedColorProfile = $('color-profile').value;
+      if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
+      const cmyk = requestedColorProfile === 'CMYK';
+      const exportType = $('export-vector').checked ? 'vector' : 'raster';
+      const imageDpi = exportType === 'vector' && $('vector-image-dpi').value !== 'original' ? Number($('vector-image-dpi').value) : null;
+      if (imageDpi !== null && ![36, 72, 108, 144, 216, 288, 300].includes(imageDpi)) { showStatus('Choose a supported image resolution.', 'error'); return; }
+      let cmykProfile = null;
+      const cmykProfileSource = cmyk ? $('cmyk-profile-source').value : null;
+      if (cmykProfileSource === 'CUSTOM') {
+        if (readingCmykProfile || !selectedCmykProfile) { showStatus('Choose a custom CMYK ICC profile, or switch to the built-in profile.', 'error'); return; }
+        cmykProfile = selectedCmykProfile;
+      } else if (cmykProfileSource === 'BUNDLED') {
+        try { cmykProfile = loadBundledCmykProfile(); }
+        catch (error) { showStatus(error.message, 'error'); return; }
+      } else if (cmyk) { showStatus('Choose the built-in profile or a custom printer profile.', 'error'); return; }
+      const split = $('output-mode').value === 'parts';
+      const pagesPerPart = split ? Number($('pages-per-part').value) : selectedFrames.length;
+      if (split && (!Number.isInteger(pagesPerPart) || pagesPerPart < 1 || pagesPerPart > 250)) { showStatus('Choose between 1 and 250 pages per part.', 'error'); return; }
+      const id = `${Date.now()}-${++jobSequence}`;
+      const unique = globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(16).slice(2, 10);
+      const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
+      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType, pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileSource, cmykProfileName: cmykProfile?.name || null, cmykProfileBytes: cmykProfile ? cmykProfile.bytes.slice() : null };
+      Object.defineProperty(job, 'outputColorMode', { value: cmyk ? 'CMYK' : 'RGB', writable: false, configurable: false, enumerable: true });
+      Object.defineProperty(job, 'imageDpi', { value: imageDpi, writable: false, configurable: false, enumerable: true });
+      // Snapshot every setting before asynchronous profile preparation or page work.
+      const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: exportType === 'vector' ? (imageDpi || 72) / 72 : QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };
+      activeJob = job;
+      updateControls();
+      showStatus(cmyk ? 'Preparing and validating the CMYK profile…' : 'Preparing frames…');
+      enqueue(job, async () => {
+        if (cmyk) {
+          if (typeof createCmykExporter !== 'function' || typeof loadCmykEngine !== 'function') throw new Error('The CMYK conversion engine is unavailable. Reopen the plugin and try again.');
+          const session = await createCmykExporter(PDFLib, { loadEngine: loadCmykEngine, yieldToBrowser }).prepare(job.cmykProfileBytes);
+          if (!isCurrent(job)) { session.close(); return; }
+          job.cmykSession = session;
+          job.cmykProfileBytes = null;
+        }
+        if (!isCurrent(job)) return;
+        job.backendDispatched = true;
+        job.backendStopped = false;
+        showStatus('Preparing frames…');
+        post(request);
+      });
+    }
+
+    function cancelExport() {
+      const job = activeJob;
+      if (!job || job.cancelled || job.failed) return;
+      job.cancelled = true;
+      showStatus(`Cancelling export… Waiting for the current operation to finish.${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'info', job.downloadedNames);
+      updateControls();
+      if (job.backendDispatched) post({ type: 'export-cancel', jobId: job.id });
+      else job.queue.finally(() => finishTerminal(job));
+    }
+
+    async function receivePage(job, message) {
+      if (!Number.isInteger(message.index) || message.index < 0) throw new Error('Invalid page number.');
+      if (message.index < job.nextIndex) return;
+      if (!job.started || !job.pdf || job.awaitingContinue) throw new Error('Page arrived before the PDF part was ready.');
+      if (message.index !== job.nextIndex || job.frames[message.index]?.id !== message.frame?.id) throw new Error('Exported page order does not match the selection.');
+      if (job.fallbackIndex === message.index && message.format === 'PDF') return;
+      // Reject inconsistent metadata before import, so a profile error cannot trigger raster fallback.
+      if (message.exportColorProfile !== job.exportColorProfile) throw new Error('The page color profile differs from this export. Start a new export with one consistent color profile.');
+      if (message.outputColorMode !== job.outputColorMode) throw new Error('The page color mode differs from this export. Start a new export.');
+      if (job.outputColorMode === 'CMYK' && message.format !== (job.exportType === 'vector' ? 'PDF' : 'PNG')) {
+        throw new Error(job.exportType === 'vector'
+          ? 'Vector CMYK requires a native PDF page. Choose Rasterized to export this frame in CMYK.'
+          : 'Raster CMYK requires PNG pages. Start a new export.');
+      }
+      addWarnings(job, message.warnings);
+      showStatus(`Preparing page ${message.index + 1} of ${job.frames.length}: ${message.frame.name}`, 'info', job.warnings);
+      const before = job.pdf.getPageCount();
+      let appended;
+      try {
+        appended = await appendExportPage(job.pdf, message, { cmykSession: job.cmykSession, imageDpi: job.imageDpi, stillActive: () => isCurrent(job) });
+      } catch (error) {
+        // A failed embed must never leave a partial/blank page in a successful file.
+        while (job.pdf.getPageCount() > before) job.pdf.removePage(job.pdf.getPageCount() - 1);
+        if (!isCurrent(job)) return;
+        if (message.format === 'PDF' && job.outputColorMode !== 'CMYK' && job.fallbackIndex !== message.index) {
+          job.fallbackIndex = message.index;
+          addWarnings(job, [`${message.frame.name}: using the selected raster format because its PDF could not be imported.`]);
+          post({ type: 'page-ack', jobId: job.id, index: message.index, fallback: true });
+          return;
+        }
+        const reason = error?.message || String(error);
+        const hint = job.outputColorMode === 'CMYK' && job.exportType === 'vector' && !/choose rasterized/i.test(reason)
+          ? ' Choose Rasterized to export this frame in CMYK.' : '';
+        throw new Error(`Could not create page “${message.frame.name}”: ${reason}${hint}`);
+      }
+      if (!isCurrent(job)) return;
+      addWarnings(job, appended.warnings);
+      job.pages.push(appended.page);
+      // A size-budget failure is not a native-PDF import failure and must not retry as raster.
+      job.retainedBytes = assertPdfBudget(job.pdf);
+      job.nextIndex++;
+      job.fallbackIndex = null;
+      await yieldToBrowser();
+      if (!isCurrent(job)) return;
+      const part = job.parts[job.partIndex];
+      if (job.nextIndex === part.end && job.partIndex < job.parts.length - 1) {
+        // Pause the backend before serialization; only Continue acknowledges this page.
+        job.pauseIndex = message.index;
+        post({ type: 'part-ready', jobId: job.id, index: message.index });
+        if (!await saveCurrentPart(job)) return;
+        job.pdf = null; job.pages = []; job.retainedBytes = 0;
+        job.awaitingContinue = true;
+        showStatus(`Part ${job.partIndex + 1} of ${job.parts.length} is ready. Save “${part.filename}”, then continue.`, 'info', [...job.warnings, 'Keep all parts together with their original filenames. Cross-part links require a compatible desktop PDF viewer.']);
+        updateControls();
+      } else post({ type: 'page-ack', jobId: job.id, index: message.index });
+    }
+
+    async function newPartDocument(job) {
+      const pdf = await PDFLib.PDFDocument.create();
+      pdf.setProducer('Figma to PDF with links');
+      if (!isCurrent(job)) return;
+      job.pdf = pdf; job.pages = []; job.retainedBytes = 0;
+    }
+
+    function continueExport() {
+      const job = activeJob;
+      if (!job || !isCurrent(job) || !job.awaitingContinue) return;
+      job.awaitingContinue = false;
+      updateControls();
+      enqueue(job, async () => {
+        if (job.blobUrl) { URL.revokeObjectURL(job.blobUrl); job.blobUrl = null; }
+        job.partIndex++;
+        await newPartDocument(job);
+        if (!isCurrent(job)) return;
+        showStatus(`Preparing part ${job.partIndex + 1} of ${job.parts.length}…`, 'info', job.warnings);
+        const index = job.pauseIndex;
+        job.pauseIndex = null;
+        post({ type: 'page-ack', jobId: job.id, index });
+      });
+    }
+
+    async function saveCurrentPart(job) {
+      const part = job.parts[job.partIndex];
+      if (!job.pdf || job.pdf.getPageCount() !== part.end - part.start) throw new Error('This PDF part did not contain every expected page.');
+      job.retainedBytes = assertPdfBudget(job.pdf);
+      showStatus('Adding links…', 'info', job.warnings);
+      const links = await addExportLinks(job.pdf, job.pages, job.frames.slice(part.start, part.end), job.connections, () => isCurrent(job), job.destinations);
+      if (!isCurrent(job)) return false;
+      addWarnings(job, links.warnings);
+      if (links.skipped) addWarnings(job, [`${links.skipped} link${links.skipped === 1 ? '' : 's'} without a supported target or precise exported geometry were omitted.`]);
+      job.retainedBytes = assertPdfBudget(job.pdf);
+      showStatus(`Saving ${part.end - part.start} pages${job.parts.length > 1 ? ` in part ${job.partIndex + 1} of ${job.parts.length}` : ''}…`, 'info', job.warnings);
+      await yieldToBrowser();
+      if (!isCurrent(job)) return false;
+      const bytes = await job.pdf.save({ addDefaultPage: false, useObjectStreams: true, objectsPerTick: 20 });
+      await yieldToBrowser();
+      if (!isCurrent(job)) return false;
+      if (bytes.byteLength > PDF_DOCUMENT_LIMIT) throw new Error(job.outputColorMode === 'CMYK'
+        ? 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or a lower resolution.'
+        : 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or a lower resolution. JPEG can help raster pages.');
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = part.filename;
+      document.body.appendChild(link);
+      try {
+        if (!isCurrent(job)) { URL.revokeObjectURL(url); return false; }
+        link.click();
+        job.blobUrl = url;
+        job.downloadsStarted++;
+        job.downloadedNames.push(part.filename);
+        job.lastOutputBytes = bytes.byteLength;
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        throw error;
+      } finally { link.remove(); }
+      return true;
+    }
+
+    async function completeExport(job) {
+      if (!job.started || !job.frames.length || job.nextIndex !== job.frames.length || job.awaitingContinue || job.partIndex !== job.parts.length - 1) throw new Error('The export did not contain every selected page.');
+      if (!await saveCurrentPart(job)) return;
+      job.completed = true;
+      post({ type: 'export-finished', jobId: job.id });
+      const url = job.blobUrl;
+      job.blobUrl = null;
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      const message = job.parts.length > 1
+        ? `PDFs ready: ${job.frames.length} pages in ${job.parts.length} parts. Every part download has started. Keep original filenames together for cross-part links.`
+        : `PDF ready: ${job.frames.length} page${job.frames.length === 1 ? '' : 's'} (${(job.lastOutputBytes / 1024 / 1024).toFixed(1)} MB). Download started.`;
+      showStatus(message, job.warnings.length ? 'warning' : 'success', [...job.warnings, ...job.downloadedNames]);
+      releaseJob(job);
+    }
+
+    window.addEventListener('message', event => {
+      // Figma forwards messages through sandbox relay windows, so source is not
+      // necessarily parent. Validate the plugin envelope and active job ID below.
+      const message = event.data?.pluginMessage;
+      if (!message || typeof message.type !== 'string') return;
+      if (message.type === 'frames-updated') { handleFramesUpdated(message); return; }
+      if (message.type === 'selection-changed') {
+        selectedInFigma = new Set(message.selectedFrameIds || []);
+        $('selection-info').textContent = message.selectedFrameNames?.length ? `Currently selected: ${message.selectedFrameNames.join(', ')}` : '';
+        $('selection-info').hidden = !message.selectedFrameNames?.length;
+        for (const item of document.querySelectorAll('.frame-item')) item.classList.toggle('selected-in-figma', selectedInFigma.has(item.dataset.frameId));
+        return;
+      }
+      if (message.type === 'restore-theme') return;
+      if (message.type === 'plugin-ready') return;
+      const job = activeJob;
+      if (!job || message.jobId !== job.id) return;
+      if (!job.backendDispatched) return;
+      if (message.type === 'export-error' || message.type === 'export-cancelled') {
+        job.backendStopped = true;
+        if (message.type === 'export-error' && !job.cancelled) failJob(job, message.message || message.error || 'Figma could not export these frames.', false);
+        else job.cancelled = true;
+        job.queue.finally(() => finishTerminal(job));
+        return;
+      }
+      if (!isCurrent(job)) return;
+      if (message.type === 'export-start') {
+        enqueue(job, async () => {
+          if (job.started) throw new Error('Duplicate export initialization.');
+          const resolvedProfile = message.exportColorProfile;
+          if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT'].includes(resolvedProfile)) throw new Error('Figma did not provide a supported color profile for this export. Choose sRGB or Display P3 and try again.');
+          const expectedProfile = job.requestedColorProfile === 'CMYK' ? 'SRGB' : job.requestedColorProfile;
+          if (job.requestedColorProfile !== 'DOCUMENT' && resolvedProfile !== expectedProfile) throw new Error('The resolved color profile differs from the selected profile. Start a new export.');
+          if (message.outputColorMode !== job.outputColorMode) throw new Error('The resolved color mode differs from the selected mode. Start a new export.');
+          Object.defineProperty(job, 'exportColorProfile', { value: resolvedProfile, writable: false, configurable: false, enumerable: true });
+          const frames = message.frames || [];
+          if (frames.length !== job.requestedIds.length || frames.some((frame, index) => frame.id !== job.requestedIds[index])) throw new Error('Export order differs from the selected frames.');
+          job.frames = frames; job.connections = message.connections || []; addWarnings(job, message.warnings);
+          const plan = createOutputPlan(frames, job.pagesPerPart, job.baseName);
+          job.parts = plan.parts; job.destinations = plan.destinations;
+          await newPartDocument(job);
+          if (!isCurrent(job)) return;
+          job.started = true;
+        });
+      } else if (message.type === 'export-page') {
+        if (Number.isInteger(message.index) && message.index < job.nextIndex) return;
+        const key = `${message.index}:${message.format}`;
+        if (job.pendingPage === key) return;
+        if (job.pendingPage) { failJob(job, 'Received overlapping page data. Please retry the export.'); return; }
+        job.pendingPage = key;
+        enqueue(job, async () => { try { await receivePage(job, message); } finally { job.pendingPage = null; } });
+      } else if (message.type === 'export-complete') {
+        if (job.finishing) return;
+        job.finishing = true;
+        addWarnings(job, message.warnings);
+        enqueue(job, () => completeExport(job));
+      } else if (message.type === 'export-progress') {
+        if (!job.awaitingContinue && job.pauseIndex === null) showStatus(message.message || 'Exporting frames…', 'info', job.warnings);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindInterface();
+      $('export-btn').addEventListener('click', startExport);
+      $('cancel-btn').addEventListener('click', cancelExport);
+      $('continue-btn').addEventListener('click', continueExport);
+      $('cmyk-profile').addEventListener('change', readCmykProfile);
+      $('clear-list-btn').addEventListener('click', () => {
+        if (activeJob) return;
+        allFrames = []; frameOrder = []; checkedFrames.clear(); connections = []; renderFrameList(); post({ type: 'clear-list' });
+      });
+      $('sort-select').addEventListener('change', event => { sortFramesByName(event.target.value); event.target.value = 'none'; });
+      for (const input of document.querySelectorAll('input[name="export-type"]')) input.addEventListener('change', updateExportTypeInfo);
+      for (const id of ['raster-format', 'output-mode', 'color-profile', 'cmyk-profile-source', 'vector-image-dpi', 'quality-select', 'fit-oversized']) $(id).addEventListener('change', updateExportTypeInfo);
+      updateExportTypeInfo(); updateControls();
+      post({ type: 'ui-ready' });
+    });
+  </script>
+</body>
+</html>
