@@ -51,7 +51,7 @@ try {
     pixels: [image.dict.get(PDFLib.PDFName.of('Width')).asNumber(), image.dict.get(PDFLib.PDFName.of('Height')).asNumber()],
     imageColorSpace: 'ICCBased', components: 4, exactProfilePreserved: true,
     transparencyMask: false, prototypeLinks: linkResult.added, outputIntent: false,
-    note: 'Local conversion evidence only. No printer profile preset or physical print verification.'
+    note: 'Local conversion evidence only. No physical print verification.'
   };
   fs.writeFileSync(path.join(directory, 'assembly-results.json'), JSON.stringify(result, null, 2) + '\n');
   console.log(JSON.stringify(result));

@@ -1,6 +1,6 @@
-# Color profiles in v9.0.0-dev.4
+# Color profiles in v9.0.0-dev.5
 
-The exporter defaults to **Same as Figma file**. Explicit **sRGB** and **Display P3** remain available. **CMYK (beta)** is a separate raster conversion path using an uploaded printer profile; see [CMYK behavior](CMYK.md).
+The exporter defaults to **Same as Figma file**. Explicit **sRGB** and **Display P3** remain available. **CMYK (beta)** is a separate raster conversion path using a built-in coated-paper profile or an optional uploaded printer profile; see [CMYK behavior](CMYK.md).
 
 ## Behavior
 

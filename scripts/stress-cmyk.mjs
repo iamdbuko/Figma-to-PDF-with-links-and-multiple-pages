@@ -10,15 +10,17 @@ import { PDFDocument, PDFName, PDFArray, PDFDict, PDFRawStream, decodePDFRawStre
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = await fs.readFile(process.env.PDF_EXPORT_TEST_UI || path.join(root, 'ui.html'), 'utf8');
-const profile = await fs.readFile(path.join(root, 'tests/fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
+const bundled = process.argv.includes('--bundled');
+const profileFile = bundled ? 'assets/color-profiles/ISOcoated_v2_300_bas.ICC' : 'tests/fixtures/color-profiles/synthetic-cmyk-test-only.icc';
+const profile = await fs.readFile(path.join(root, profileFile));
 const output = path.resolve(root, process.argv.find(value => value.startsWith('--output='))?.slice(9) || 'docs/cmyk-stress-results.json');
 const hash = value => createHash('sha256').update(value).digest('hex');
 const count = 8, pagesPerPart = 2;
 const dimensions = { width: 1400, height: 1400 }, pixels = { width: 2800, height: 2800 };
 const report = {
   recordedAt: new Date().toISOString(), builtUiSha256: hash(html), platform: process.platform,
-  profile: { file: 'tests/fixtures/color-profiles/synthetic-cmyk-test-only.icc', bytes: profile.length, sha256: hash(profile), purpose: 'Synthetic LittleCMS test-only profile; not a production press profile, print recommendation, or proof.' },
-  scope: 'Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uploads a real synthetic CMYK ICC, sends one PNG page at a time, honors part-ready/page-ack, clicks Continue only after validating each downloaded part, and saves no PDF binaries in the repository. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.',
+  profile: { file: profileFile, source: bundled ? 'BUNDLED' : 'CUSTOM', bytes: profile.length, sha256: hash(profile), purpose: bundled ? 'Built-in basICColor ISO Coated v2 300%, FOGRA39 coated printing. No physical print validation.' : 'Synthetic LittleCMS test-only profile; not a production press profile, print recommendation, or proof.' },
+  scope: 'Actual built plugin UI, bundled pdf-lib, and offline LittleCMS WASM in isolated headless Chromium. The harness uses the indicated profile source, sends one PNG page at a time, honors part-ready/page-ack, clicks Continue only after validating each downloaded part, and saves no PDF binaries in the repository. No Figma exportAsync, backend sandbox, document traversal, print device, or physical color proof is included.',
   memoryScope: 'CDP Runtime.getHeapUsage samples V8 usedSize and backingStorageSize separately. Samples are not total browser/Figma/native decoder/GPU resident memory and can miss transient peaks. The renderer includes a reusable fixture canvas and one encoded PNG. No forced garbage collection is used. Node-side PDF inspection is outside renderer samples. WASM heap length is reported separately and must not be added to backingStorageSize as if disjoint.',
   rasterSource: 'Eight distinct 2800x2800 synthetic landscapes: layered gradients and curved terrain plus smoothly enlarged seeded low-resolution noise. Small transparent and translucent regions exercise white compositing. These are compressible photo-like fixtures, not a real photograph corpus or worst-case random entropy workload. Pages are generated sequentially, only after the prior page/part is acknowledged.',
   requestedPages: count, pagesPerPart, pageDimensions: dimensions, rasterDimensions: pixels,
@@ -165,8 +167,14 @@ try {
   const connections = frames.map((frame, index) => ({ source: 'prototype', type: 'internal', fromFrameId: frame.id, toFrameId: frames[(index + 1) % count].id, elementBounds: { x: 10, y: 10, width: 40, height: 20 } }));
   await post({ type: 'frames-updated', frames, connections });
   await frame.locator('#color-profile').selectOption('CMYK');
-  await frame.locator('#cmyk-profile').setInputFiles({ name: 'synthetic-test-only.icc', mimeType: 'application/vnd.iccprofile', buffer: profile });
-  await frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
+  if (bundled) {
+    assert.equal(await frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
+    assert.equal(await frame.evaluate(() => document.getElementById('cmyk-profile').files.length), 0);
+  } else {
+    await frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+    await frame.locator('#cmyk-profile').setInputFiles({ name: 'synthetic-test-only.icc', mimeType: 'application/vnd.iccprofile', buffer: profile });
+    await frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
+  }
   await frame.locator('#quality-select').selectOption('print-low');
   await frame.locator('#output-mode').selectOption('parts');
   await frame.locator('#pages-per-part').fill(String(pagesPerPart));

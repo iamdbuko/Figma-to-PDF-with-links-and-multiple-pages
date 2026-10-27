@@ -57,6 +57,7 @@ async function harness(t) {
     if (options.fitOversized) await frame.locator('#fit-oversized').check();
     if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile);
     if (options.iccBuffer) {
+      await frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
       await frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from(options.iccBuffer) });
       await frame.waitForFunction(() => !readingCmykProfile && selectedCmykProfile);
     }
@@ -447,11 +448,13 @@ test('export initialization rejects unsupported or contradictory color profiles'
   }
 });
 
-test('CMYK requires a readable bounded ICC file and rejects an invalid profile before contacting Figma', { timeout: 15000 }, async t => {
+test('custom CMYK requires a readable bounded ICC file and rejects an invalid profile before contacting Figma', { timeout: 15000 }, async t => {
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
   await h.frame.locator('#color-profile').selectOption('CMYK');
   assert.equal(await h.frame.locator('#cmyk-settings').isVisible(), true);
+  assert.equal(await h.frame.locator('#export-btn').isEnabled(), true, 'the bundled default is ready without an upload');
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
   assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
   await h.frame.evaluate(() => startExport());
   assert.match(await h.frame.locator('#status-title').textContent(), /CMYK ICC profile/);
@@ -479,6 +482,7 @@ test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and
   const h = await harness(t);
   await h.post({ type: 'frames-updated', frames: [first], connections: [] });
   await h.frame.locator('#color-profile').selectOption('CMYK');
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
   await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
   await h.frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
   await h.frame.evaluate(() => {
@@ -492,7 +496,7 @@ test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and
   await h.frame.waitForFunction(() => typeof window.finishPrepare === 'function');
   await h.frame.evaluate(() => { selectedCmykProfile.bytes[0] = 99; });
   assert.deepEqual(await h.frame.evaluate(() => [...window.preparingBytes]), [1, 2, 3], 'this job owns a snapshot of the uploaded profile');
-  for (const selector of ['#cmyk-profile', '#color-profile', '#output-mode', '#quality-select']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
+  for (const selector of ['#cmyk-profile', '#cmyk-profile-source', '#color-profile', '#output-mode', '#quality-select']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
   assert.equal((await h.messages('export-pdf')).length, 0, 'profile preparation precedes all backend export work');
   await h.frame.locator('#cancel-btn').click();
   assert.equal(await h.frame.locator('#export-btn').isDisabled(), true, 'preparation must finish before another job starts');
@@ -648,5 +652,104 @@ test('the bundled offline CMYK engine converts an uploaded printer profile and d
   assert.equal(image.dict.has(PDFLib.PDFName.of('SMask')), false, 'CMYK pages are flattened onto white');
   assert.equal(document.getPage(0).node.lookup(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray).size(), 1);
   assert.equal(await h.frame.evaluate(() => activeJob), null);
+  assert.deepEqual(h.errors, []);
+});
+
+test('CMYK works offline with the bundled profile and no file upload', { timeout: 20000 }, async t => {
+  const h = await harness(t);
+  const requests = [];
+  h.page.on('request', request => requests.push(request.url()));
+  assert.equal(await h.frame.locator('#color-profile').inputValue(), 'DOCUMENT', 'the overall default still follows the Figma file');
+  const expected = await h.frame.evaluate(() => {
+    const first = getBundledCmykProfile();
+    const original = first.bytes[0];
+    first.bytes[0] ^= 255;
+    const fresh = getBundledCmykProfile();
+    if (fresh.bytes[0] !== original) throw new Error('Bundled profile bytes must not be shared mutable state');
+    return { bytes: [...fresh.bytes], name: fresh.name };
+  });
+  const links = [{ source: 'prototype', type: 'external', fromFrameId: first.id, toUrl: 'https://example.com/bundled-cmyk', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
+  const { jobId } = await h.start([first], { colorProfile: 'CMYK', links });
+  assert.equal(await h.frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
+  assert.equal(await h.frame.locator('#cmyk-profile').isVisible(), false);
+  assert.equal(await h.frame.locator('#cmyk-profile-source').isDisabled(), true);
+  assert.equal(await h.frame.evaluate(() => document.getElementById('cmyk-profile').files.length), 0);
+  assert.equal(await h.frame.evaluate(() => activeJob.cmykProfileSource), 'BUNDLED');
+  assert.equal(await h.frame.evaluate(() => activeJob.cmykProfileName), expected.name);
+  await h.post(h.pageMessage(jobId));
+  await h.waitMessage('page-ack', { jobId });
+  const downloaded = h.page.waitForEvent('download');
+  await h.post({ type: 'export-complete', jobId });
+  await h.waitMessage('export-finished', { jobId });
+  const document = await PDFLib.PDFDocument.load(fs.readFileSync(await (await downloaded).path()));
+  assert.deepEqual(document.getPage(0).getSize(), { width: 600, height: 400 });
+  const image = document.context.enumerateIndirectObjects().map(([, object]) => object).find(object => object instanceof PDFLib.PDFRawStream && object.dict.get(PDFLib.PDFName.of('Subtype'))?.toString() === '/Image');
+  const colorSpace = image.dict.lookup(PDFLib.PDFName.of('ColorSpace'), PDFLib.PDFArray);
+  assert.equal(colorSpace.get(0).toString(), '/ICCBased');
+  const profile = document.context.lookup(colorSpace.get(1));
+  assert.equal(profile.dict.get(PDFLib.PDFName.of('N')).asNumber(), 4);
+  assert.deepEqual([...PDFLib.decodePDFRawStream(profile).decode()], expected.bytes);
+  assert.equal(PDFLib.decodePDFRawStream(image).decode().length, 4, 'the 1x1 fixture has four actual CMYK bytes');
+  const annotation = document.getPage(0).node.lookup(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray).lookup(0, PDFLib.PDFDict);
+  assert.equal(annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict).lookup(PDFLib.PDFName.of('URI')).decodeText(), 'https://example.com/bundled-cmyk');
+  assert.equal(await h.frame.locator('#cmyk-profile-source').isEnabled(), true);
+  assert.deepEqual(requests, [], 'bundled conversion requires no network');
+  assert.deepEqual(h.errors, []);
+});
+
+test('switching back to bundled CMYK during a pending custom read cannot replace its profile', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('#color-profile').selectOption('CMYK');
+  await h.frame.locator('#cmyk-profile-source').selectOption('CUSTOM');
+  await h.frame.evaluate(() => {
+    File.prototype.arrayBuffer = function () { return new Promise(resolve => { window.finishProfileRead = () => resolve(Uint8Array.of(1, 2, 3).buffer); }); };
+  });
+  await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'slow.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
+  await h.frame.waitForFunction(() => typeof window.finishProfileRead === 'function');
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+  await h.frame.locator('#cmyk-profile-source').selectOption('BUNDLED');
+  assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
+  await h.frame.evaluate(() => window.finishProfileRead());
+  await h.frame.waitForFunction(() => !readingCmykProfile);
+  assert.equal(await h.frame.locator('#cmyk-profile-source').inputValue(), 'BUNDLED');
+  await h.frame.evaluate(() => {
+    window.closeCalls = 0;
+    createCmykExporter = () => ({ prepare: bytes => new Promise(resolve => {
+      const expected = getBundledCmykProfile().bytes;
+      window.usedBundledBytes = bytes.length === expected.length && bytes.every((value, index) => value === expected[index]);
+      window.finishPrepare = () => resolve({ close() { window.closeCalls++; } });
+    }) });
+  });
+  await h.frame.locator('#export-btn').click();
+  await h.frame.waitForFunction(() => typeof window.finishPrepare === 'function');
+  assert.equal(await h.frame.evaluate(() => window.usedBundledBytes), true);
+  assert.equal(await h.frame.locator('#cmyk-profile-source').isDisabled(), true);
+  await h.frame.locator('#cancel-btn').click();
+  await h.frame.evaluate(() => window.finishPrepare());
+  await h.frame.waitForFunction(() => activeJob === null);
+  assert.equal(await h.frame.evaluate(() => window.closeCalls), 1);
+  assert.equal((await h.messages('export-pdf')).length, 0);
+  assert.deepEqual(h.errors, []);
+});
+
+test('profile help opens with keyboard and explains Mac and Windows locations offline', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  const requests = [];
+  h.page.on('request', request => requests.push(request.url()));
+  await h.frame.locator('#color-profile').selectOption('CMYK');
+  const help = h.frame.locator('#cmyk-profile-help');
+  assert.equal(await help.evaluate(element => element.open), false);
+  await help.locator('summary').focus();
+  await h.page.keyboard.press('Enter');
+  assert.equal(await help.evaluate(element => element.open), true);
+  const text = await help.textContent();
+  for (const location of ['/Library/ColorSync/Profiles', '~/Library/ColorSync/Profiles', '/System/Library/ColorSync/Profiles', '%WINDIR%\\System32\\spool\\drivers\\color']) assert.ok(text.includes(location), location);
+  assert.match(text, /\.icc/); assert.match(text, /\.icm/);
+  assert.match(text, /CMYK/); assert.match(text, /RGB/); assert.match(text, /Downloads/);
+  await help.locator('summary').focus();
+  await h.page.keyboard.press('Enter');
+  assert.equal(await help.evaluate(element => element.open), false);
+  assert.deepEqual(requests, []);
   assert.deepEqual(h.errors, []);
 });

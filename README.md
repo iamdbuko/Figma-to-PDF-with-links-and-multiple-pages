@@ -6,7 +6,7 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Development version
 
-This branch is **v9.0.0-dev.4**. The Community release is still v8. Importing or running this development copy does not publish an update.
+This branch is **v9.0.0-dev.5**. The Community release is still v8. Importing or running this development copy does not publish an update.
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
@@ -14,7 +14,7 @@ Other changes include cancellation, detection of edits during export, fresh fram
 
 **Color profile** defaults to **Same as Figma file**, including older files. Explicit sRGB and Display P3 remain available. The chosen profile applies to vector pages, raster pages, and fallbacks; raster profiles are embedded in the PDF, including compressed JPEGs. See [color-profile behavior and validation](docs/COLOR-PROFILES.md).
 
-**CMYK (beta)** converts raster pages using a printer's uploaded CMYK ICC profile, entirely offline. Links and page dimensions remain intact; text becomes pixels and transparency is flattened onto white. This is not a vector CMYK or PDF/X exporter. See [CMYK setup, limits and validation](docs/CMYK.md).
+**CMYK (beta)** works immediately using the built-in basICColor ISO Coated v2 300% profile (FOGRA39 coated paper). An optional custom printer ICC profile can replace it. Conversion stays entirely offline. Links and page dimensions remain intact; text becomes pixels and transparency is flattened onto white. This is not a vector CMYK or PDF/X exporter. See [CMYK setup, limits and validation](docs/CMYK.md), or [where to find profiles on Mac and Windows](docs/ICC-PROFILES.md).
 
 ## Run and develop
 
@@ -48,7 +48,7 @@ See [large-file export options and validation](docs/LARGE-EXPORTS.md), [initial 
 ## Current limits
 
 - Raster rendering: at most **32 million scaled pixels** and **16,384 pixels per side**. Lower the quality or export a smaller frame when a request exceeds these limits.
-- CMYK beta: at most **8 million scaled pixels** per page because decoding and conversion need additional memory. Fit oversized pages uses this lower limit. A compatible printer CMYK ICC profile is required; no universal print profile is assumed.
+- CMYK beta: at most **8 million scaled pixels** per page because decoding and conversion need additional memory. Fit oversized pages uses this lower limit. The built-in profile describes FOGRA39 coated printing; use a custom profile when your printer specifies another condition.
 - Transport budget: **128 MiB per page**, including temporary text-link data. Earlier pages and discarded retries do not consume this allowance.
 - PDF data budget: **128 MiB per output document**, estimated from retained PDF objects and streams. This is not a total-memory measurement; final serialization needs additional memory. Split into smaller parts or use JPEG when a document exceeds it.
 - Vector mode rasterizes whole frames containing Figma's unsupported Plus lighter/darker blend modes, or when native export/import fails. The UI identifies fallback pages.

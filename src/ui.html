@@ -697,6 +697,11 @@
     #pages-per-part { width: 65px; }
     #continue-btn { width: 100%; margin-top: 8px; }
     .frame-name { overflow-wrap: anywhere; }
+    #cmyk-profile-help summary, #cmyk-profile-help a { color: var(--accent-blue); text-decoration: underline; cursor: pointer; }
+    #cmyk-profile-help summary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
+    #cmyk-profile-help code { overflow-wrap: anywhere; }
+    #cmyk-bundled-description, #cmyk-profile-status { overflow-wrap: anywhere; }
+    .cmyk-profile-paths { margin: 6px 0; padding-left: 18px; }
   </style>
 </head>
 <body data-theme="dark">
@@ -738,8 +743,22 @@
     <label class="export-setting" for="color-profile">Color profile <select id="color-profile"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></label>
     <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
     <div id="cmyk-settings" hidden>
-      <label class="export-setting" for="cmyk-profile">Printer ICC profile <input id="cmyk-profile" type="file" accept=".icc,.icm"></label>
-      <p id="cmyk-profile-status" class="export-help">Choose the CMYK ICC profile supplied by your printer (.icc or .icm, up to 16 MiB).</p>
+      <label class="export-setting" for="cmyk-profile-source">CMYK profile <select id="cmyk-profile-source"><option value="BUNDLED" selected>Built-in profile</option><option value="CUSTOM">Custom printer profile</option></select></label>
+      <p id="cmyk-bundled-description" class="export-help"></p>
+      <div id="cmyk-custom-profile" hidden>
+        <label class="export-setting" for="cmyk-profile">Printer ICC profile <input id="cmyk-profile" type="file" accept=".icc,.icm"></label>
+        <p id="cmyk-profile-status" class="export-help">Choose a CMYK printer profile (.icc or .icm, up to 16 MiB).</p>
+      </div>
+      <details id="cmyk-profile-help" class="export-help">
+        <summary>Where can I find ICC profiles?</summary>
+        <p>For a specific printer and paper, ask your printer or paper provider for a CMYK output profile. Choose its <code>.icc</code> or <code>.icm</code> file directly from Downloads or another folder; installing it in your operating system is not required.</p>
+        <p><strong>Mac:</strong> in Finder, choose Go → Go to Folder (Shift–Command–G), then paste one of these paths:</p>
+        <ul class="cmyk-profile-paths"><li><code>/Library/ColorSync/Profiles</code></li><li><code>~/Library/ColorSync/Profiles</code></li><li><code>/System/Library/ColorSync/Profiles</code></li></ul>
+        <p><strong>Windows:</strong> paste this into the File Explorer address bar:</p>
+        <p><code>%WINDIR%\System32\spool\drivers\color</code></p>
+        <p>Some folders may be empty or missing. Many display and device profiles are RGB; this plugin requires a CMYK printer/output profile.</p>
+        <p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p>
+      </details>
       <p class="export-help">CMYK beta creates raster pages on a white background and keeps links clickable. Maximum 8 million pixels per page; enable Fit oversized raster pages to lower resolution when needed. This is not a PDF/X export.</p>
     </div>
     <label class="export-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
@@ -1061,8 +1080,38 @@
 
     const CMYK_PROFILE_LIMIT = 16 * 1024 * 1024;
     let selectedCmykProfile = null;
+    let bundledCmykProfile = null;
+    let bundledCmykProfileError = null;
     let readingCmykProfile = false;
     let cmykProfileReadSequence = 0;
+
+    function loadBundledCmykProfile() {
+      if (bundledCmykProfile) return bundledCmykProfile;
+      if (typeof getBundledCmykProfile !== 'function') throw new Error('The built-in CMYK profile is unavailable. Reopen the plugin or choose a custom printer profile.');
+      const profile = getBundledCmykProfile();
+      if (!(profile?.bytes instanceof Uint8Array) || !profile.bytes.byteLength || profile.bytes.byteLength > CMYK_PROFILE_LIMIT || typeof profile.name !== 'string' || !profile.name.trim() || typeof profile.description !== 'string') {
+        throw new Error('The built-in CMYK profile could not be loaded. Reopen the plugin or choose a custom printer profile.');
+      }
+      // Keep the bundled source separate from asynchronous custom-file reads.
+      bundledCmykProfile = { bytes: profile.bytes.slice(), name: profile.name, description: profile.description };
+      bundledCmykProfileError = null;
+      return bundledCmykProfile;
+    }
+
+    function updateCmykProfileInfo() {
+      const custom = $('cmyk-profile-source').value === 'CUSTOM';
+      $('cmyk-custom-profile').hidden = !custom;
+      $('cmyk-bundled-description').hidden = custom;
+      if (!custom && $('color-profile').value === 'CMYK') {
+        try {
+          const profile = loadBundledCmykProfile();
+          $('cmyk-bundled-description').textContent = `${profile.name}${profile.description ? ` — ${profile.description}` : ''}`;
+        } catch (error) {
+          bundledCmykProfileError = error.message;
+          $('cmyk-bundled-description').textContent = bundledCmykProfileError;
+        }
+      }
+    }
 
     async function readCmykProfile() {
       if (activeJob) return;
@@ -1071,7 +1120,7 @@
       selectedCmykProfile = null;
       readingCmykProfile = false;
       if (!file) {
-        $('cmyk-profile-status').textContent = 'Choose the CMYK ICC profile supplied by your printer (.icc or .icm, up to 16 MiB).';
+        $('cmyk-profile-status').textContent = 'Choose a CMYK printer profile (.icc or .icm, up to 16 MiB).';
         updateControls();
         return;
       }
@@ -1124,7 +1173,7 @@
       $('raster-format-setting').hidden = cmyk;
       $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
       $('export-help').textContent = cmyk
-        ? 'CMYK rasterizes every page at the selected resolution and converts colors using your printer profile. Transparent areas become white.'
+        ? 'CMYK rasterizes every page at the selected resolution and converts colors using the selected profile. Transparent areas become white.'
         : vector
         ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
         : 'Creates image pages at the selected resolution. Page links and web links remain clickable.';
@@ -1137,9 +1186,10 @@
         SRGB: 'sRGB works well across most screens and PDF viewers.',
         DISPLAY_P3_V4: 'Display P3 supports a wider range of colors. Appearance depends on the screen and PDF viewer.',
         DOCUMENT: 'Preserves the Figma file’s exported color profile, including older files.',
-        CMYK: 'For print workflows: choose the CMYK output profile supplied by your printer. Conversion happens inside the plugin.'
+        CMYK: 'Use the built-in profile or choose a custom profile for your printer and paper. Conversion happens inside the plugin.'
       }[$('color-profile').value];
       $('cmyk-settings').hidden = !cmyk;
+      updateCmykProfileInfo();
       const parts = $('output-mode').value === 'parts';
       $('part-size-setting').hidden = !parts;
       $('parts-help').hidden = !parts;
@@ -1150,10 +1200,13 @@
       const busy = Boolean(activeJob);
       for (const input of document.querySelectorAll('#clear-list-btn, #sort-select, .export-panel select, .export-panel input, .frame-checkbox, .remove-btn')) input.disabled = busy;
       const cmyk = $('color-profile').value === 'CMYK';
+      const cmykProfileReady = $('cmyk-profile-source').value === 'BUNDLED'
+        ? Boolean(bundledCmykProfile && !bundledCmykProfileError)
+        : $('cmyk-profile-source').value === 'CUSTOM' && !readingCmykProfile && Boolean(selectedCmykProfile);
       for (const id of ['export-vector', 'export-raster', 'raster-format']) $(id).disabled = busy || cmyk;
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
-      $('export-btn').disabled = busy || !count || (cmyk && (readingCmykProfile || !selectedCmykProfile));
+      $('export-btn').disabled = busy || !count || (cmyk && !cmykProfileReady);
       $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
       $('cancel-btn').hidden = !busy;
       $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
@@ -1283,20 +1336,28 @@
       const requestedColorProfile = $('color-profile').value;
       if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
       const cmyk = requestedColorProfile === 'CMYK';
-      if (cmyk && (readingCmykProfile || !selectedCmykProfile)) { showStatus('Choose the CMYK ICC profile supplied by your printer before exporting.', 'error'); return; }
+      let cmykProfile = null;
+      const cmykProfileSource = cmyk ? $('cmyk-profile-source').value : null;
+      if (cmykProfileSource === 'CUSTOM') {
+        if (readingCmykProfile || !selectedCmykProfile) { showStatus('Choose a custom CMYK ICC profile, or switch to the built-in profile.', 'error'); return; }
+        cmykProfile = selectedCmykProfile;
+      } else if (cmykProfileSource === 'BUNDLED') {
+        try { cmykProfile = loadBundledCmykProfile(); }
+        catch (error) { showStatus(error.message, 'error'); return; }
+      } else if (cmyk) { showStatus('Choose the built-in profile or a custom printer profile.', 'error'); return; }
       const split = $('output-mode').value === 'parts';
       const pagesPerPart = split ? Number($('pages-per-part').value) : selectedFrames.length;
       if (split && (!Number.isInteger(pagesPerPart) || pagesPerPart < 1 || pagesPerPart > 250)) { showStatus('Choose between 1 and 250 pages per part.', 'error'); return; }
       const id = `${Date.now()}-${++jobSequence}`;
       const unique = globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(16).slice(2, 10);
       const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
-      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: cmyk ? 'raster' : $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileBytes: cmyk ? selectedCmykProfile.bytes.slice() : null };
+      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: cmyk ? 'raster' : $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileSource, cmykProfileName: cmykProfile?.name || null, cmykProfileBytes: cmykProfile ? cmykProfile.bytes.slice() : null };
       Object.defineProperty(job, 'outputColorMode', { value: cmyk ? 'CMYK' : 'RGB', writable: false, configurable: false, enumerable: true });
       // Snapshot every setting before asynchronous profile preparation or page work.
       const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };
       activeJob = job;
       updateControls();
-      showStatus(cmyk ? 'Preparing and validating the printer profile…' : 'Preparing frames…');
+      showStatus(cmyk ? 'Preparing and validating the CMYK profile…' : 'Preparing frames…');
       enqueue(job, async () => {
         if (cmyk) {
           if (typeof createCmykExporter !== 'function' || typeof loadCmykEngine !== 'function') throw new Error('The CMYK conversion engine is unavailable. Reopen the plugin and try again.');
@@ -1527,7 +1588,7 @@
       });
       $('sort-select').addEventListener('change', event => { sortFramesByName(event.target.value); event.target.value = 'none'; });
       for (const input of document.querySelectorAll('input[name="export-type"]')) input.addEventListener('change', updateExportTypeInfo);
-      for (const id of ['raster-format', 'output-mode', 'color-profile']) $(id).addEventListener('change', updateExportTypeInfo);
+      for (const id of ['raster-format', 'output-mode', 'color-profile', 'cmyk-profile-source']) $(id).addEventListener('change', updateExportTypeInfo);
       updateExportTypeInfo(); updateControls();
       post({ type: 'ui-ready' });
     });

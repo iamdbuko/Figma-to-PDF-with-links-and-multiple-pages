@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { build } from 'esbuild';
@@ -8,7 +9,25 @@ const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export async function buildCmykBundle() {
   const wasm = readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')).toString('base64');
-  const entry = `import * as engine from 'lcms-wasm';
+  // Keep the redistributed production profile byte-for-byte identical to OpenICC.
+  // Its original license and download provenance are recorded in licenses/.
+  const profile = readFileSync(path.join(root, 'assets/color-profiles/ISOcoated_v2_300_bas.ICC'));
+  const expectedProfileHash = 'b424c77f40c3423c925536f8ae08634985ccd0fe80eb253d5d229197ded7e886';
+  if (createHash('sha256').update(profile).digest('hex') !== expectedProfileHash) {
+    throw new Error('Bundled CMYK profile differs from the verified OpenICC original');
+  }
+  const profileLicense = readFileSync(path.join(root, 'licenses/basICColor-zlib.txt'), 'utf8');
+  const entry = `/*! Bundled ISO Coated v2 300% (basICColor) profile; original bytes unchanged.
+${profileLicense}
+*/
+    import * as engine from 'lcms-wasm';
+    globalThis.getBundledCmykProfile = function () {
+      return {
+        bytes: Uint8Array.from(atob(${JSON.stringify(profile.toString('base64'))}), character => character.charCodeAt(0)),
+        name: 'ISO Coated v2 300% (basICColor)',
+        description: 'Coated paper, FOGRA39, 300% ink limit. Use a custom profile when your printer specifies one.'
+      };
+    };
     let loading;
     globalThis.loadCmykEngine = function () {
       if (!loading) {
