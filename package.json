@@ -1,6 +1,6 @@
 {
   "name": "figma-to-pdf-with-links",
-  "version": "9.0.0-dev.3",
+  "version": "9.0.0-dev.4",
   "private": true,
   "description": "Figma PDF export with links and multiple pages",
   "scripts": {
@@ -9,9 +9,11 @@
     "test:stress": "npm run build && node scripts/stress-large.mjs"
   },
   "dependencies": {
+    "lcms-wasm": "1.0.5",
     "pdf-lib": "1.17.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "esbuild": "0.25.12"
   }
 }

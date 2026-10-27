@@ -1,6 +1,6 @@
 // Figma PDF export: whole-frame rendering, one acknowledged page at a time.
-// Resolve export colors once per job; publish that concrete profile alongside
-// every page so the assembler can embed matching profiles without relabeling.
+// Keep output color mode separate from Figma's rendering profile. Legacy file
+// colors stay DOCUMENT; the assembler reads each page's actual color metadata.
 figma.showUI(__html__, { width: 400, height: 600 });
 
 let frameData = [];
@@ -10,11 +10,13 @@ let listRevision = 0;
 const usedJobIds = new Set();
 
 // Provisional v9 safety limits. Raster pixels are measured after scaling.
-// The transfer cap applies to one page plus its annotation PDF, not historical
-// traffic. The UI separately bounds retained PDF resources and saves parts.
+// The transfer cap includes a page's annotation PDF and any color-profile probe,
+// not historical traffic. CMYK beta uses 8 MP to bound conversion buffers.
+// The UI separately bounds retained PDF resources and saves parts.
 // Optional fitting changes raster resolution only, never PDF page dimensions.
 const EXPORT_LIMITS = Object.freeze({
   maxRasterPixels: 32000000,
+  maxCmykRasterPixels: 8000000,
   maxRasterSide: 16384,
   maxPageTransferBytes: 128 * 1024 * 1024,
   acknowledgementTimeoutMs: 120000,
@@ -455,38 +457,41 @@ function validateFrameSize(frame) {
   }
 }
 
-function validateRasterSize(frame, scale) {
+function validateRasterSize(frame, scale, outputColorMode = 'RGB') {
+  const maxPixels = outputColorMode === 'CMYK' ? EXPORT_LIMITS.maxCmykRasterPixels : EXPORT_LIMITS.maxRasterPixels;
   const width = Math.ceil(frame.width * scale);
   const height = Math.ceil(frame.height * scale);
   if (!Number.isFinite(width) || !Number.isFinite(height) ||
       width < 1 || height < 1 ||
       width > EXPORT_LIMITS.maxRasterSide || height > EXPORT_LIMITS.maxRasterSide ||
-      width * height > EXPORT_LIMITS.maxRasterPixels) {
-    throw new Error(`“${frame.name}” would render at ${width}×${height} pixels. Raster export is limited to 32 million pixels and 16,384 pixels per side. Lower the quality, enable Fit oversized pages, or reduce this frame’s size.`);
+      width * height > maxPixels) {
+    const limit = outputColorMode === 'CMYK' ? 'CMYK beta is limited to 8 million pixels' : 'Raster export is limited to 32 million pixels';
+    throw new Error(`“${frame.name}” would render at ${width}×${height} pixels. ${limit} and 16,384 pixels per side. Lower the quality, enable Fit oversized pages, or reduce this frame’s size.`);
   }
   return { scale, width, height };
 }
 
-function rasterPlan(frame, requestedScale, fitOversized) {
+function rasterPlan(frame, requestedScale, fitOversized, outputColorMode = 'RGB') {
+  const maxPixels = outputColorMode === 'CMYK' ? EXPORT_LIMITS.maxCmykRasterPixels : EXPORT_LIMITS.maxRasterPixels;
   const fits = scale => {
     const width = Math.ceil(frame.width * scale), height = Math.ceil(frame.height * scale);
     return width >= 1 && height >= 1 && width <= EXPORT_LIMITS.maxRasterSide &&
-      height <= EXPORT_LIMITS.maxRasterSide && width * height <= EXPORT_LIMITS.maxRasterPixels;
+      height <= EXPORT_LIMITS.maxRasterSide && width * height <= maxPixels;
   };
-  if (!fitOversized || fits(requestedScale)) return validateRasterSize(frame, requestedScale);
+  if (!fitOversized || fits(requestedScale)) return validateRasterSize(frame, requestedScale, outputColorMode);
   // The continuous limit can round up to too many pixels. Search below it using
   // the same integer dimensions as the guard, including extreme aspect ratios.
   let high = Math.min(requestedScale, EXPORT_LIMITS.maxRasterSide / frame.width,
     EXPORT_LIMITS.maxRasterSide / frame.height,
-    Math.sqrt(EXPORT_LIMITS.maxRasterPixels) / Math.sqrt(frame.width) / Math.sqrt(frame.height));
-  if (fits(high)) return validateRasterSize(frame, high);
+    Math.sqrt(maxPixels) / Math.sqrt(frame.width) / Math.sqrt(frame.height));
+  if (fits(high)) return validateRasterSize(frame, high, outputColorMode);
   let low = 0;
   for (let i = 0; i < 64; i++) {
     const middle = low + (high - low) / 2;
     if (fits(middle)) low = middle;
     else high = middle;
   }
-  return validateRasterSize(frame, low);
+  return validateRasterSize(frame, low, outputColorMode);
 }
 
 function unsupportedPdfBlendMode(frame) {
@@ -520,13 +525,15 @@ function readDocumentColorProfile() {
 }
 
 function resolveExportColorProfile(requested, sourceProfile) {
+  if (requested === 'CMYK') return 'SRGB';
   if (requested === 'SRGB' || requested === 'DISPLAY_P3_V4') return requested;
-  if (requested !== 'DOCUMENT') throw new Error('Choose sRGB, Display P3, or the document color profile.');
+  if (requested !== 'DOCUMENT') throw new Error('Choose sRGB, Display P3, the document color profile, or CMYK.');
   if (sourceProfile === 'SRGB') return 'SRGB';
   if (sourceProfile === 'DISPLAY_P3') return 'DISPLAY_P3_V4';
-  // A legacy document can follow a user preference that the Plugin API does
-  // not expose. Never label those pixels with a guessed ICC profile.
-  throw new Error('This legacy document has no explicit color profile. Choose sRGB or Display P3 for this export.');
+  // LEGACY can follow a preference that the API does not expose. Keep Figma's
+  // DOCUMENT behavior and preserve actual exported metadata, without guessing
+  // or promising that this otherwise invisible preference is frozen per job.
+  return 'DOCUMENT';
 }
 
 function verifySourceColorProfile(job) {
@@ -576,9 +583,10 @@ async function startExport(msg) {
     exportType: msg.exportType || 'raster',
     rasterFormat: msg.rasterFormat === undefined ? 'PNG' : msg.rasterFormat,
     fitOversized: msg.fitOversized === undefined ? false : msg.fitOversized,
-    requestedColorProfile: msg.colorProfile === undefined ? 'SRGB' : msg.colorProfile,
+    requestedColorProfile: msg.colorProfile === undefined ? 'DOCUMENT' : msg.colorProfile,
     sourceColorProfile: null,
-    exportColorProfile: null
+    exportColorProfile: null,
+    outputColorMode: msg.colorProfile === 'CMYK' ? 'CMYK' : 'RGB'
   };
   activeExportJob = job;
   usedJobIds.add(job.id);
@@ -603,6 +611,12 @@ async function startExport(msg) {
     if (job.exportType !== 'vector' && job.exportType !== 'raster') throw new Error('Choose Vector or Rasterized export.');
     if (job.rasterFormat !== 'PNG' && job.rasterFormat !== 'JPG') throw new Error('Choose PNG or JPG for raster pages.');
     if (typeof job.fitOversized !== 'boolean') throw new Error('Fit oversized pages must be enabled or disabled.');
+    if (job.outputColorMode === 'CMYK') {
+      // The UI converts explicit sRGB samples with the chosen printer profile.
+      // PNG avoids a lossy intermediate before that conversion.
+      job.exportType = 'raster';
+      job.rasterFormat = 'PNG';
+    }
     const ids = orderedSelectedIds(msg.frameOrder, msg.selectedFrames);
     const selectedIds = new Set(ids);
     const liveFrames = [];
@@ -614,7 +628,7 @@ async function startExport(msg) {
       validateFrameSize(frame);
       const metadata = describeFrame(frame);
       validateFrameSize(metadata);
-      if (job.exportType === 'raster' || unsupportedPdfBlendMode(frame)) rasterPlan(metadata, job.scale, job.fitOversized);
+      if (job.exportType === 'raster' || unsupportedPdfBlendMode(frame)) rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
       job.frames.push(metadata);
       liveFrames.push(frame);
     }
@@ -629,7 +643,7 @@ async function startExport(msg) {
     const freshById = new Map(job.frames.map(frame => [frame.id, frame]));
     frameData = frameData.map(frame => freshById.get(frame.id) || frame);
     connections = connections.filter(link => !selectedIds.has(link.fromFrameId)).concat(job.connections);
-    figma.ui.postMessage({ type: 'export-start', jobId: job.id, frames: job.frames, connections: job.connections, exportColorProfile: job.exportColorProfile, warnings: [] });
+    figma.ui.postMessage({ type: 'export-start', jobId: job.id, frames: job.frames, connections: job.connections, exportColorProfile: job.exportColorProfile, outputColorMode: job.outputColorMode, warnings: [] });
     if (!jobIsRunning(job)) return;
     await exportPage(job, 0);
   });
@@ -649,6 +663,30 @@ function checkedExportBytes(data, name) {
   return data;
 }
 
+function colorProfileProbeScale(frame) {
+  // This image is only a color-metadata carrier, never a PDF page image.
+  let scale = Math.min(1, 64 / Math.max(frame.width, frame.height));
+  if (Math.ceil(frame.width * scale) > 64 || Math.ceil(frame.height * scale) > 64) {
+    scale *= 1 - Number.EPSILON;
+  }
+  if (!Number.isFinite(scale) || scale <= 0 || Math.ceil(frame.width * scale) > 64 || Math.ceil(frame.height * scale) > 64) {
+    throw new Error(`Could not obtain a bounded color-profile sample for “${frame.name}”. Choose sRGB or Display P3 explicitly.`);
+  }
+  return scale;
+}
+
+function checkedColorProfileProbe(data, name) {
+  checkedExportBytes(data, name);
+  const signature = [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82];
+  const read32 = offset => data[offset] * 16777216 + data[offset + 1] * 65536 + data[offset + 2] * 256 + data[offset + 3];
+  if (data.byteLength < 33 || signature.some((byte, index) => data[index] !== byte) ||
+      read32(16) < 1 || read32(16) > 64 || read32(20) < 1 || read32(20) > 64) {
+    throw new Error(`Figma returned an invalid color-profile sample for “${name}”. Choose sRGB or Display P3 explicitly.`);
+  }
+  // The assembler validates CRCs, ICC data and sRGB metadata before using it.
+  return data;
+}
+
 async function exportPage(job, index, options = {}) {
   if (!verifySourceColorProfile(job)) return;
   job.phase = 'exporting';
@@ -662,6 +700,7 @@ async function exportPage(job, index, options = {}) {
   let format = job.exportType === 'raster' || options.forceRaster || unsupportedMode ? job.rasterFormat : 'PDF';
   let data;
   let annotationPdfData = options.annotationPdfData;
+  let colorProfilePngData;
   let nativeExportFailed = false;
   if (unsupportedMode && job.exportType === 'vector') {
     warnings.push(`“${metadata.name}” uses ${unsupportedMode === 'PLUS_DARKER' || unsupportedMode === 'LINEAR_BURN' ? 'Plus darker' : 'Plus lighter'}, which Figma does not support in PDF. This page is rasterized.`);
@@ -680,14 +719,28 @@ async function exportPage(job, index, options = {}) {
     }
   }
   if (format === 'PNG' || format === 'JPG') {
-    const plan = rasterPlan(metadata, job.scale, job.fitOversized);
+    const plan = rasterPlan(metadata, job.scale, job.fitOversized, job.outputColorMode);
     if (plan.scale < job.scale) {
-      warnings.push(`“${metadata.name}” was fitted to ${plan.width}×${plan.height} pixels: requested ${Number(job.scale.toPrecision(4))}×, actual ${Number(plan.scale.toPrecision(4))}×. Its PDF page dimensions are unchanged.`);
+      const limit = job.outputColorMode === 'CMYK' ? ' CMYK beta is limited to 8 million pixels and 16,384 pixels per side.' : '';
+      warnings.push(`“${metadata.name}” was fitted to ${plan.width}×${plan.height} pixels: requested ${Number(job.scale.toPrecision(4))}×, actual ${Number(plan.scale.toPrecision(4))}×. Its PDF page dimensions are unchanged.${limit}`);
     }
     const settings = { format, useAbsoluteBounds: true, colorProfile: job.exportColorProfile, constraint: { type: 'SCALE', value: plan.scale } };
     data = await frame.exportAsync(settings);
     if (!verifySourceColorProfile(job)) return;
     data = checkedExportBytes(data, metadata.name);
+    if (format === 'JPG' && job.exportColorProfile === 'DOCUMENT') {
+      // Figma's legacy JPEG export may omit ICC metadata. A tiny PNG exported
+      // with the same DOCUMENT setting lets the UI identify actual colors.
+      try {
+        colorProfilePngData = await frame.exportAsync({ format: 'PNG', useAbsoluteBounds: true,
+          colorProfile: 'DOCUMENT', constraint: { type: 'SCALE', value: colorProfileProbeScale(metadata) } });
+        if (!verifySourceColorProfile(job)) return;
+        colorProfilePngData = checkedColorProfileProbe(colorProfilePngData, metadata.name);
+      } catch (error) {
+        if (!verifySourceColorProfile(job)) return;
+        throw new Error(`Could not verify the JPEG color profile for “${metadata.name}”: ${error.message || error}. Choose sRGB or Display P3 explicitly.`);
+      }
+    }
     const hasTextLinks = job.connections.some(link => link.fromFrameId === metadata.id && link.source === 'text');
     if (!hasTextLinks) annotationPdfData = undefined;
     if (hasTextLinks && !annotationPdfData && !nativeExportFailed) {
@@ -706,9 +759,9 @@ async function exportPage(job, index, options = {}) {
   }
   if (!verifySourceColorProfile(job)) return;
   assertUnchangedDimensions(frame, metadata);
-  const transferBytes = data.byteLength + (annotationPdfData ? annotationPdfData.byteLength : 0);
+  const transferBytes = data.byteLength + (annotationPdfData ? annotationPdfData.byteLength : 0) + (colorProfilePngData ? colorProfilePngData.byteLength : 0);
   if (transferBytes > EXPORT_LIMITS.maxPageTransferBytes) {
-    throw new Error(`“${metadata.name}” exceeds the provisional 128 MiB per-page transfer limit, including its text-link data. Reduce raster quality or simplify this frame.`);
+    throw new Error(`“${metadata.name}” exceeds the provisional 128 MiB per-page transfer limit, including its text-link and color-profile data. Reduce raster quality or simplify this frame.`);
   }
   job.transferredBytes += transferBytes;
   const pending = { index, format, nativePdfData: format === 'PDF' ? data : null };
@@ -719,8 +772,9 @@ async function exportPage(job, index, options = {}) {
       terminateJob(job, 'export-error', `PDF processing did not acknowledge page ${index + 1} within two minutes. Start a new export.`);
     }
   }, EXPORT_LIMITS.acknowledgementTimeoutMs);
-  const message = { type: 'export-page', jobId: job.id, index, frame: metadata, format, data, exportColorProfile: job.exportColorProfile, warnings };
+  const message = { type: 'export-page', jobId: job.id, index, frame: metadata, format, data, exportColorProfile: job.exportColorProfile, outputColorMode: job.outputColorMode, warnings };
   if (annotationPdfData) message.annotationPdfData = annotationPdfData;
+  if (colorProfilePngData) message.colorProfilePngData = colorProfilePngData;
   figma.ui.postMessage(message);
 }
 

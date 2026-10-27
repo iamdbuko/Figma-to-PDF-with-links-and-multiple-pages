@@ -48,6 +48,28 @@ test('raster pages retain precise native text annotations without copying the na
   assert.ok(saved.length < fixture.length / 2, 'only annotation geometry, not vector content, was copied');
 });
 
+test('real CMYK assembly retains exact native text-link rectangles and rejects a vector payload', async () => {
+  const constants = await import('lcms-wasm');
+  const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
+  const { createCmykExporter } = require('../src/cmyk.js');
+  const profile = fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
+  const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(profile);
+  try {
+    const output = await PDFLib.PDFDocument.create();
+    await assert.rejects(appendExportPage(output, { frame, format: 'PDF', data: fixture, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session }), /requires an sRGB PNG/);
+    const { page, warnings } = await appendExportPage(output, { frame, format: 'PNG', data: png, annotationPdfData: fixture, outputColorMode: 'CMYK', exportColorProfile: 'SRGB' }, { cmykSession: session });
+    assert.deepEqual(warnings, []);
+    await addExportLinks(output, [page], [frame], textLinks);
+    const reloaded = await PDFLib.PDFDocument.load(await output.save());
+    const original = await PDFLib.PDFDocument.load(fixture);
+    assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), plainRecords(original, original.getPage(0)));
+    assert.deepEqual(reloaded.getPage(0).getSize(), { width: 600, height: 400 });
+    const profiles = reloaded.context.enumerateIndirectObjects().map(([, object]) => object).filter(object => object instanceof PDFLib.PDFRawStream && object.dict.has(PDFLib.PDFName.of('N')));
+    assert.equal(profiles.length, 1);
+    assert.equal(profiles[0].dict.get(PDFLib.PDFName.of('N')).asNumber(), 4);
+  } finally { session.close(); }
+});
+
 test('missing partial-text geometry is reported instead of creating overlapping whole-node links', async () => {
   const output = await PDFLib.PDFDocument.create();
   const { page } = await appendExportPage(output, { frame, format: 'PNG', data: png });

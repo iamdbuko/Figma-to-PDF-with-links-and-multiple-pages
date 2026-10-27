@@ -222,7 +222,7 @@ async function runScenario({ name, format, pagesPerPart = 30, testBudget = null 
     assert.equal(request.qualityScale, 1.5);
     assert.equal(request.colorProfile, 'SRGB');
     const jobId = request.jobId;
-    await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB' });
+    await post({ type: 'export-start', jobId, frames, connections, exportColorProfile: 'SRGB', outputColorMode: 'RGB' });
     await frame.waitForFunction(() => activeJob?.started);
     const plan = await frame.evaluate(() => activeJob.parts);
     assert.equal(plan.length, Math.ceil(count / pagesPerPart));
@@ -234,7 +234,7 @@ async function runScenario({ name, format, pagesPerPart = 30, testBudget = null 
       result.compressedInputBytes += source.inputBytes;
       const assemblyStart = performance.now();
       await page.evaluate(({ jobId, index, frame, format }) => {
-        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format, data: window.nextStressRaster, exportColorProfile: 'SRGB' } }, '*');
+        document.querySelector('iframe').contentWindow.postMessage({ pluginMessage: { type: 'export-page', jobId, index, frame, format, data: window.nextStressRaster, exportColorProfile: 'SRGB', outputColorMode: 'RGB' } }, '*');
         window.nextStressRaster = null;
       }, { jobId, index, frame: frames[index], format });
       const message = await waitMessage(['page-ack', 'part-ready'], { jobId, index });

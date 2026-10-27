@@ -97,6 +97,28 @@ test('missing P3 metadata and untagged DOCUMENT JPEG fail without a guessed colo
   await assert.rejects(helper.attachRasterProfile(document, image, read('native-SRGB.jpg'), 'JPG', 'DOCUMENT'), /color profile is unknown/);
 });
 
+test('legacy DOCUMENT JPEG uses its PNG probe profile without recompressing image data', async () => {
+  const helper = createPdfColorManagement(PDFLib);
+  for (const profileName of ['SRGB', 'DISPLAY_P3_V4']) {
+    const document = await PDFDocument.create(), bytes = read('native-SRGB.jpg');
+    const probe = read(`native-${profileName}.png`), image = await document.embedJpg(bytes);
+    const result = await helper.attachRasterProfile(document, image, bytes, 'JPG', 'DOCUMENT', probe);
+    assert.equal(result.profileSource, 'document-probe');
+    const stream = document.context.lookup(image.ref);
+    assert.deepEqual(stream.contents, bytes);
+    assert.deepEqual(imageProfile(document, stream).bytes, helper.getRasterProfile(document, probe, 'PNG', 'DOCUMENT').profile);
+  }
+});
+
+test('embedded JPEG ICC takes precedence over a probe, while missing or malformed probe metadata fails', async () => {
+  const helper = createPdfColorManagement(PDFLib), document = await PDFDocument.create();
+  const embedded = helper.getRasterProfile(document, read('native-DISPLAY_P3_V4.jpg'), 'JPG', 'DOCUMENT', read('native-SRGB.png'));
+  assert.equal(embedded.profileSource, 'embedded');
+  assert.equal(embedded.profile.length, 536);
+  assert.throws(() => helper.getRasterProfile(document, read('native-SRGB.jpg'), 'JPG', 'DOCUMENT', Uint8Array.of(1, 2, 3)), /invalid PNG header/);
+  assert.throws(() => helper.getRasterProfile(document, read('native-SRGB.jpg'), 'JPG', 'DOCUMENT'), /color profile is unknown/);
+});
+
 function iccFromJpeg(bytes) {
   const buffer = Buffer.from(bytes), magic = buffer.indexOf(Buffer.from('ICC_PROFILE\0'));
   assert(magic > 0);

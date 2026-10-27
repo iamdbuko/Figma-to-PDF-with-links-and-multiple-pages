@@ -21,12 +21,13 @@ async function harness(t) {
   const page = await context.newPage();
   const downloads = [], errors = [];
   const profilesByJob = new Map();
+  const modesByJob = new Map();
   page.on('download', download => downloads.push(download));
   page.on('pageerror', error => errors.push(error.message));
   // Only an isolated local document is controlled; no Figma account or user browser is used.
   await page.setContent('<script>window.received=[];addEventListener("message",event=>{if(event.data?.pluginMessage)received.push(event.data.pluginMessage)})</script><iframe title="Plugin UI" style="width:400px;height:700px"></iframe>');
   const frame = page.frames().find(item => item !== page.mainFrame());
-  await frame.setContent(fs.readFileSync(path.join(root, 'ui.html'), 'utf8'));
+  await frame.setContent(fs.readFileSync(process.env.PDF_EXPORT_TEST_UI || path.join(root, 'ui.html'), 'utf8'));
   assert.deepEqual(errors, [], 'the built HTML and bundled library must parse in a real browser');
   assert.equal(await frame.evaluate(() => typeof PDFLib), 'object', 'the bundled PDF library is available');
   await frame.waitForFunction(() => typeof startExport === 'function', {}, { timeout: 5000 });
@@ -55,19 +56,25 @@ async function harness(t) {
     if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat);
     if (options.fitOversized) await frame.locator('#fit-oversized').check();
     if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile);
+    if (options.iccBuffer) {
+      await frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from(options.iccBuffer) });
+      await frame.waitForFunction(() => !readingCmykProfile && selectedCmykProfile);
+    }
     await frame.locator('#export-btn').click();
     await page.waitForFunction(count => received.filter(message => message.type === 'export-pdf').length > count, previousRequests);
     const request = await waitMessage('export-pdf');
     const ordered = request.selectedFrames.map(id => frames.find(item => item.id === id));
-    const exportColorProfile = options.resolvedProfile || (request.colorProfile === 'DOCUMENT' ? 'SRGB' : request.colorProfile);
+    const exportColorProfile = options.resolvedProfile || (['DOCUMENT', 'CMYK'].includes(request.colorProfile) ? 'SRGB' : request.colorProfile);
+    const outputColorMode = request.colorProfile === 'CMYK' ? 'CMYK' : 'RGB';
     profilesByJob.set(request.jobId, exportColorProfile);
-    await post({ type: 'export-start', jobId: request.jobId, frames: ordered, connections: options.links || [], exportColorProfile });
+    modesByJob.set(request.jobId, outputColorMode);
+    await post({ type: 'export-start', jobId: request.jobId, frames: ordered, connections: options.links || [], exportColorProfile, outputColorMode });
     await frame.waitForFunction(() => activeJob?.started);
     return request;
   };
   const pageMessage = (jobId, index = 0, item = first, format = 'PNG', data) => {
     const exportColorProfile = profilesByJob.get(jobId) || 'SRGB';
-    return { type: 'export-page', jobId, index, frame: item, format, data: data ?? (exportColorProfile === 'DISPLAY_P3_V4' ? p3Png : png), exportColorProfile };
+    return { type: 'export-page', jobId, index, frame: item, format, data: data ?? (exportColorProfile === 'DISPLAY_P3_V4' ? p3Png : png), exportColorProfile, outputColorMode: modesByJob.get(jobId) || 'RGB' };
   };
   return { page, frame, post, messages, waitMessage, start, pageMessage, downloads, errors };
 }
@@ -196,7 +203,7 @@ test('selection updates preserve sorting and checks, render names safely, and ne
   await h.frame.locator('#export-btn').click();
   const request = await h.waitMessage('export-pdf');
   assert.deepEqual(request.selectedFrames, ['ten', 'literal']);
-  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[0], malicious], connections: [], exportColorProfile: 'SRGB' });
+  await h.post({ type: 'export-start', jobId: request.jobId, frames: [frames[0], malicious], connections: [], exportColorProfile: 'SRGB', outputColorMode: 'RGB' });
   await h.frame.waitForFunction(() => activeJob?.started);
   await h.post({ type: 'frames-updated', frames: [...frames, malicious, { ...first, id: 'new' }], connections: [], justAdded: ['new'] });
   await h.post({ type: 'selection-changed', selectedFrameIds: ['ten'], selectedFrameNames: ['Page 10'] });
@@ -378,10 +385,10 @@ test('annotations are included in the final pre-save retained-budget check', { t
   assert.deepEqual(h.errors, []);
 });
 
-test('color choices are sent explicitly and the concrete resolved profile is frozen per job', { timeout: 20000 }, async t => {
-  for (const [choice, resolved] of [['SRGB', 'SRGB'], ['DISPLAY_P3_V4', 'DISPLAY_P3_V4'], ['DOCUMENT', 'DISPLAY_P3_V4'], ['DOCUMENT', 'SRGB']]) {
+test('color choices default to the Figma file and preserve concrete or legacy resolution per job', { timeout: 20000 }, async t => {
+  for (const [choice, resolved] of [['SRGB', 'SRGB'], ['DISPLAY_P3_V4', 'DISPLAY_P3_V4'], ['DOCUMENT', 'DISPLAY_P3_V4'], ['DOCUMENT', 'SRGB'], ['DOCUMENT', 'DOCUMENT']]) {
     const h = await harness(t);
-    assert.equal(await h.frame.locator('#color-profile').inputValue(), 'SRGB', 'sRGB is the compatibility default');
+    assert.equal(await h.frame.locator('#color-profile').inputValue(), 'DOCUMENT', 'the file profile is the default');
     const request = await h.start([first], { colorProfile: choice, resolvedProfile: resolved });
     assert.equal(request.colorProfile, choice);
     assert.equal(await h.frame.evaluate(() => activeJob.exportColorProfile), resolved);
@@ -421,14 +428,14 @@ test('inconsistent or missing page color profiles fail before import without ras
   }
 });
 
-test('export initialization rejects unresolved or contradictory color profiles', { timeout: 15000 }, async t => {
-  for (const [choice, resolved] of [['SRGB', 'DISPLAY_P3_V4'], ['DOCUMENT', 'DOCUMENT'], ['DOCUMENT', undefined]]) {
+test('export initialization rejects unsupported or contradictory color profiles', { timeout: 15000 }, async t => {
+  for (const [choice, resolved] of [['SRGB', 'DISPLAY_P3_V4'], ['SRGB', 'DOCUMENT'], ['DOCUMENT', 'LEGACY'], ['DOCUMENT', undefined]]) {
     const h = await harness(t);
     await h.post({ type: 'frames-updated', frames: [first], connections: [], justAdded: [first.id] });
     await h.frame.locator('#color-profile').selectOption(choice);
     await h.frame.locator('#export-btn').click();
     const { jobId } = await h.waitMessage('export-pdf');
-    await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: resolved });
+    await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: resolved, outputColorMode: 'RGB' });
     const failure = await h.waitMessage('export-failed', { jobId });
     assert.match(failure.message, /color profile/);
     assert.equal(await h.frame.evaluate(() => activeJob.started), false);
@@ -438,4 +445,208 @@ test('export initialization rejects unresolved or contradictory color profiles',
     assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
     assert.deepEqual(h.errors, []);
   }
+});
+
+test('CMYK requires a readable bounded ICC file and rejects an invalid profile before contacting Figma', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('#color-profile').selectOption('CMYK');
+  assert.equal(await h.frame.locator('#cmyk-settings').isVisible(), true);
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+  await h.frame.evaluate(() => startExport());
+  assert.match(await h.frame.locator('#status-title').textContent(), /CMYK ICC profile/);
+  for (const file of [
+    { name: 'not-a-profile.txt', buffer: Buffer.from([1, 2, 3]) },
+    { name: 'empty.icc', buffer: Buffer.alloc(0) },
+    { name: 'too-large.icc', buffer: Buffer.alloc(16 * 1024 * 1024 + 1) }
+  ]) {
+    await h.frame.locator('#cmyk-profile').setInputFiles({ ...file, mimeType: 'application/vnd.iccprofile' });
+    assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+    assert.match(await h.frame.locator('#cmyk-profile-status').textContent(), /non-empty.*16 MiB/);
+  }
+  await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'invalid.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
+  await h.frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
+  await h.frame.locator('#export-btn').click();
+  await h.frame.waitForFunction(() => activeJob === null && document.getElementById('status-title').textContent.includes('Export failed'));
+  assert.equal((await h.messages('export-pdf')).length, 0);
+  assert.equal((await h.messages('export-failed')).length, 0);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  assert.equal(await h.frame.locator('#cmyk-profile').isEnabled(), true);
+  assert.deepEqual(h.errors, []);
+});
+
+test('cancelling CMYK preparation waits for cleanup, freezes uploaded bytes, and never starts the backend', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+  await h.frame.locator('#color-profile').selectOption('CMYK');
+  await h.frame.locator('#cmyk-profile').setInputFiles({ name: 'printer.icc', mimeType: 'application/vnd.iccprofile', buffer: Buffer.from([1, 2, 3]) });
+  await h.frame.waitForFunction(() => selectedCmykProfile && !readingCmykProfile);
+  await h.frame.evaluate(() => {
+    window.closeCalls = 0;
+    createCmykExporter = () => ({ prepare: bytes => new Promise(resolve => {
+      window.preparingBytes = bytes;
+      window.finishPrepare = () => resolve({ close() { window.closeCalls++; } });
+    }) });
+  });
+  await h.frame.locator('#export-btn').click();
+  await h.frame.waitForFunction(() => typeof window.finishPrepare === 'function');
+  await h.frame.evaluate(() => { selectedCmykProfile.bytes[0] = 99; });
+  assert.deepEqual(await h.frame.evaluate(() => [...window.preparingBytes]), [1, 2, 3], 'this job owns a snapshot of the uploaded profile');
+  for (const selector of ['#cmyk-profile', '#color-profile', '#output-mode', '#quality-select']) assert.equal(await h.frame.locator(selector).isDisabled(), true, selector);
+  assert.equal((await h.messages('export-pdf')).length, 0, 'profile preparation precedes all backend export work');
+  await h.frame.locator('#cancel-btn').click();
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true, 'preparation must finish before another job starts');
+  assert.equal((await h.messages('export-cancel')).length, 0, 'there is no backend job to cancel yet');
+  await h.frame.evaluate(() => window.finishPrepare());
+  await h.frame.waitForFunction(() => activeJob === null);
+  assert.equal(await h.frame.evaluate(() => window.closeCalls), 1);
+  assert.equal((await h.messages('export-pdf')).length, 0);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  const next = await h.start([first], { colorProfile: 'SRGB' });
+  assert.equal(next.colorProfile, 'SRGB');
+  assert.deepEqual(h.errors, []);
+});
+
+async function stubCmykSession(frame, { deferredEmbed = false } = {}) {
+  // Lifecycle-only substitute: actual CMYK samples and ICC output are verified by
+  // the real-engine test below and the conversion/assembly suites.
+  await frame.evaluate(deferred => {
+    window.prepareCalls = 0; window.closeCalls = 0; window.embedModes = [];
+    createCmykExporter = () => ({ prepare: async () => {
+      window.prepareCalls++;
+      return {
+        async embedPng(pdf, bytes, options) {
+          window.embedModes.push({ mode: activeJob.outputColorMode, active: options.stillActive() });
+          if (deferred) await new Promise(resolve => { window.finishConversion = resolve; });
+          window.lastStillActive = options.stillActive();
+          const image = await pdf.embedPng(bytes);
+          return { image, width: image.width, height: image.height };
+        },
+        close() { window.closeCalls++; }
+      };
+    } });
+  }, deferredEmbed);
+}
+
+test('CMYK preserves RGB choices and uses one conversion session across parts until final download', { timeout: 20000 }, async t => {
+  const h = await harness(t);
+  await stubCmykSession(h.frame);
+  const frames = [first, { ...first, id: 'second', name: 'Page 2' }];
+  const links = [{ source: 'prototype', type: 'internal', fromFrameId: first.id, toFrameId: 'second', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
+  const request = await h.start(frames, { pagesPerPart: 1, rasterFormat: 'JPG', colorProfile: 'CMYK', iccBuffer: [1, 2, 3], links });
+  const { jobId } = request;
+  assert.equal(request.colorProfile, 'CMYK');
+  assert.equal(request.exportType, 'raster');
+  assert.equal(request.rasterFormat, 'PNG');
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), true, 'the saved RGB vector setting stays selected');
+  assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
+  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), false);
+  assert.equal(await h.frame.locator('#raster-format-setting').isVisible(), false);
+  assert.deepEqual(await h.frame.evaluate(() => ({ mode: activeJob.outputColorMode, profile: activeJob.exportColorProfile, writable: Object.getOwnPropertyDescriptor(activeJob, 'outputColorMode').writable })), { mode: 'CMYK', profile: 'SRGB', writable: false });
+  await h.post(h.pageMessage(jobId));
+  await h.waitMessage('part-ready', { jobId });
+  await h.frame.waitForFunction(() => activeJob?.awaitingContinue);
+  assert.equal(await h.frame.evaluate(() => window.closeCalls), 0, 'the converter stays alive between parts');
+  assert.equal(await h.frame.locator('#cmyk-profile').isDisabled(), true);
+  await h.frame.locator('#continue-btn').click();
+  await h.waitMessage('page-ack', { jobId, index: 0 });
+  await h.post(h.pageMessage(jobId, 1, frames[1]));
+  await h.waitMessage('page-ack', { jobId, index: 1 });
+  await h.post({ type: 'export-complete', jobId });
+  await h.waitMessage('export-finished', { jobId });
+  assert.deepEqual(await h.frame.evaluate(() => ({ prepared: window.prepareCalls, closed: window.closeCalls, embeds: window.embedModes, downloads: window.downloadClicks })), { prepared: 1, closed: 1, embeds: [{ mode: 'CMYK', active: true }, { mode: 'CMYK', active: true }], downloads: 2 });
+  const firstPart = await PDFLib.PDFDocument.load(fs.readFileSync(await h.downloads[0].path()));
+  const annotation = firstPart.getPage(0).node.lookup(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray).lookup(0, PDFLib.PDFDict);
+  assert.equal(annotation.lookup(PDFLib.PDFName.of('A'), PDFLib.PDFDict).get(PDFLib.PDFName.of('S')).toString(), '/GoToR');
+  await h.frame.locator('#color-profile').selectOption('DOCUMENT');
+  assert.equal(await h.frame.locator('#export-vector').isEnabled(), true);
+  assert.equal(await h.frame.locator('#export-vector').isChecked(), true);
+  assert.equal(await h.frame.locator('#raster-format').inputValue(), 'JPG');
+  assert.equal(await h.frame.locator('.export-type-selector').isVisible(), true);
+  assert.equal(await h.frame.locator('#raster-format-setting').isVisible(), true);
+  assert.deepEqual(h.errors, []);
+});
+
+test('cancelling an in-flight CMYK conversion closes its session only after conversion settles', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  await stubCmykSession(h.frame, { deferredEmbed: true });
+  const { jobId } = await h.start([first], { colorProfile: 'CMYK', iccBuffer: [1, 2, 3] });
+  await h.post(h.pageMessage(jobId));
+  await h.frame.waitForFunction(() => typeof window.finishConversion === 'function');
+  await h.frame.locator('#cancel-btn').click();
+  await h.waitMessage('export-cancel', { jobId });
+  await h.post({ type: 'export-cancelled', jobId });
+  assert.equal(await h.frame.evaluate(() => window.closeCalls), 0);
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true);
+  await h.frame.evaluate(() => window.finishConversion());
+  await h.frame.waitForFunction(() => activeJob === null);
+  assert.equal(await h.frame.evaluate(() => window.lastStillActive), false);
+  assert.equal(await h.frame.evaluate(() => window.closeCalls), 1);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  assert.equal((await h.messages('page-ack')).length, 0);
+  assert.deepEqual(h.errors, []);
+});
+
+test('missing or inconsistent output color modes fail before page conversion', { timeout: 15000 }, async t => {
+  for (const phase of ['start', 'page']) {
+    const h = await harness(t);
+    let jobId;
+    if (phase === 'start') {
+      await h.post({ type: 'frames-updated', frames: [first], connections: [] });
+      await h.frame.locator('#export-btn').click();
+      ({ jobId } = await h.waitMessage('export-pdf'));
+      await h.post({ type: 'export-start', jobId, frames: [first], connections: [], exportColorProfile: 'SRGB' });
+    } else {
+      ({ jobId } = await h.start());
+      await h.post({ ...h.pageMessage(jobId), outputColorMode: 'CMYK' });
+    }
+    const failure = await h.waitMessage('export-failed', { jobId });
+    assert.match(failure.message, /color mode differs/);
+    assert.equal(await h.frame.evaluate(() => activeJob.nextIndex), 0);
+    assert.equal((await h.messages('page-ack')).length, 0);
+    await h.post({ type: 'export-error', jobId, error: failure.message });
+    await h.frame.waitForFunction(() => activeJob === null);
+    assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+    assert.deepEqual(h.errors, []);
+  }
+});
+
+test('legacy DOCUMENT exports preserve the per-page embedded profile through download', { timeout: 15000 }, async t => {
+  const h = await harness(t);
+  const { jobId } = await h.start([first], { resolvedProfile: 'DOCUMENT' });
+  await h.post(h.pageMessage(jobId, 0, first, 'PNG', p3Png));
+  await h.waitMessage('page-ack', { jobId });
+  const downloaded = h.page.waitForEvent('download');
+  await h.post({ type: 'export-complete', jobId });
+  await h.waitMessage('export-finished', { jobId });
+  const document = await PDFLib.PDFDocument.load(fs.readFileSync(await (await downloaded).path()));
+  const images = document.context.enumerateIndirectObjects().map(([, object]) => object).filter(object => object instanceof PDFLib.PDFRawStream && object.dict.get(PDFLib.PDFName.of('Subtype'))?.toString() === '/Image');
+  const image = images.find(object => object.dict.get(PDFLib.PDFName.of('ColorSpace')) instanceof PDFLib.PDFArray);
+  const colorSpace = image.dict.lookup(PDFLib.PDFName.of('ColorSpace'), PDFLib.PDFArray);
+  assert.equal(colorSpace.get(0).toString(), '/ICCBased');
+  assert.equal(document.context.lookup(colorSpace.get(1)).dict.get(PDFLib.PDFName.of('N')).asNumber(), 3);
+  assert.deepEqual(h.errors, []);
+});
+
+test('the bundled offline CMYK engine converts an uploaded printer profile and downloads a four-channel PDF', { timeout: 20000 }, async t => {
+  const h = await harness(t);
+  const iccBuffer = fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc'));
+  const links = [{ source: 'prototype', type: 'external', fromFrameId: first.id, toUrl: 'https://example.com', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }];
+  const { jobId } = await h.start([first], { colorProfile: 'CMYK', iccBuffer, links });
+  await h.post(h.pageMessage(jobId));
+  await h.waitMessage('page-ack', { jobId });
+  const downloaded = h.page.waitForEvent('download');
+  await h.post({ type: 'export-complete', jobId });
+  await h.waitMessage('export-finished', { jobId });
+  const document = await PDFLib.PDFDocument.load(fs.readFileSync(await (await downloaded).path()));
+  const image = document.context.enumerateIndirectObjects().map(([, object]) => object).find(object => object instanceof PDFLib.PDFRawStream && object.dict.get(PDFLib.PDFName.of('Subtype'))?.toString() === '/Image');
+  const colorSpace = image.dict.lookup(PDFLib.PDFName.of('ColorSpace'), PDFLib.PDFArray);
+  assert.equal(colorSpace.get(0).toString(), '/ICCBased');
+  const embeddedProfile = document.context.lookup(colorSpace.get(1));
+  assert.equal(embeddedProfile.dict.get(PDFLib.PDFName.of('N')).asNumber(), 4);
+  assert.deepEqual(Buffer.from(PDFLib.decodePDFRawStream(embeddedProfile).decode()), iccBuffer);
+  assert.equal(image.dict.has(PDFLib.PDFName.of('SMask')), false, 'CMYK pages are flattened onto white');
+  assert.equal(document.getPage(0).node.lookup(PDFLib.PDFName.of('Annots'), PDFLib.PDFArray).size(), 1);
+  assert.equal(await h.frame.evaluate(() => activeJob), null);
+  assert.deepEqual(h.errors, []);
 });

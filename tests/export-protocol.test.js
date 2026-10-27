@@ -73,6 +73,9 @@ function textLink(h, frame) {
   return h.child(frame, { type: 'TEXT', characters: 'One link', hyperlink: { type: 'URL', value: 'https://example.com' } });
 }
 
+// A 1×1 PNG stands in for native probe bytes; ICC parsing belongs to the UI.
+const colorProbePng = () => new Uint8Array(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5v8AAAAASUVORK5CYII=', 'base64'));
+
 test('deduplicates ordered IDs and waits for each ACK before exporting another page', async () => {
   const h = harness(); h.frame('a'); h.frame('b'); h.frame('unused');
   await h.start(['b', 'a', 'b', 'unused'], { selectedFrames: ['a', 'b', 'b'] });
@@ -451,12 +454,16 @@ test('style edits during native rendering stop the result; source watchers end b
   assert.equal(h.events.has('stylechange'), false);
 });
 
-test('the default export profile is explicit sRGB even in a Display P3 document', async () => {
-  const h = harness({ documentColorProfile: 'DISPLAY_P3' }); h.frame('a');
-  await h.start(['a']);
-  assert.equal(h.messagesOf('export-start')[0].exportColorProfile, 'SRGB');
-  assert.equal(h.messagesOf('export-page')[0].exportColorProfile, 'SRGB');
-  assert.equal(h.exports[0].colorProfile, 'SRGB');
+test('the default export profile follows the file, including legacy DOCUMENT exports', async () => {
+  for (const [documentColorProfile, resolved] of [['SRGB', 'SRGB'], ['DISPLAY_P3', 'DISPLAY_P3_V4'], ['LEGACY', 'DOCUMENT']]) {
+    const h = harness({ documentColorProfile }); h.frame('a');
+    await h.start(['a']);
+    assert.equal(h.messagesOf('export-start')[0].exportColorProfile, resolved);
+    assert.equal(h.messagesOf('export-page')[0].exportColorProfile, resolved);
+    assert.equal(h.exports[0].colorProfile, resolved);
+    assert.equal(h.messagesOf('export-start')[0].outputColorMode, 'RGB');
+    assert.equal(h.messagesOf('export-page')[0].outputColorMode, 'RGB');
+  }
 });
 
 test('explicit RGB profiles reach native PDFs, both raster formats, annotation PDFs and merge retries', async () => {
@@ -508,16 +515,159 @@ test('document profiles resolve once to a concrete profile shared by every messa
   }
 });
 
-test('legacy documents require an explicit export choice rather than a guessed document profile', async () => {
-  const h = harness({ documentColorProfile: 'LEGACY' }); h.frame('a');
-  await h.start(['a'], { colorProfile: 'DOCUMENT' });
-  assert.match(h.messagesOf('export-error')[0].error, /legacy document.*Choose sRGB or Display P3/);
+test('legacy document PNG exports retain DOCUMENT for both pixels and precise annotation data', async () => {
+  const h = harness({ documentColorProfile: 'LEGACY' }), frame = h.frame('a'); textLink(h, frame);
+  await h.start(['a'], { colorProfile: 'DOCUMENT', exportType: 'raster' });
+  assert.equal(h.messagesOf('export-error').length, 0);
+  assert.deepEqual(h.exports.map(item => [item.format, item.colorProfile]), [['PNG', 'DOCUMENT'], ['PDF', 'DOCUMENT']]);
+  const page = h.messagesOf('export-page')[0];
+  assert.equal(page.exportColorProfile, 'DOCUMENT');
+  assert.ok(page.annotationPdfData);
+  assert.equal(page.colorProfilePngData, undefined);
+});
+
+test('legacy JPEG pages carry a bounded PNG profile sample, including native merge fallback', async () => {
+  for (const exportType of ['raster', 'vector']) {
+    const h = harness({ documentColorProfile: 'LEGACY' }), frame = h.frame('a', {
+      width: 8191.3, height: 31.1,
+      exporter: settings => settings.format === 'PNG' ? colorProbePng() : new Uint8Array([1, 2, 3, 4])
+    });
+    textLink(h, frame);
+    await h.start(['a'], { exportType, rasterFormat: 'JPG' });
+    if (exportType === 'vector') await h.ack(0, { fallback: true });
+    const page = h.messagesOf('export-page').at(-1), probe = h.exports.find(item => item.format === 'PNG');
+    assert.equal(h.messagesOf('export-error').length, 0);
+    assert.equal(page.format, 'JPG');
+    assert.equal(page.exportColorProfile, 'DOCUMENT');
+    assert.equal(page.outputColorMode, 'RGB');
+    assert.deepEqual(page.colorProfilePngData, colorProbePng());
+    assert.ok(page.annotationPdfData);
+    assert.ok(probe.constraint.value > 0 && probe.constraint.value <= 1);
+    assert.ok(Math.ceil(frame.width * probe.constraint.value) <= 64);
+    assert.ok(Math.ceil(frame.height * probe.constraint.value) <= 64);
+    assert.equal(probe.useAbsoluteBounds, true);
+    assert.ok(h.exports.every(item => item.colorProfile === 'DOCUMENT'));
+    assert.deepEqual(h.exports.map(item => item.format), exportType === 'vector' ? ['PDF', 'JPG', 'PNG'] : ['JPG', 'PNG', 'PDF']);
+  }
+});
+
+test('known document profiles need no JPEG color probe and small legacy probes never upscale', async () => {
+  for (const documentColorProfile of ['SRGB', 'DISPLAY_P3']) {
+    const h = harness({ documentColorProfile }); h.frame('a');
+    await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+    assert.deepEqual(h.exports.map(item => item.format), ['JPG']);
+    assert.equal(h.messagesOf('export-page')[0].colorProfilePngData, undefined);
+  }
+  const h = harness({ documentColorProfile: 'LEGACY' });
+  h.frame('a', { width: 12.5, height: 2.5, exporter: settings => settings.format === 'PNG' ? colorProbePng() : new Uint8Array([1]) });
+  await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+  assert.equal(h.exports[1].constraint.value, 1);
+});
+
+test('failed, empty, malformed or oversized legacy JPEG probes fail rather than send unverified pixels', async () => {
+  const oversized = colorProbePng(); oversized[19] = 65;
+  for (const result of [null, new Uint8Array(), new Uint8Array([1, 2, 3]), oversized, new Error('Probe failed')]) {
+    const h = harness({ documentColorProfile: 'LEGACY' });
+    h.frame('a', { exporter(settings) {
+      if (settings.format !== 'PNG') return new Uint8Array([1]);
+      if (result instanceof Error) throw result;
+      return result;
+    } });
+    await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+    assert.match(h.messagesOf('export-error')[0].error, /Could not verify the JPEG color profile.*Choose sRGB or Display P3/);
+    assert.equal(h.messagesOf('export-page').length, 0);
+    assert.equal(h.timers.size, 0);
+    assert.equal(h.pageEvents.size, 0);
+  }
+});
+
+test('legacy JPEG probe bytes count toward the per-page transfer budget', async () => {
+  const h = harness({ documentColorProfile: 'LEGACY', maxPageTransferBytes: colorProbePng().byteLength + 3 });
+  h.frame('a', { exporter: settings => settings.format === 'PNG' ? colorProbePng() : new Uint8Array([1, 2, 3, 4]) });
+  await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+  assert.match(h.messagesOf('export-error')[0].error, /per-page transfer limit.*color-profile data/);
+  assert.equal(h.messagesOf('export-page').length, 0);
+});
+
+test('cancellation during the color probe waits for native completion and discards stale bytes', async () => {
+  const h = harness({ documentColorProfile: 'LEGACY' }), probe = deferred();
+  h.frame('a', { exporter: settings => settings.format === 'PNG' ? probe.promise : new Uint8Array([1]) });
+  const started = h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+  while (h.exports.length < 2) await new Promise(resolve => setImmediate(resolve));
+  await h.send({ type: 'export-cancel', jobId: 'job-1' });
+  assert.equal(h.messagesOf('export-cancelled').length, 0);
+  await h.start(['a'], { jobId: 'too-soon' });
+  assert.match(h.messagesOf('export-error').at(-1).error, /Another export/);
+  probe.resolve(colorProbePng()); await started;
+  assert.equal(h.messagesOf('export-cancelled').length, 1);
+  assert.equal(h.messagesOf('export-page').length, 0);
+});
+
+test('source-profile changes and source events during a legacy JPEG probe abort the page', async () => {
+  for (const change of ['profile', 'source']) {
+    const h = harness({ documentColorProfile: 'LEGACY' });
+    h.frame('a', { exporter(settings) {
+      if (settings.format === 'PNG') {
+        if (change === 'profile') h.figma.root.documentColorProfile = 'DISPLAY_P3';
+        else h.pageEvents.get('nodechange')({ nodeChanges: [] });
+        return colorProbePng();
+      }
+      return new Uint8Array([1]);
+    } });
+    await h.start(['a'], { exportType: 'raster', rasterFormat: 'JPG' });
+    assert.match(h.messagesOf('export-error')[0].error, change === 'profile' ? /color profile changed/ : /design changed/);
+    assert.equal(h.messagesOf('export-page').length, 0);
+    assert.equal(h.pageEvents.size, 0);
+  }
+});
+
+test('CMYK always renders explicit sRGB PNG, with separate output mode and native link metadata', async () => {
+  for (const documentColorProfile of ['SRGB', 'DISPLAY_P3', 'LEGACY']) {
+    const h = harness({ documentColorProfile }), frame = h.frame('a'); textLink(h, frame);
+    const original = { width: frame.width, height: frame.height, visible: frame.visible, profile: h.figma.root.documentColorProfile };
+    await h.start(['a'], { colorProfile: 'CMYK', exportType: 'vector', rasterFormat: 'JPG' });
+    assert.equal(h.messagesOf('export-error').length, 0);
+    assert.deepEqual(h.exports.map(item => [item.format, item.colorProfile]), [['PNG', 'SRGB'], ['PDF', 'SRGB']]);
+    const start = h.messagesOf('export-start')[0], page = h.messagesOf('export-page')[0];
+    assert.equal(start.outputColorMode, 'CMYK');
+    assert.equal(page.outputColorMode, 'CMYK');
+    assert.equal(start.exportColorProfile, 'SRGB');
+    assert.equal(page.exportColorProfile, 'SRGB');
+    assert.equal(page.format, 'PNG');
+    assert.ok(page.annotationPdfData);
+    assert.equal(page.colorProfilePngData, undefined);
+    assert.deepEqual({ width: frame.width, height: frame.height, visible: frame.visible, profile: h.figma.root.documentColorProfile }, original);
+  }
+});
+
+test('CMYK rejects pages above 8 million pixels before rendering while RGB retains its 32 MP limit', async () => {
+  const h = harness(); h.frame('a', { width: 3000, height: 3000 });
+  await h.start(['a'], { colorProfile: 'CMYK', exportType: 'vector' });
+  assert.match(h.messagesOf('export-error')[0].error, /CMYK beta is limited to 8 million pixels/);
   assert.equal(h.exports.length, 0);
   assert.equal(h.messagesOf('export-start').length, 0);
+  await h.start(['a'], { jobId: 'rgb', colorProfile: 'SRGB', exportType: 'raster' });
+  assert.equal(h.messagesOf('export-page').at(-1).outputColorMode, 'RGB');
+  assert.equal(h.exports.length, 1);
+});
+
+test('CMYK fitting respects rounded 8 MP and side limits without changing PDF page dimensions', async () => {
+  for (const [width, height] of [[3000.1, 3000.3], [100000, 10], [2828.5, 2828.5]]) {
+    const h = harness(); h.frame('a', { width, height });
+    await h.start(['a'], { colorProfile: 'CMYK', qualityScale: 2, fitOversized: true });
+    assert.equal(h.messagesOf('export-error').length, 0);
+    const scale = h.exports[0].constraint.value;
+    const pixelsWide = Math.ceil(width * scale), pixelsHigh = Math.ceil(height * scale);
+    assert.ok(pixelsWide <= 16384 && pixelsHigh <= 16384);
+    assert.ok(pixelsWide * pixelsHigh <= 8000000);
+    const page = h.messagesOf('export-page')[0];
+    assert.deepEqual([page.frame.width, page.frame.height], [width, height]);
+    assert.match(page.warnings.join(' '), /requested 2×, actual.*CMYK beta is limited to 8 million/);
+  }
 });
 
 test('invalid choices and unavailable document profiles fail before exporting any pixels', async () => {
-  for (const colorProfile of ['CMYK', 'DISPLAY_P3', '', null, 42]) {
+  for (const colorProfile of ['ADOBE_RGB', 'DISPLAY_P3', '', null, 42]) {
     const h = harness(); h.frame('a');
     await h.start(['a'], { colorProfile });
     assert.match(h.messagesOf('export-error')[0].error, /Choose sRGB, Display P3/);

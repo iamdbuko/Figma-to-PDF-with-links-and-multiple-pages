@@ -142,20 +142,34 @@ function createPdfColorManagement(PDFLib) {
     return profiles.get(key);
   }
 
-  async function attachRasterProfile(pdfDoc, image, bytes, format, exportColorProfile) {
+  function getRasterProfile(pdfDoc, bytes, format, exportColorProfile, colorProfilePngData) {
     if (!(bytes instanceof Uint8Array)) bytes = new Uint8Array(bytes);
     const metadata = format === 'PNG' ? pngProfile(pdfDoc, bytes) : format === 'JPG' ? jpegProfile(bytes) : invalid('unsupported raster format.');
     let profile = metadata.profile;
+    let profileSource = profile ? 'embedded' : 'sRGB';
+    // A legacy file's preferred profile is not exposed by the Plugin API.
+    // Its tiny DOCUMENT PNG carries that metadata even when its JPEG does not.
+    if (!profile && !metadata.isSRGB && format === 'JPG' && exportColorProfile === 'DOCUMENT' && colorProfilePngData) {
+      const probeBytes = colorProfilePngData instanceof Uint8Array ? colorProfilePngData : new Uint8Array(colorProfilePngData);
+      const probe = pngProfile(pdfDoc, probeBytes);
+      profile = probe.profile || (probe.isSRGB ? sRGB : null);
+      if (profile) profileSource = 'document-probe';
+    }
     if (!profile) {
       if (exportColorProfile === 'DISPLAY_P3_V4') throw new Error('The Display P3 image is missing its ICC color profile.');
       if (exportColorProfile !== 'SRGB' && !metadata.isSRGB) throw new Error('The raster image color profile is unknown. Export with an explicit sRGB or Display P3 profile.');
       profile = sRGB;
     }
+    return { profile, profileSource };
+  }
+
+  async function attachRasterProfile(pdfDoc, image, bytes, format, exportColorProfile, colorProfilePngData) {
+    const { profile, profileSource } = getRasterProfile(pdfDoc, bytes, format, exportColorProfile, colorProfilePngData);
     await image.embed();
     const stream = pdfDoc.context.lookup(image.ref, PDFRawStream);
     if (stream.dict.get(PDFName.of('ColorSpace'))?.toString() !== '/DeviceRGB') invalid('the image must contain RGB pixels.');
     stream.dict.set(PDFName.of('ColorSpace'), pdfDoc.context.obj(['ICCBased', profileReference(pdfDoc, profile)]));
-    return { profileSource: metadata.profile ? 'embedded' : 'sRGB', profileBytes: profile.length };
+    return { profileSource, profileBytes: profile.length };
   }
 
   async function preserveNativeColorProfile(pdfDoc, source, sourcePage, copiedPage, exportColorProfile) {
@@ -172,7 +186,7 @@ function createPdfColorManagement(PDFLib) {
     return { profileSource: 'native-page-resources' };
   }
 
-  return { attachRasterProfile, preserveNativeColorProfile };
+  return { attachRasterProfile, preserveNativeColorProfile, getRasterProfile };
 }
 
 if (typeof module !== 'undefined' && module.exports) module.exports = { createPdfColorManagement };

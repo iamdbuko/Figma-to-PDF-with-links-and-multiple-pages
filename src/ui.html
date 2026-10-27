@@ -733,16 +733,21 @@
       <button id="export-btn" class="btn btn-primary" disabled>Export PDF</button>
     </div>
     <p id="export-help" class="export-help">Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.</p>
-    <label class="export-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
+    <label class="export-setting" id="raster-format-setting" for="raster-format">Raster compression <select id="raster-format"><option value="PNG">Lossless PNG</option><option value="JPG">JPEG for photos</option></select></label>
     <p id="compression-help" class="export-help">Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.</p>
-    <label class="export-setting" for="color-profile">Color profile <select id="color-profile"><option value="SRGB" selected>sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="DOCUMENT">Same as Figma file</option></select></label>
-    <p id="color-profile-help" class="export-help">sRGB works well across most screens and PDF viewers.</p>
+    <label class="export-setting" for="color-profile">Color profile <select id="color-profile"><option value="DOCUMENT" selected>Same as Figma file</option><option value="SRGB">sRGB</option><option value="DISPLAY_P3_V4">Display P3</option><option value="CMYK">CMYK (beta)</option></select></label>
+    <p id="color-profile-help" class="export-help">Preserves the Figma file’s exported color profile.</p>
+    <div id="cmyk-settings" hidden>
+      <label class="export-setting" for="cmyk-profile">Printer ICC profile <input id="cmyk-profile" type="file" accept=".icc,.icm"></label>
+      <p id="cmyk-profile-status" class="export-help">Choose the CMYK ICC profile supplied by your printer (.icc or .icm, up to 16 MiB).</p>
+      <p class="export-help">CMYK beta creates raster pages on a white background and keeps links clickable. Maximum 8 million pixels per page; enable Fit oversized raster pages to lower resolution when needed. This is not a PDF/X export.</p>
+    </div>
     <label class="export-setting"><span><input type="checkbox" id="fit-oversized"> Fit oversized raster pages</span></label>
     <p class="export-help">When enabled, lowers resolution only for pages above the raster size limits. PDF page dimensions stay unchanged.</p>
     <label class="export-setting" for="output-mode">Output <select id="output-mode"><option value="single">One PDF</option><option value="parts">Split into parts</option></select></label>
     <label class="export-setting" id="part-size-setting" for="pages-per-part" hidden>Pages per part <input type="number" id="pages-per-part" min="1" max="250" step="1" value="25"></label>
     <p id="parts-help" class="export-help" hidden>Save each part before continuing. Keep every PDF together with its original filename. Links between parts require a compatible desktop PDF viewer. The export pauses for up to 15 minutes between parts.</p>
-    <p class="export-help">Each PDF has a 128 MiB retained-data allowance. Try JPEG for photo-heavy pages or smaller parts for large files; processing also needs memory beyond the PDF size.</p>
+    <p class="export-help">Each PDF has a 128 MiB retained-data allowance. Lower resolution or smaller parts can help large exports. For RGB exports, JPEG can help photo-heavy pages. Processing also needs memory beyond the PDF size.</p>
     <button id="continue-btn" class="btn btn-primary" hidden>Continue to next part</button>
     <button id="cancel-btn" class="btn btn-secondary" hidden>Cancel export</button>
     <div id="status" class="status" role="status" aria-live="polite"><div id="status-title" class="status-title"></div><div id="status-log" class="status-log"></div></div>
@@ -750,6 +755,7 @@
   <!-- Replaced with the pinned local library by the production build. -->
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="color-profiles.js"></script>
+  <script src="cmyk.js"></script>
   <script>
     'use strict';
     const QUALITY_SETTINGS = {
@@ -785,7 +791,7 @@
 
     function assertPdfBudget(pdfDoc, limit = PDF_DOCUMENT_LIMIT) {
       const bytes = estimatePdfBytes(pdfDoc);
-      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Try JPEG for photo-heavy pages or split the export into fewer pages per part.');
+      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower raster quality or split the export into fewer pages per part.');
       return bytes;
     }
 
@@ -926,11 +932,15 @@
       }
     }
 
-    async function appendExportPage(pdfDoc, message) {
+    async function appendExportPage(pdfDoc, message, options = {}) {
       const bytes = message.data instanceof Uint8Array ? message.data : new Uint8Array(message.data);
       if (!bytes.byteLength) throw new Error('The exported page is empty.');
       const frame = message.frame;
       if (!frame || ![frame.width, frame.height].every(n => Number.isFinite(n) && n > 0)) throw new Error('Invalid page dimensions.');
+      const cmyk = message.outputColorMode === 'CMYK';
+      if (cmyk && (message.format !== 'PNG' || message.exportColorProfile !== 'SRGB' || !options.cmykSession)) {
+        throw new Error('CMYK export requires an sRGB PNG and a prepared printer profile.');
+      }
       if (message.format === 'PDF') {
         const source = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false, throwOnInvalidObject: true });
         if (source.getPageCount() !== 1) throw new Error('A frame must produce exactly one PDF page.');
@@ -947,12 +957,15 @@
       }
       if (!['PNG', 'JPG'].includes(message.format)) throw new Error('Unsupported exported page format.');
       // JPEG is embedded as its original compressed DCT stream, without RGB expansion.
-      const image = message.format === 'JPG' ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+      const image = cmyk
+        ? (await options.cmykSession.embedPng(pdfDoc, bytes, { stillActive: options.stillActive })).image
+        : message.format === 'JPG' ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+      if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
       const page = pdfDoc.addPage([frame.width, frame.height]);
       page.drawImage(image, { x: 0, y: 0, width: frame.width, height: frame.height });
       // Flush this image now so pdf-lib releases its decoded RGB/alpha buffers before the next page.
       await image.embed();
-      await pdfColorManagement.attachRasterProfile(pdfDoc, image, bytes, message.format, message.exportColorProfile || 'SRGB');
+      if (!cmyk) await pdfColorManagement.attachRasterProfile(pdfDoc, image, bytes, message.format, message.exportColorProfile || 'SRGB', message.colorProfilePngData);
       const warnings = [];
       if (message.annotationPdfData) {
         try { await copyNativeUriAnnotations(pdfDoc, page, message.annotationPdfData, frame); }
@@ -1046,6 +1059,42 @@
     }
     // PDF_ASSEMBLY_END
 
+    const CMYK_PROFILE_LIMIT = 16 * 1024 * 1024;
+    let selectedCmykProfile = null;
+    let readingCmykProfile = false;
+    let cmykProfileReadSequence = 0;
+
+    async function readCmykProfile() {
+      if (activeJob) return;
+      const sequence = ++cmykProfileReadSequence;
+      const file = $('cmyk-profile').files?.[0];
+      selectedCmykProfile = null;
+      readingCmykProfile = false;
+      if (!file) {
+        $('cmyk-profile-status').textContent = 'Choose the CMYK ICC profile supplied by your printer (.icc or .icm, up to 16 MiB).';
+        updateControls();
+        return;
+      }
+      if (!/\.(icc|icm)$/i.test(file.name) || !file.size || file.size > CMYK_PROFILE_LIMIT) {
+        $('cmyk-profile-status').textContent = 'Choose a non-empty .icc or .icm file no larger than 16 MiB.';
+        updateControls();
+        return;
+      }
+      readingCmykProfile = true;
+      $('cmyk-profile-status').textContent = 'Reading printer profile…';
+      updateControls();
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (sequence !== cmykProfileReadSequence) return;
+        selectedCmykProfile = { name: file.name, bytes };
+        $('cmyk-profile-status').textContent = `${file.name} selected. The printer profile will be validated before export.`;
+      } catch (_) {
+        if (sequence === cmykProfileReadSequence) $('cmyk-profile-status').textContent = 'Could not read this profile. Choose the file again.';
+      } finally {
+        if (sequence === cmykProfileReadSequence) { readingCmykProfile = false; updateControls(); }
+      }
+    }
+
     function showStatus(message, type = 'info', details = []) {
       const status = $('status');
       status.className = `status ${type}`;
@@ -1069,30 +1118,42 @@
     }
 
     function updateExportTypeInfo() {
-      const vector = $('export-vector').checked;
+      const cmyk = $('color-profile').value === 'CMYK';
+      const vector = !cmyk && $('export-vector').checked;
+      document.querySelector('.export-type-selector').hidden = cmyk;
+      $('raster-format-setting').hidden = cmyk;
       $('quality-label').textContent = vector ? 'Fallback quality:' : 'Quality:';
-      $('export-help').textContent = vector
+      $('export-help').textContent = cmyk
+        ? 'CMYK rasterizes every page at the selected resolution and converts colors using your printer profile. Transparent areas become white.'
+        : vector
         ? 'Keeps native vectors and text where supported. Frames that need rasterization use the selected fallback quality.'
         : 'Creates image pages at the selected resolution. Page links and web links remain clickable.';
-      $('compression-help').textContent = $('raster-format').value === 'JPG'
+      $('compression-help').textContent = cmyk
+        ? 'CMYK uses lossless image compression. Your RGB export settings are kept for when you switch back.'
+        : $('raster-format').value === 'JPG'
         ? 'Applies to raster pages and vector fallbacks. JPEG can reduce photo-heavy exports; transparent areas become white and text may soften. Flat graphics can be larger than PNG.'
         : 'Applies to raster pages and vector fallbacks. PNG keeps transparency and sharp text.';
       $('color-profile-help').textContent = {
         SRGB: 'sRGB works well across most screens and PDF viewers.',
         DISPLAY_P3_V4: 'Display P3 supports a wider range of colors. Appearance depends on the screen and PDF viewer.',
-        DOCUMENT: 'Uses the Figma file’s color profile, fixed when this export starts.'
+        DOCUMENT: 'Preserves the Figma file’s exported color profile, including older files.',
+        CMYK: 'For print workflows: choose the CMYK output profile supplied by your printer. Conversion happens inside the plugin.'
       }[$('color-profile').value];
+      $('cmyk-settings').hidden = !cmyk;
       const parts = $('output-mode').value === 'parts';
       $('part-size-setting').hidden = !parts;
       $('parts-help').hidden = !parts;
+      updateControls();
     }
 
     function updateControls() {
       const busy = Boolean(activeJob);
       for (const input of document.querySelectorAll('#clear-list-btn, #sort-select, .export-panel select, .export-panel input, .frame-checkbox, .remove-btn')) input.disabled = busy;
+      const cmyk = $('color-profile').value === 'CMYK';
+      for (const id of ['export-vector', 'export-raster', 'raster-format']) $(id).disabled = busy || cmyk;
       for (const item of document.querySelectorAll('.frame-item')) item.draggable = !busy;
       const count = frameOrder.filter(id => checkedFrames.has(id)).length;
-      $('export-btn').disabled = busy || !count;
+      $('export-btn').disabled = busy || !count || (cmyk && (readingCmykProfile || !selectedCmykProfile));
       $('export-btn').textContent = busy ? 'Exporting…' : count ? `Export ${count} Frame${count === 1 ? '' : 's'}` : 'Export PDF';
       $('cancel-btn').hidden = !busy;
       $('cancel-btn').disabled = Boolean(activeJob?.cancelled || activeJob?.failed);
@@ -1185,6 +1246,8 @@
     function releaseJob(job) {
       if (activeJob !== job) return;
       if (job.blobUrl) { URL.revokeObjectURL(job.blobUrl); job.blobUrl = null; }
+      job.cmykSession?.close();
+      job.cmykSession = null; job.cmykProfileBytes = null;
       activeJob = null;
       job.pdf = null; job.pages = []; job.frames = []; job.connections = [];
       job.destinations?.clear();
@@ -1203,7 +1266,7 @@
       job.failed = error instanceof Error ? error.message : String(error || 'Unknown error');
       showStatus(`Export failed: ${job.failed}${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'error', job.downloadedNames);
       updateControls();
-      if (notifyBackend) post({ type: 'export-failed', jobId: job.id, message: job.failed });
+      if (notifyBackend && job.backendDispatched) post({ type: 'export-failed', jobId: job.id, message: job.failed });
     }
     function enqueue(job, task) {
       job.queue = job.queue.then(async () => {
@@ -1218,18 +1281,36 @@
       if (!window.PDFLib?.PDFDocument) { showStatus('The PDF library is unavailable. Reopen the plugin and try again.', 'error'); return; }
       const quality = $('quality-select').value;
       const requestedColorProfile = $('color-profile').value;
-      if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
+      if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT', 'CMYK'].includes(requestedColorProfile)) { showStatus('Choose a supported color profile.', 'error'); return; }
+      const cmyk = requestedColorProfile === 'CMYK';
+      if (cmyk && (readingCmykProfile || !selectedCmykProfile)) { showStatus('Choose the CMYK ICC profile supplied by your printer before exporting.', 'error'); return; }
       const split = $('output-mode').value === 'parts';
       const pagesPerPart = split ? Number($('pages-per-part').value) : selectedFrames.length;
       if (split && (!Number.isInteger(pagesPerPart) || pagesPerPart < 1 || pagesPerPart > 250)) { showStatus('Choose between 1 and 250 pages per part.', 'error'); return; }
       const id = `${Date.now()}-${++jobSequence}`;
       const unique = globalThis.crypto?.randomUUID?.().slice(0, 8) || Math.random().toString(16).slice(2, 10);
       const baseName = `figma-export-${new Date().toISOString().slice(0, 10)}-${Date.now().toString(36)}-${unique}`;
-      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0 };
+      const job = { id, requestedIds: selectedFrames, requestedColorProfile, frames: [], connections: [], pages: [], pdf: null, nextIndex: 0, queue: Promise.resolve(), warnings: [], cancelled: false, failed: null, backendStopped: true, backendDispatched: false, started: false, completed: false, pendingPage: null, fallbackIndex: null, exportType: cmyk ? 'raster' : $('export-vector').checked ? 'vector' : 'raster', pagesPerPart, baseName, parts: [], destinations: new Map(), partIndex: 0, awaitingContinue: false, pauseIndex: null, downloadsStarted: 0, downloadedNames: [], blobUrl: null, retainedBytes: 0, cmykSession: null, cmykProfileBytes: cmyk ? selectedCmykProfile.bytes.slice() : null };
+      Object.defineProperty(job, 'outputColorMode', { value: cmyk ? 'CMYK' : 'RGB', writable: false, configurable: false, enumerable: true });
+      // Snapshot every setting before asynchronous profile preparation or page work.
+      const request = { type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames: [...selectedFrames], qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: cmyk ? 'PNG' : $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile };
       activeJob = job;
       updateControls();
-      showStatus('Preparing frames…');
-      post({ type: 'export-pdf', jobId: id, frameOrder: [...frameOrder], selectedFrames, qualityScale: QUALITY_SETTINGS[quality].scale, quality, exportType: job.exportType, rasterFormat: $('raster-format').value, fitOversized: $('fit-oversized').checked, colorProfile: requestedColorProfile });
+      showStatus(cmyk ? 'Preparing and validating the printer profile…' : 'Preparing frames…');
+      enqueue(job, async () => {
+        if (cmyk) {
+          if (typeof createCmykExporter !== 'function' || typeof loadCmykEngine !== 'function') throw new Error('The CMYK conversion engine is unavailable. Reopen the plugin and try again.');
+          const session = await createCmykExporter(PDFLib, { loadEngine: loadCmykEngine }).prepare(job.cmykProfileBytes);
+          if (!isCurrent(job)) { session.close(); return; }
+          job.cmykSession = session;
+          job.cmykProfileBytes = null;
+        }
+        if (!isCurrent(job)) return;
+        job.backendDispatched = true;
+        job.backendStopped = false;
+        showStatus('Preparing frames…');
+        post(request);
+      });
     }
 
     function cancelExport() {
@@ -1238,7 +1319,8 @@
       job.cancelled = true;
       showStatus(`Cancelling export… Waiting for the current operation to finish.${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'info', job.downloadedNames);
       updateControls();
-      post({ type: 'export-cancel', jobId: job.id });
+      if (job.backendDispatched) post({ type: 'export-cancel', jobId: job.id });
+      else job.queue.finally(() => finishTerminal(job));
     }
 
     async function receivePage(job, message) {
@@ -1249,12 +1331,14 @@
       if (job.fallbackIndex === message.index && message.format === 'PDF') return;
       // Reject inconsistent metadata before import, so a profile error cannot trigger raster fallback.
       if (message.exportColorProfile !== job.exportColorProfile) throw new Error('The page color profile differs from this export. Start a new export with one consistent color profile.');
+      if (message.outputColorMode !== job.outputColorMode) throw new Error('The page color mode differs from this export. Start a new export.');
+      if (job.outputColorMode === 'CMYK' && message.format !== 'PNG') throw new Error('CMYK export requires raster PNG pages. Start a new export.');
       addWarnings(job, message.warnings);
       showStatus(`Preparing page ${message.index + 1} of ${job.frames.length}: ${message.frame.name}`, 'info', job.warnings);
       const before = job.pdf.getPageCount();
       let appended;
       try {
-        appended = await appendExportPage(job.pdf, message);
+        appended = await appendExportPage(job.pdf, message, { cmykSession: job.cmykSession, stillActive: () => isCurrent(job) });
       } catch (error) {
         // A failed embed must never leave a partial/blank page in a successful file.
         while (job.pdf.getPageCount() > before) job.pdf.removePage(job.pdf.getPageCount() - 1);
@@ -1329,7 +1413,9 @@
       const bytes = await job.pdf.save({ addDefaultPage: false, useObjectStreams: true, objectsPerTick: 20 });
       await yieldToBrowser();
       if (!isCurrent(job)) return false;
-      if (bytes.byteLength > PDF_DOCUMENT_LIMIT) throw new Error('The saved PDF exceeds 128 MiB. Choose fewer pages per part or JPEG compression.');
+      if (bytes.byteLength > PDF_DOCUMENT_LIMIT) throw new Error(job.outputColorMode === 'CMYK'
+        ? 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or a lower resolution.'
+        : 'The saved PDF exceeds 128 MiB. Choose fewer pages per part or JPEG compression.');
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -1382,6 +1468,7 @@
       if (message.type === 'plugin-ready') { if (!activeJob) showStatus(message.message || 'Select frames to get started.'); return; }
       const job = activeJob;
       if (!job || message.jobId !== job.id) return;
+      if (!job.backendDispatched) return;
       if (message.type === 'export-error' || message.type === 'export-cancelled') {
         job.backendStopped = true;
         if (message.type === 'export-error' && !job.cancelled) failJob(job, message.message || message.error || 'Figma could not export these frames.', false);
@@ -1394,8 +1481,10 @@
         enqueue(job, async () => {
           if (job.started) throw new Error('Duplicate export initialization.');
           const resolvedProfile = message.exportColorProfile;
-          if (!['SRGB', 'DISPLAY_P3_V4'].includes(resolvedProfile)) throw new Error('Figma did not provide a supported color profile for this export. Choose sRGB or Display P3 and try again.');
-          if (job.requestedColorProfile !== 'DOCUMENT' && resolvedProfile !== job.requestedColorProfile) throw new Error('The resolved color profile differs from the selected profile. Start a new export.');
+          if (!['SRGB', 'DISPLAY_P3_V4', 'DOCUMENT'].includes(resolvedProfile)) throw new Error('Figma did not provide a supported color profile for this export. Choose sRGB or Display P3 and try again.');
+          const expectedProfile = job.requestedColorProfile === 'CMYK' ? 'SRGB' : job.requestedColorProfile;
+          if (job.requestedColorProfile !== 'DOCUMENT' && resolvedProfile !== expectedProfile) throw new Error('The resolved color profile differs from the selected profile. Start a new export.');
+          if (message.outputColorMode !== job.outputColorMode) throw new Error('The resolved color mode differs from the selected mode. Start a new export.');
           Object.defineProperty(job, 'exportColorProfile', { value: resolvedProfile, writable: false, configurable: false, enumerable: true });
           const frames = message.frames || [];
           if (frames.length !== job.requestedIds.length || frames.some((frame, index) => frame.id !== job.requestedIds[index])) throw new Error('Export order differs from the selected frames.');
@@ -1431,6 +1520,7 @@
       $('export-btn').addEventListener('click', startExport);
       $('cancel-btn').addEventListener('click', cancelExport);
       $('continue-btn').addEventListener('click', continueExport);
+      $('cmyk-profile').addEventListener('change', readCmykProfile);
       $('clear-list-btn').addEventListener('click', () => {
         if (activeJob) return;
         allFrames = []; frameOrder = []; checkedFrames.clear(); connections = []; renderFrameList(); post({ type: 'clear-list' });
