@@ -126,6 +126,58 @@ test('Vector image resolution changes saved RGB and CMYK image pixels without ch
   } finally { session.close(); }
 });
 
+test('RGB assembly keeps smaller original JPEGs while normal downsizing and CMYK still use the selected DPI', async () => {
+  const name = PDFLib.PDFName.of, jpeg = require('jpeg-js');
+  const rgba = new Uint8Array(512 * 512 * 4);
+  let seed = 12345;
+  for (let i = 0; i < rgba.length; i += 4) {
+    for (let channel = 0; channel < 3; channel++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      rgba[i + channel] = seed >>> 24;
+    }
+    rgba[i + 3] = 255;
+  }
+  const jpegBytes = jpeg.encode({ data: rgba, width: 512, height: 512 }, 35).data;
+  const source = await PDFLib.PDFDocument.load(fixture), nativePage = source.getPage(0);
+  const expectedLinks = plainRecords(source, nativePage);
+  const image = await source.embedJpg(jpegBytes);
+  // Separate XObjects allow independent placement-based density decisions.
+  const smallImage = await source.embedJpg(jpegBytes);
+  nativePage.drawImage(image, { x: 350, y: 150, width: 100, height: 100 });
+  nativePage.drawImage(smallImage, { x: 500, y: 150, width: 12, height: 12 });
+  const bytes = await source.save();
+  const constants = await import('lcms-wasm');
+  const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });
+  const { createCmykExporter } = require('../src/cmyk.js');
+  const session = await createCmykExporter(PDFLib, { loadEngine: async () => ({ lcms, constants }) }).prepare(fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/synthetic-cmyk-test-only.icc')));
+  try {
+    for (const outputColorMode of ['RGB', 'CMYK']) {
+      const output = await PDFLib.PDFDocument.create();
+      const result = await appendExportPage(output, { frame, format: 'PDF', data: bytes, exportColorProfile: 'SRGB', outputColorMode }, { imageDpi: 300, cmykSession: outputColorMode === 'CMYK' ? session : undefined });
+      const saved = await PDFLib.PDFDocument.load(await output.save()), resultPage = saved.getPage(0);
+      assert.deepEqual(resultPage.getSize(), { width: 600, height: 400 });
+      assert.deepEqual(plainRecords(saved, resultPage), expectedLinks);
+      const images = resultPage.node.Resources().lookup(name('XObject')).values()
+        .map(ref => saved.context.lookup(ref)).filter(object => object.dict?.get(name('Subtype'))?.toString() === '/Image');
+      const byWidth = new Map(images.map(object => [object.dict.lookup(name('Width')).asNumber(), object]));
+      assert.ok(byWidth.has(50), 'the smaller placement still downsizes to the selected 300 DPI');
+      if (outputColorMode === 'RGB') {
+        assert.ok(byWidth.has(512), 'inflating JPEG stays at its higher original resolution');
+        assert.equal(byWidth.get(512).dict.lookup(name('Filter')).toString(), '/DCTDecode');
+        assert.deepEqual(Buffer.from(byWidth.get(512).contents), Buffer.from(jpegBytes));
+        assert.match(result.warnings.join(' '), /original resolution.*increase.*size/i);
+      } else {
+        assert.ok(byWidth.has(417), 'CMYK keeps its previous downsizing and conversion path');
+        assert.doesNotMatch(result.warnings.join(' '), /resizing.*increase.*size/i);
+        for (const object of images) {
+          const space = object.dict.lookup(name('ColorSpace'));
+          assert.equal(saved.context.lookup(space.get(1)).dict.lookup(name('N')).asNumber(), 4);
+        }
+      }
+    }
+  } finally { session.close(); }
+});
+
 test('real CMYK assembly retains exact native text-link rectangles in vector and raster modes', async () => {
   const constants = await import('lcms-wasm');
   const lcms = await constants.instantiate({ wasmBinary: fs.readFileSync(require.resolve('lcms-wasm/dist/lcms.wasm')) });

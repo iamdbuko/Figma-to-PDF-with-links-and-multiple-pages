@@ -90,7 +90,7 @@ try {
   for (let i = 0; i < pages.length; i++) {
     const start = performance.now();
     try {
-      const resized = resampler ? await resampler.resamplePage(doc, pages[i], { dpi }) : null;
+      const resized = resampler ? await resampler.resamplePage(doc, pages[i], { dpi, preserveSmallerJpeg: mode === 'rgb' }) : null;
       const converted = converter ? await converter.convertPage(doc, pages[i], session) : null;
       report.results.push({ page: i + 1, ms: Math.round(performance.now() - start), resized, converted });
     } catch (error) {

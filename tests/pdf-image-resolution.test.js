@@ -163,6 +163,224 @@ test('JPEG downsampling uses source decoded channels without browser color conve
   assert.deepEqual(Array.from(decoded(doc.context.lookup(image.ref))), expected);
 });
 
+// A deterministic photo-like JPEG whose modest downsampling produces larger
+// lossless Flate data. Use real decoder/compressor output rather than fake sizes.
+function detailedJpeg(size = 64) {
+  const rgba = new Uint8Array(size * size * 4);
+  let seed = 7;
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    rgba.set([(x * 3 + ((seed >>> 24) & 31)) & 255, (y * 3 + ((seed >>> 16) & 31)) & 255,
+      (x + y + (seed >>> 24)) & 255, 255], (y * size + x) * 4);
+  }
+  return new Uint8Array(jpeg.encode({ width: size, height: size, data: rgba }, 40).data);
+}
+
+function jpegWithCommentLength(bytes, length) {
+  const added = length - bytes.length;
+  assert(added >= 4 && added <= 65537, 'valid JPEG comment padding');
+  const output = new Uint8Array(length);
+  output.set(bytes.subarray(0, 2));
+  output.set([0xff, 0xfe, (added - 2) >>> 8, (added - 2) & 255], 2);
+  output.set(bytes.subarray(2), added + 2);
+  return output;
+}
+
+async function jpegSetup({ bytes = detailedJpeg(), target = 48, maskSamples, maskCompressed = true } = {}) {
+  const fixture = await setup(64, 64, { samples: bytes, compressed: false, Filter: 'DCTDecode' });
+  const { doc, page, image } = fixture;
+  setContent(doc, page, `q ${target} 0 0 ${target} 0 0 cm /I Do Q`, { XObject: { I: image.ref } });
+  if (maskSamples) {
+    fixture.mask = addImage(doc, 64, 64, { samples: maskSamples, compressed: maskCompressed, ColorSpace: 'DeviceGray' });
+    image.stream.dict.set(n('SMask'), fixture.mask.ref);
+  }
+  return fixture;
+}
+
+test('JPEG no-inflation preserves exact image, mask and ICC resources and deduplicates its warning', async () => {
+  const bytes = detailedJpeg(), { doc, page, image, mask } = await jpegSetup({ bytes, maskSamples: new Uint8Array(64 * 64).fill(255) });
+  const profileBytes = createPdfColorManagement(P).getRasterProfile(doc,
+    new Uint8Array(fs.readFileSync(path.join(__dirname, 'fixtures/color-profiles/native-SRGB.png'))), 'PNG', 'SRGB').profile;
+  const profile = doc.context.flateStream(profileBytes, { N: 3 }), profileRef = doc.context.register(profile);
+  const colorSpace = doc.context.obj(['ICCBased', profileRef]);
+  image.stream.dict.set(n('ColorSpace'), colorSpace);
+  const second = addImage(doc, 64, 64, { samples: bytes, compressed: false, Filter: ['DCTDecode'], ColorSpace: colorSpace, SMask: mask.ref });
+  const [content] = setContent(doc, page, 'q 48 0 0 48 0 0 cm /I Do /J Do Q', { XObject: { I: image.ref, J: second.ref } });
+  const originals = doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]);
+  const dictionaries = [image.stream, second.stream, mask.stream, profile].map(stream => stream.dict.toString());
+  const maskBytes = mask.stream.contents.slice(), encodedProfile = profile.contents.slice(), contentBytes = content.contents.slice();
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  assert.equal(result.stats.imagesResampled, 0);
+  assert.equal(result.stats.imagesUnchanged, 2);
+  assert.equal(result.stats.outputPixels, 2 * 64 * 64);
+  assert.equal(result.stats.decodedPixels, 2 * 64 * 64);
+  assert.deepEqual(result.warnings, ['An embedded JPEG was kept at its original resolution because resizing it would increase the PDF size.']);
+  for (const info of result.stats.images) {
+    assert.deepEqual([info.targetWidth, info.targetHeight, info.requestedTargetWidth, info.requestedTargetHeight], [64, 64, 48, 48]);
+    assert.match(info.reason, /JPEG resizing would increase encoded size/);
+    assert.equal(info.originalEncodedBytes, bytes.length + maskBytes.length);
+    assert(info.proposedEncodedBytes > info.originalEncodedBytes);
+  }
+  assert.deepEqual(doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]), originals);
+  assert.deepEqual([image.stream, second.stream, mask.stream, profile].map(stream => stream.dict.toString()), dictionaries);
+  assert.equal(doc.context.lookup(image.ref), image.stream);
+  assert.equal(doc.context.lookup(second.ref), second.stream);
+  assert.equal(image.stream.dict.get(n('ColorSpace')), colorSpace);
+  assert.equal(image.stream.dict.get(n('SMask')), mask.ref);
+  assert.deepEqual(content.contents, contentBytes);
+  const reloaded = await P.PDFDocument.load(await doc.save());
+  for (const ref of [image.ref, second.ref]) {
+    const kept = reloaded.context.lookup(ref);
+    assert.deepEqual(kept.contents, bytes);
+    assert.deepEqual(imageSize(reloaded, ref), [64, 64]);
+    assert.deepEqual(kept.dict.lookup(n('SMask')).contents, maskBytes);
+    assert.deepEqual(reloaded.context.lookup(kept.dict.lookup(n('ColorSpace')).get(1)).contents, encodedProfile);
+  }
+});
+
+test('JPEG no-inflation still downsamples when compressed output is smaller', async () => {
+  const { doc, page, image } = await jpegSetup({ target: 4 });
+  const originalBytes = image.stream.contents.length;
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  assert.equal(result.stats.imagesResampled, 1);
+  assert.deepEqual(result.warnings, []);
+  assert.deepEqual(imageSize(doc, image.ref), [4, 4]);
+  const resized = doc.context.lookup(image.ref);
+  assert.equal(resized.dict.get(n('Filter')).toString(), '/FlateDecode');
+  assert(resized.contents.length < originalBytes);
+});
+
+test('JPEG no-inflation permits equality, preserving the normal requested resolution', async () => {
+  const bytes = detailedJpeg(), baseline = await jpegSetup({ bytes });
+  await resampler().resamplePage(baseline.doc, baseline.page, { dpi: 72 });
+  const replacementBytes = baseline.doc.context.lookup(baseline.image.ref).contents.length;
+  const padded = jpegWithCommentLength(bytes, replacementBytes);
+  assert.deepEqual(jpeg.decode(padded, { useTArray: true, formatAsRGBA: false }).data,
+    jpeg.decode(bytes, { useTArray: true, formatAsRGBA: false }).data);
+  const { doc, page, image } = await jpegSetup({ bytes: padded });
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  assert.equal(result.stats.imagesResampled, 1);
+  assert.deepEqual(result.warnings, []);
+  assert.equal(doc.context.lookup(image.ref).contents.length, padded.length);
+  assert.deepEqual(imageSize(doc, image.ref), [48, 48]);
+});
+
+test('JPEG no-inflation counts mask savings when the image alone grows', async () => {
+  const { doc, page, image, mask } = await jpegSetup({ target: 40, maskSamples: new Uint8Array(64 * 64).fill(255), maskCompressed: false });
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  const resized = doc.context.lookup(image.ref), resizedMask = resized.dict.lookup(n('SMask'));
+  assert(resized.contents.length > image.stream.contents.length, 'JPEG alone grows');
+  assert(resized.contents.length + resizedMask.contents.length < image.stream.contents.length + mask.stream.contents.length, 'the complete pair shrinks');
+  assert.equal(result.stats.imagesResampled, 1);
+  assert.deepEqual(result.warnings, []);
+  assert.deepEqual(imageSize(doc, image.ref), [40, 40]);
+  assert.equal(resizedMask.dict.lookup(n('Width')).asNumber(), 40);
+  assert.equal(doc.context.lookup(mask.ref), mask.stream, 'shared original masks remain untouched');
+});
+
+test('JPEG no-inflation does not credit a shared mask that another retained resource still needs', async () => {
+  for (const otherUse of ['painted image', 'nested direct containers']) {
+    const { doc, page, image, mask } = await jpegSetup({ target: 40, maskSamples: new Uint8Array(64 * 64).fill(255), maskCompressed: false });
+    let second;
+    if (otherUse === 'painted image') {
+      second = addImage(doc, 64, 64, { samples: detailedJpeg(), compressed: false, Filter: 'DCTDecode', SMask: mask.ref });
+      setContent(doc, page, 'q 40 0 0 40 0 0 cm /I Do Q q 64 0 0 64 50 0 cm /J Do Q', { XObject: { I: image.ref, J: second.ref } });
+    } else {
+      // Unknown metadata is copied with the image dictionary, so its reference
+      // keeps the original mask reachable even if this image gets a new SMask.
+      image.stream.dict.set(n('PreservedMetadata'), doc.context.obj({ Nested: [{ Image: mask.ref }] }));
+    }
+    const copyAndSave = async () => {
+      const output = await P.PDFDocument.create();
+      const [copied] = await output.copyPages(doc, [0]); output.addPage(copied);
+      return output.save();
+    };
+    const before = await copyAndSave();
+    const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+    const kept = result.stats.images.find(info => info.reason);
+    assert(kept.proposedEncodedBytes < kept.originalEncodedBytes, 'the image/mask pair misleadingly appears smaller');
+    assert(kept.proposedEncodedBytes > kept.replacementBudgetBytes, 'no savings are credited for the retained shared mask');
+    assert.equal(kept.replacementBudgetBytes, image.stream.contents.length);
+    assert.equal(result.stats.imagesResampled, 0);
+    assert.equal(result.warnings.length, 1);
+    assert.equal(doc.context.lookup(image.ref), image.stream);
+    assert.equal(image.stream.dict.get(n('SMask')), mask.ref);
+    if (second) assert.equal(doc.context.lookup(second.ref), second.stream);
+    const after = await copyAndSave();
+    assert.equal(after.length, before.length, 'the actual assembled PDF does not inflate');
+    const reloaded = await P.PDFDocument.load(after);
+    const resources = reloaded.getPage(0).node.Resources().lookup(n('XObject'));
+    const keptImage = resources.lookup(n('I'));
+    assert.deepEqual(keptImage.contents, image.stream.contents);
+    assert.deepEqual(keptImage.dict.lookup(n('SMask')).contents, mask.stream.contents);
+    if (second) assert.equal(keptImage.dict.get(n('SMask')).toString(), resources.lookup(n('J')).dict.get(n('SMask')).toString());
+  }
+});
+
+test('a bounded ownership scan conservatively grants no mask savings for oversized source graphs', async () => {
+  const { doc, page, image } = await jpegSetup({ target: 40, maskSamples: new Uint8Array(64 * 64).fill(255), maskCompressed: false });
+  doc.catalog.set(n('Extra'), doc.context.obj(new Array(100001).fill(null)));
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  assert.equal(result.stats.imagesResampled, 0);
+  assert.equal(result.stats.imagesUnchanged, 1);
+  assert.equal(result.stats.images[0].replacementBudgetBytes, image.stream.contents.length);
+  assert.equal(doc.context.lookup(image.ref), image.stream);
+  assert.equal(result.warnings.length, 1);
+});
+
+test('JPEG no-inflation counts mask growth when the image alone shrinks', async () => {
+  const maskSamples = Uint8Array.from({ length: 64 * 64 }, (_, i) => Math.floor(i / 64) % 7 < 3 ? 0 : 255);
+  const bytes = detailedJpeg(), baseline = await jpegSetup({ bytes, target: 40, maskSamples });
+  await resampler().resamplePage(baseline.doc, baseline.page, { dpi: 72 });
+  const replacement = baseline.doc.context.lookup(baseline.image.ref);
+  const padded = jpegWithCommentLength(bytes, replacement.contents.length + 10);
+  const { doc, page, image, mask } = await jpegSetup({ bytes: padded, target: 40, maskSamples });
+  const originalCount = doc.context.enumerateIndirectObjects().length;
+  assert(replacement.contents.length < padded.length, 'the image alone shrinks');
+  assert(replacement.contents.length + replacement.dict.lookup(n('SMask')).contents.length > padded.length + mask.stream.contents.length, 'the complete pair grows');
+  const result = await resampler().resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true });
+  assert.equal(result.stats.imagesResampled, 0);
+  assert.equal(result.stats.imagesUnchanged, 1);
+  assert.equal(result.warnings.length, 1);
+  assert.equal(doc.context.lookup(image.ref), image.stream);
+  assert.equal(image.stream.dict.get(n('SMask')), mask.ref);
+  assert.equal(doc.context.enumerateIndirectObjects().length, originalCount);
+});
+
+test('the default and explicit false retain the existing JPEG resampling path used by CMYK', async () => {
+  for (const options of [{}, { preserveSmallerJpeg: false }]) {
+    const { doc, page, image } = await jpegSetup();
+    const result = await resampler().resamplePage(doc, page, { dpi: 72, ...options });
+    assert.equal(result.stats.imagesResampled, 1);
+    assert.equal(result.stats.imagesUnchanged, 0);
+    assert.deepEqual(result.warnings, []);
+    assert.deepEqual(imageSize(doc, image.ref), [48, 48]);
+    assert(doc.context.lookup(image.ref).contents.length > image.stream.contents.length);
+    assert.equal(doc.context.lookup(image.ref).dict.get(n('Filter')).toString(), '/FlateDecode');
+  }
+});
+
+test('cancellation after deciding to keep a JPEG rolls back earlier staged images', async () => {
+  const { doc, page, image } = await setup();
+  const kept = addImage(doc, 64, 64, { samples: detailedJpeg(), compressed: false, Filter: 'DCTDecode' });
+  setContent(doc, page, 'q 4 0 0 4 0 0 cm /A Do Q q 48 0 0 48 0 0 cm /B Do Q', { XObject: { A: image.ref, B: kept.ref } });
+  const originals = doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]);
+  const originalFlate = doc.context.flateStream;
+  let active = true, proposedJpegCreated = false;
+  doc.context.flateStream = function (bytes, ...args) {
+    if (bytes.length === 48 * 48 * 3) proposedJpegCreated = true;
+    return originalFlate.call(this, bytes, ...args);
+  };
+  try {
+    await assert.rejects(resampler({ yieldToBrowser: async () => { if (proposedJpegCreated) active = false; } })
+      .resamplePage(doc, page, { dpi: 72, preserveSmallerJpeg: true, stillActive: () => active }), /cancelled/);
+  } finally { doc.context.flateStream = originalFlate; }
+  assert(proposedJpegCreated, 'cancellation occurs after the keep decision can be made');
+  assert.deepEqual(doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]), originals);
+  assert.equal(doc.context.lookup(image.ref), image.stream);
+  assert.equal(doc.context.lookup(kept.ref), kept.stream);
+});
+
 test('soft-mask samples are resized with premultiplied color without changing a shared original mask', async () => {
   const { doc, page, image } = await setup(2, 2, { samples: Uint8Array.from([255, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 255]) });
   const mask = addImage(doc, 2, 2, { samples: Uint8Array.from([255, 0, 255, 0]), ColorSpace: 'DeviceGray' });

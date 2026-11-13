@@ -1,0 +1,7 @@
+Fixed a high-DPI Vector export issue: resizing an embedded JPEG could unexpectedly make the PDF larger and trigger the size allowance, including at 300 DPI.
+
+RGB Vector exports now keep the original JPEG when resizing would increase its stored size. The image keeps its original quality and color profile, and a warning explains that it remains at its original resolution. Images that become smaller still downsize normally.
+
+Links, defaults, Rasterized exports, CMYK conversion and existing size safeguards keep their current behavior. Retained originals can remain above the requested DPI. Very large PDFs may still need lower resolution or smaller parts.
+
+Verified with 304 automated tests and a 148-page native Figma report export at 300 DPI. Full validation and source are available in the v9.0.2 GitHub release.
