@@ -49,6 +49,8 @@ A [native Figma Desktop smoke test](heavy-native-live-results.json) also exporte
 
 Tested UI SHA-256: `d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938`. The canonical build exactly matches the temporary tested bundle; backend syntax validation passed. Package version and the published v9 tag remain unchanged.
 
+GitHub's `ubuntu-latest` runner resolved to Ubuntu 26.04, which the pinned Playwright 1.56.1 cannot install on. CI is now pinned to supported Ubuntu 24.04; no plugin runtime dependency was changed.
+
 Reproduce from the repository:
 
 ```sh
