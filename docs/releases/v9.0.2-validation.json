@@ -1,0 +1,36 @@
+{
+  "version": "9.0.2",
+  "preparedDate": "2026-11-13",
+  "baselineCommit": "bf065061b55e06d8e1041b3253264977af6c5419",
+  "automatedTests": 304,
+  "testFailures": 0,
+  "testDurationMs": 53179.590583,
+  "focusedTests": 55,
+  "runtimeFiles": {
+    "code.js": {
+      "bytes": 40036,
+      "sha256": "830cdf4f7aeaa31ef0225ba289c5c058959346bef3e8092934848f99a6b57607"
+    },
+    "ui.html": {
+      "bytes": 2637975,
+      "sha256": "4e5de515aee4330c0c87b3ced519ee87858f2cd305ca13b3edcaba5a1ee0ec5d"
+    },
+    "manifest.json": {
+      "bytes": 319,
+      "sha256": "e150bee029d90a646a3e587313314abde4c94e7610c453039c77285a3cf9166f"
+    }
+  },
+  "nativeVerification": {
+    "status": "pending",
+    "scope": "Actual report, 148 main frames, RGB Vector / As file / 300 DPI / PNG / no lower-resolution fallback / single PDF; compare against Original reference."
+  },
+  "evidence": [
+    "../DPI-SIZE-GUARD.md",
+    "../AI-REVIEW-HANDOFF.md"
+  ],
+  "limitations": [
+    "No physical print proof or Windows verification.",
+    "The size guard applies to supported JPEGs in RGB Vector mode; retained originals may exceed selected DPI.",
+    "Existing 128 MiB retained-data allowance remains unchanged."
+  ]
+}

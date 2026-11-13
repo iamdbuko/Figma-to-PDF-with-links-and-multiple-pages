@@ -6,9 +6,11 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Version 9
 
-This is **v9.0.1**. See the [release notes](docs/releases/v9.0.1.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
+This is **v9.0.2**. See the [release notes](docs/releases/v9.0.2.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
 
-This patch fixes heavy native exports: rejected native imports release their copied data, proven-unused image resources are excluded, and shared transparency-mask resources no longer block unrelated image resizing. See the [investigation, workaround and validation](docs/HEAVY-NATIVE-EXPORTS.md).
+The preceding v9.0.1 patch fixed heavy native exports: rejected native imports release their copied data, proven-unused image resources are excluded, and shared transparency-mask resources no longer block unrelated image resizing. See the [investigation, workaround and validation](docs/HEAVY-NATIVE-EXPORTS.md).
+
+This patch prevents RGB Vector JPEG downsizing from increasing encoded image data: when a resized JPEG and its transparency mask would be larger, their original data is retained with an explicit resolution warning. Resizes that save space and the CMYK path keep their previous behavior. See the [high-DPI fix and validation](docs/DPI-SIZE-GUARD.md) and [AI review handoff](docs/AI-REVIEW-HANDOFF.md).
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
@@ -56,7 +58,7 @@ See [large-file export options and validation](docs/LARGE-EXPORTS.md), [initial 
 
 - Raster rendering: at most **32 million scaled pixels** and **16,384 pixels per side**. Lower the quality or export a smaller frame when a request exceeds these limits.
 - Rasterized CMYK: **8 million scaled pixels** per page; fitting uses this lower limit. Vector CMYK: **16 million pixels per embedded image**, **32 million converted image pixels per page**, with additional drawing-content limits. It retains normal transparency with an appearance warning. The built-in profile describes FOGRA39 coated printing; use a custom profile when your printer specifies another condition. Neither mode is PDF/X.
-- Explicit Vector image downsizing: up to **20 million source pixels per image**, **80 million decoded source pixels per page**, and **16 million output pixels per image**. Unsupported images stay original with a warning; CMYK may still refuse them. Resized JPEGs use lossless compression, so fewer pixels do not guarantee fewer bytes.
+- Explicit Vector image downsizing: up to **20 million source pixels per image**, **80 million decoded source pixels per page**, and **16 million output pixels per image**. Unsupported images stay original with a warning; CMYK may still refuse them. Resized JPEGs use lossless compression. RGB Vector keeps the original JPEG and matching mask if resizing would increase their encoded size; that image can remain above the requested DPI, with a warning. CMYK keeps its existing resizing/conversion behavior.
 - Transport budget: **128 MiB per page**, including temporary text-link data. Earlier pages and discarded retries do not consume this allowance.
 - PDF data budget: **128 MiB per output document**, estimated from retained PDF objects and streams. This is not a total-memory measurement; final serialization needs additional memory. Lower image/page resolution, split into smaller parts, or use JPEG for raster pages when a document exceeds it.
 - RGB Vector mode rasterizes whole frames containing Figma's unsupported Plus lighter/darker blend modes, or when native export/import fails. The UI identifies fallback pages. Vector CMYK stops on unsupported content and never silently rasterizes a page.

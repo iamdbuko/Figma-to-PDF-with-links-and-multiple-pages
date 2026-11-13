@@ -84,7 +84,7 @@ function createPdfImageResampler(P, options = {}) {
     return result;
   }
 
-  async function resamplePage(doc, page, { dpi, stillActive = () => true } = {}) {
+  async function resamplePage(doc, page, { dpi, stillActive = () => true, preserveSmallerJpeg = false } = {}) {
     if (!Number.isFinite(dpi) || dpi < 36 || dpi > 300) throw new Error('Image resolution must be between 36 and 300 DPI.');
     const context = doc.context, warnings = [], stats = { dpi, imagesFound: 0, imagesResampled: 0, imagesUnchanged: 0, sourcePixels: 0, outputPixels: 0, decodedPixels: 0, images: [] };
     const active = () => { if (!stillActive()) throw new Error('Image resolution adjustment was cancelled.'); };
@@ -226,7 +226,44 @@ function createPdfImageResampler(P, options = {}) {
     }
     stats.imagesFound = images.size;
     const staged = [];
-    let stagedBytes = 0;
+    let stagedBytes = 0, maskReferenceCounts;
+    const maskIsExclusive = async mask => {
+      if (maskReferenceCounts === undefined) {
+        // Count structural references across the source context, including direct
+        // containers and unused resources. An old shared mask can remain in the
+        // copied page, so its bytes cannot safely offset a replacement's size.
+        // Unknown or oversized graphs receive no mask-savings credit.
+        maskReferenceCounts = null;
+        try {
+          const candidates = new Set([...images.values()].map(item => lookup(item.image.dict.get(n('SMask')))).filter(value => value instanceof Stream));
+          const counts = new Map([...candidates].map(value => [value, 0])), seen = new Set();
+          const roots = context.enumerateIndirectObjects(), limit = 100000;
+          if (roots.length > limit) return false;
+          const pending = roots.map(([, value]) => [value, false]);
+          let inspected = 0;
+          while (pending.length) {
+            if (++inspected > limit) return false;
+            const [value, reference] = pending.pop(), target = lookup(value);
+            if (reference && counts.has(target)) counts.set(target, counts.get(target) + 1);
+            // Indirect targets are visited exactly once through the roots above.
+            if (value instanceof Ref || !target || seen.has(target)) continue;
+            seen.add(target);
+            let children = [];
+            if (target instanceof Stream) children = [target.dict];
+            else if (target instanceof Dict) children = target.values();
+            else if (target instanceof Arr) {
+              if (target.size() > limit - inspected - pending.length) return false;
+              children = target.asArray();
+            }
+            if (children.length > limit - inspected - pending.length) return false;
+            for (const child of children) pending.push([child, true]);
+            if (inspected % 4096 === 0) { await yieldToBrowser(); active(); }
+          }
+          maskReferenceCounts = counts;
+        } catch (error) { active(); }
+      }
+      return maskReferenceCounts?.get(mask) === 1;
+    };
     for (const item of images.values()) {
       active();
       const { image } = item, d = image.dict;
@@ -321,9 +358,26 @@ function createPdfImageResampler(P, options = {}) {
           mask.dict.set(n('Width'), Num.of(targetWidth)); mask.dict.set(n('Height'), Num.of(targetHeight));
         }
         const outputBytes = replacement.contents.length + (mask?.contents.length || 0);
-        if (stagedBytes + outputBytes > MAX_OUTPUT) unsupported('the 128 MiB resized-image data limit');
-        stagedBytes += outputBytes;
-        staged.push({ item, replacement, mask, width, height, targetWidth, targetHeight });
+        const originalBytes = image.contents.length + (originalMask?.contents.length || 0);
+        let replacementBudget = originalBytes;
+        if (preserveSmallerJpeg && filter?.toString() === '/DCTDecode' && originalMask && !await maskIsExclusive(originalMask)) {
+          replacementBudget = image.contents.length;
+        }
+        // JPEG pixels can shrink while lossless Flate data grows. Compare the
+        // complete image/mask pair before registering or staging replacements.
+        // This opt-in safeguard is for RGB exports; CMYK keeps its existing path.
+        if (preserveSmallerJpeg && filter?.toString() === '/DCTDecode' && outputBytes > replacementBudget) {
+          stats.imagesUnchanged++; stats.outputPixels += width * height;
+          stats.images.push({ width, height, targetWidth: width, targetHeight: height,
+            requestedTargetWidth: targetWidth, requestedTargetHeight: targetHeight, resized: false,
+            reason: 'JPEG resizing would increase encoded size', originalEncodedBytes: originalBytes,
+            proposedEncodedBytes: outputBytes, replacementBudgetBytes: replacementBudget });
+          warn('An embedded JPEG was kept at its original resolution because resizing it would increase the PDF size.');
+        } else {
+          if (stagedBytes + outputBytes > MAX_OUTPUT) unsupported('the 128 MiB resized-image data limit');
+          stagedBytes += outputBytes;
+          staged.push({ item, replacement, mask, width, height, targetWidth, targetHeight });
+        }
       } catch (error) {
         active();
         stats.imagesUnchanged++;

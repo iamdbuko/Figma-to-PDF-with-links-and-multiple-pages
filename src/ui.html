@@ -117,7 +117,7 @@
   <dialog id="profile-help-dialog" aria-labelledby="profile-help-title"><h2 id="profile-help-title">Find ICC profiles</h2><div id="cmyk-profile-help"><p>Ask your printer or paper provider for the CMYK output profile for your printer and paper. Choose its <code>.icc</code> or <code>.icm</code> file directly from Downloads; installing it is not required.</p><p><strong>Mac</strong> — in Finder, press Shift–Command–G and paste a path:</p><ul><li><code>/Library/ColorSync/Profiles</code></li><li><code>~/Library/ColorSync/Profiles</code></li><li><code>/System/Library/ColorSync/Profiles</code></li></ul><p><strong>Windows</strong> — paste into the File Explorer address bar:</p><p><code>%WINDIR%\System32\spool\drivers\color</code></p><p>Some folders may be empty. Display profiles are often RGB; choose a CMYK printer/output profile.</p><p><a href="https://help.fiery.com/cws/5.7/en-us/GUID-8701A1DA-A5C4-46DD-9CB2-AF131CEB8B95.html" target="_blank" rel="noopener noreferrer">Profile folder reference</a></p></div><form method="dialog"><button class="btn">Close</button></form></dialog>
   <div class="help-copy" aria-hidden="true">
     <p id="selection-info"></p><p id="color-profile-help"></p><p id="color-profile-compatibility"></p>
-    <p id="vector-resolution-help">Lowers the resolution of supported images while keeping text and shapes vector. Never adds detail beyond Figma’s export. Unsupported images keep their original resolution with a warning. Choose Original in More to keep image resolution unchanged.</p>
+    <p id="vector-resolution-help">Lowers the resolution of supported images while keeping text and shapes vector. Never adds detail beyond Figma’s export. In RGB exports, JPEG images keep their original resolution if resizing would increase their stored size, with a warning. Unsupported images also stay original. Choose Original in More to keep image resolution unchanged.</p>
     <p id="export-help"></p><p id="compression-help"></p><p id="cmyk-bundled-description"></p><p id="cmyk-format-help"></p>
     <p id="cmyk-file-help">Choose a CMYK printer profile (.icc or .icm, up to 16 MiB). The profile is validated before export and never uploaded.</p>
     <p id="fit-oversized-help">Allow lowers resolution only for raster pages above the size limits, including RGB vector fallbacks. PDF page dimensions stay unchanged. Don’t allow stops the export when a page exceeds these limits.</p>
@@ -393,7 +393,7 @@
         warnings.push(...(pruned?.warnings || []));
         if (options.imageDpi != null) {
           if (typeof createPdfImageResampler !== 'function') throw new Error('The image resolution helper is unavailable. Reopen the plugin and try again.');
-          const resized = await createPdfImageResampler(PDFLib, { yieldToBrowser }).resamplePage(source, sourcePage, { dpi: options.imageDpi, stillActive: options.stillActive });
+          const resized = await createPdfImageResampler(PDFLib, { yieldToBrowser }).resamplePage(source, sourcePage, { dpi: options.imageDpi, stillActive: options.stillActive, preserveSmallerJpeg: !cmyk });
           if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
           warnings.push(...(resized?.warnings || []));
         }
