@@ -155,7 +155,7 @@
     const PDF_DOCUMENT_LIMIT = 128 * 1024 * 1024;
 
     function estimatePdfBytes(pdfDoc) {
-      // Count retained objects, including unreferenced objects left by failed imports.
+      // Count all retained objects: pdf-lib also serializes unreferenced objects.
       // This estimates serialized data, not total renderer or Figma memory.
       const objects = pdfDoc.context.enumerateIndirectObjects();
       let bytes = 4096 + objects.length * 32; // header, trailer, and cross-reference allowance
@@ -166,7 +166,7 @@
 
     function assertPdfBudget(pdfDoc, limit = PDF_DOCUMENT_LIMIT) {
       const bytes = estimatePdfBytes(pdfDoc);
-      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower image/page resolution or split the export into fewer pages per part.');
+      if (bytes > limit) throw new Error('This PDF exceeds the 128 MiB retained-data allowance. Lower image/page resolution or split into fewer pages per part. For RGB exports that still fail in Vector, try Rasterized with JPEG; JPEG does not recompress images inside vector pages.');
       return bytes;
     }
 
@@ -387,6 +387,10 @@
           throw new Error('Native PDF dimensions differ from the frame.');
         }
         const warnings = [];
+        if (typeof createPdfResourcePruner !== 'function') throw new Error('The PDF resource helper is unavailable. Reopen the plugin and try again.');
+        const pruned = await createPdfResourcePruner(PDFLib, { yieldToBrowser }).prunePage(source, sourcePage, { stillActive: options.stillActive });
+        if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
+        warnings.push(...(pruned?.warnings || []));
         if (options.imageDpi != null) {
           if (typeof createPdfImageResampler !== 'function') throw new Error('The image resolution helper is unavailable. Reopen the plugin and try again.');
           const resized = await createPdfImageResampler(PDFLib, { yieldToBrowser }).resamplePage(source, sourcePage, { dpi: options.imageDpi, stillActive: options.stillActive });
@@ -399,11 +403,24 @@
           if (options.stillActive && !options.stillActive()) throw new Error('Export cancelled.');
           warnings.push(...(converted?.warnings || []));
         }
-        const [page] = await pdfDoc.copyPages(source, [0]);
-        if (cmyk) deduplicateCmykPageProfiles(pdfDoc, page, options.cmykSession);
-        if (!cmyk) await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
-        pdfDoc.addPage(page);
-        return { page, warnings };
+        // copyPages registers streams before a page is added. If copying or
+        // profile validation fails, remove those objects as well as the page:
+        // otherwise a small raster fallback still retains the rejected PDF.
+        const existingRefs = new Set(pdfDoc.context.enumerateIndirectObjects().map(([ref]) => ref));
+        const existingPages = pdfDoc.getPageCount();
+        try {
+          const [page] = await pdfDoc.copyPages(source, [0]);
+          if (cmyk) deduplicateCmykPageProfiles(pdfDoc, page, options.cmykSession);
+          if (!cmyk) await pdfColorManagement.preserveNativeColorProfile(pdfDoc, source, sourcePage, page, message.exportColorProfile || 'SRGB');
+          pdfDoc.addPage(page);
+          return { page, warnings };
+        } catch (error) {
+          while (pdfDoc.getPageCount() > existingPages) pdfDoc.removePage(pdfDoc.getPageCount() - 1);
+          for (const [ref] of pdfDoc.context.enumerateIndirectObjects()) {
+            if (!existingRefs.has(ref)) pdfDoc.context.delete(ref);
+          }
+          throw error;
+        }
       }
       if (!['PNG', 'JPG'].includes(message.format)) throw new Error('Unsupported exported page format.');
       // JPEG is embedded as its original compressed DCT stream, without RGB expansion.
@@ -977,13 +994,13 @@
       if (activeJob !== job || !job.backendStopped || (!job.cancelled && !job.failed)) return;
       // Called only after this job's serialized library work has settled.
       const prior = job.downloadsStarted ? ` Download started for ${job.downloadsStarted} part${job.downloadsStarted === 1 ? '' : 's'}. Links to unfinished parts will not work.` : ' No PDF was downloaded.';
-      showStatus((job.failed ? `Export failed: ${job.failed}` : 'Export cancelled.') + prior, job.failed ? 'error' : 'info', job.downloadedNames);
+      showStatus((job.failed ? `Export failed: ${job.failed}` : 'Export cancelled.') + prior, job.failed ? 'error' : 'info', job.failed ? [...job.warnings, ...job.downloadedNames] : job.downloadedNames);
       releaseJob(job);
     }
     function failJob(job, error, notifyBackend = true) {
       if (activeJob !== job || job.cancelled || job.failed) return;
       job.failed = error instanceof Error ? error.message : String(error || 'Unknown error');
-      showStatus(`Export failed: ${job.failed}${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'error', job.downloadedNames);
+      showStatus(`Export failed: ${job.failed}${job.downloadsStarted ? ` ${job.downloadsStarted} part download(s) already started; links to unfinished parts will not work.` : ''}`, 'error', [...job.warnings, ...job.downloadedNames]);
       updateControls();
       if (notifyBackend && job.backendDispatched) post({ type: 'export-failed', jobId: job.id, message: job.failed });
     }
@@ -1095,7 +1112,8 @@
       addWarnings(job, appended.warnings);
       job.pages.push(appended.page);
       // A size-budget failure is not a native-PDF import failure and must not retry as raster.
-      job.retainedBytes = assertPdfBudget(job.pdf);
+      try { job.retainedBytes = assertPdfBudget(job.pdf); }
+      catch (error) { throw new Error(`Page ${message.index + 1} (“${message.frame.name}”), part ${job.partIndex + 1}: ${error.message}`); }
       job.nextIndex++;
       job.fallbackIndex = null;
       await yieldToBrowser();

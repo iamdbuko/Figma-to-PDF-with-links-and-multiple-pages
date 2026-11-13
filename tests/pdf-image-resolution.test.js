@@ -195,6 +195,105 @@ test('Alpha and Luminosity mask graphs protect their images but permit unrelated
   }
 });
 
+test('path-only masks sharing page resources do not protect unrelated image entries', async () => {
+  for (const maskType of ['Alpha', 'Luminosity']) {
+    const { doc, page, image } = await setup(128, 128);
+    const resources = doc.context.obj({ XObject: { I: image.ref } });
+    const group = doc.context.flateStream('1 g 0 0 100 100 re f', {
+      Subtype: 'Form', BBox: [0, 0, 100, 100], Resources: resources,
+      Group: { S: 'Transparency', CS: 'DeviceGray' },
+    });
+    resources.set(n('ExtGState'), doc.context.obj({ GS: { SMask: { S: maskType, G: doc.context.register(group) } } }));
+    const [content] = setContent(doc, page, '/GS gs q 8 0 0 8 0 0 cm /I Do Q', resources);
+    const originalGroup = group.contents.slice(), originalContent = content.contents.slice(), originalResources = resources.toString();
+    const result = await resampler().resamplePage(doc, page, { dpi: 36 });
+    assert.deepEqual(result.warnings, []);
+    assert.equal(result.stats.imagesResampled, 1);
+    assert.deepEqual(imageSize(doc, image.ref), [4, 4]);
+    assert.deepEqual(group.contents, originalGroup);
+    assert.deepEqual(content.contents, originalContent);
+    assert.equal(resources.toString(), originalResources);
+    assert.equal(group.dict.lookup(n('Resources')), page.node.Resources());
+  }
+});
+
+test('a shared mask resource dictionary protects only images actually painted by nested Forms', async () => {
+  const { doc, page, image } = await setup(128, 128), maskImage = addImage(doc, 128, 128);
+  const resources = doc.context.obj({ XObject: { I: image.ref, MI: maskImage.ref } });
+  const inner = doc.context.register(doc.context.flateStream('/MI Do', {
+    Subtype: 'Form', BBox: [0, 0, 1, 1], Matrix: [0, 2, -2, 0, 0, 0],
+  }));
+  resources.lookup(n('XObject')).set(n('Inner'), inner);
+  // This unused Form cannot be interpreted safely. Merely listing it must not
+  // affect which images are protected or block supported page content.
+  const unused = doc.context.register(doc.context.flateStream('BI /W 1 /H 1 ID x EI', { Subtype: 'Form', BBox: [0, 0, 1, 1] }));
+  resources.lookup(n('XObject')).set(n('Unused'), unused);
+  const group = doc.context.register(doc.context.flateStream('q 3 0 0 3 0 0 cm /Inner Do Q', {
+    Subtype: 'Form', BBox: [0, 0, 100, 100], Resources: resources, Group: { S: 'Transparency', CS: 'DeviceGray' },
+  }));
+  resources.set(n('ExtGState'), doc.context.obj({ GS: { SMask: { S: 'Alpha', G: group } } }));
+  setContent(doc, page, '/GS gs q 8 0 0 8 0 0 cm /I Do /MI Do Q', resources);
+  const result = await resampler().resamplePage(doc, page, { dpi: 36 });
+  assert.equal(result.stats.imagesResampled, 1);
+  assert.deepEqual(imageSize(doc, image.ref), [4, 4]);
+  assert.equal(doc.context.lookup(maskImage.ref), maskImage.stream);
+  assert(result.warnings.some(warning => /transparency mask/.test(warning)));
+  assert(!result.stats.pageUnchanged);
+});
+
+test('the same inherited-resource Form is resolved separately for mask and ordinary placements', async () => {
+  const { doc, page, image } = await setup(128, 128), maskImage = addImage(doc, 128, 128);
+  const shared = doc.context.register(doc.context.flateStream('/I Do', {
+    Subtype: 'Form', BBox: [0, 0, 1, 1], Matrix: [0, 2, -2, 0, 0, 0],
+  }));
+  const group = doc.context.register(doc.context.flateStream('/Shared Do', {
+    Subtype: 'Form', BBox: [0, 0, 10, 10],
+    Resources: { XObject: { I: maskImage.ref, Shared: shared } }, Group: { S: 'Transparency', CS: 'DeviceGray' },
+  }));
+  setContent(doc, page, '/GS gs q 4 0 0 4 0 0 cm /Shared Do /MI Do Q', {
+    XObject: { I: image.ref, Shared: shared, MI: maskImage.ref }, ExtGState: { GS: { SMask: { S: 'Alpha', G: group } } },
+  });
+  const before = doc.context.lookup(shared).contents.slice();
+  const result = await resampler().resamplePage(doc, page, { dpi: 36 });
+  assert.equal(result.stats.imagesResampled, 1);
+  assert.deepEqual(imageSize(doc, image.ref), [4, 4]);
+  assert.equal(doc.context.lookup(maskImage.ref), maskImage.stream);
+  assert.deepEqual(doc.context.lookup(shared).contents, before);
+  assert(!result.stats.pageUnchanged);
+});
+
+test('unsupported or recursive mask drawing leaves all page images unchanged', async () => {
+  for (const kind of ['inline image', 'recursive mask']) {
+    const { doc, page, image } = await setup(128, 128);
+    const resources = doc.context.obj({ XObject: { I: image.ref } });
+    const group = doc.context.register(doc.context.flateStream(kind === 'inline image' ? 'BI /W 1 /H 1 ID x EI' : '/GS gs', {
+      Subtype: 'Form', BBox: [0, 0, 1, 1], Resources: resources, Group: { S: 'Transparency', CS: 'DeviceGray' },
+    }));
+    resources.set(n('ExtGState'), doc.context.obj({ GS: { SMask: { S: 'Alpha', G: group } } }));
+    setContent(doc, page, 'q 8 0 0 8 0 0 cm /I Do Q /GS gs', resources);
+    const before = doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]);
+    const result = await resampler().resamplePage(doc, page, { dpi: 36 });
+    assert.equal(result.stats.pageUnchanged, true, kind);
+    assert(result.warnings.some(warning => /unchanged on this page/.test(warning)), kind);
+    assert.equal(doc.context.lookup(image.ref), image.stream, kind);
+    assert.deepEqual(doc.context.enumerateIndirectObjects().map(([ref, object]) => [ref.toString(), object]), before);
+  }
+});
+
+test('a path-only tiling pattern can share page image resources without protecting them', async () => {
+  const { doc, page, image } = await setup(128, 128);
+  const resources = doc.context.obj({ XObject: { I: image.ref } });
+  const pattern = doc.context.register(doc.context.flateStream('0 g 0 0 1 1 re f', {
+    Type: 'Pattern', PatternType: 1, PaintType: 1, TilingType: 1,
+    BBox: [0, 0, 1, 1], XStep: 1, YStep: 1, Resources: resources,
+  }));
+  resources.set(n('Pattern'), doc.context.obj({ P: pattern }));
+  setContent(doc, page, '/Pattern cs /P scn 0 0 10 10 re f q 8 0 0 8 0 0 cm /I Do Q', resources);
+  const result = await resampler().resamplePage(doc, page, { dpi: 36 });
+  assert.deepEqual(result.warnings, []);
+  assert.deepEqual(imageSize(doc, image.ref), [4, 4]);
+});
+
 test('tiling pattern images remain unchanged while unrelated visible images are resized', async () => {
   const { doc, page, image } = await setup();
   const patternImage = addImage(doc);

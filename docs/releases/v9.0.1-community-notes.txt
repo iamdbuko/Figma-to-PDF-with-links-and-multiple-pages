@@ -1,0 +1,8 @@
+Heavy-file export fixes (v9.0.1)
+
+• Prevents unused image data from inflating PDFs, including at Original quality.
+• Releases rejected vector-page data before raster fallback.
+• Fixes some masks preventing images from being reduced to the selected DPI.
+• Improves export errors with the affected page/part and keeps resolution warnings visible.
+
+Tested with 77-page single and split exports while preserving internal and external links. Existing size limits remain. For heavy RGB files that still exceed them, try Rasterized + JPEG, lower DPI and fewer pages per part.

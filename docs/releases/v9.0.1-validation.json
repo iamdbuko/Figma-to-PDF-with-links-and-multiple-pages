@@ -1,0 +1,29 @@
+{
+  "version": "9.0.1",
+  "preparedDate": "2026-11-13",
+  "implementationCheckpoint": "0a2145bc976e99726df7b940cc74b9a00eae771a",
+  "automatedTests": 294,
+  "testFailures": 0,
+  "testDurationMs": 52544.450833,
+  "packagingChanges": "Version metadata and release documentation only; runtime files are identical to the tested heavy-export implementation. Clean npm ci and build reproduced the committed runtime bundle and notices.",
+  "runtimeFiles": {
+    "code.js": {
+      "bytes": 40036,
+      "sha256": "830cdf4f7aeaa31ef0225ba289c5c058959346bef3e8092934848f99a6b57607"
+    },
+    "ui.html": {
+      "bytes": 2634388,
+      "sha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938"
+    },
+    "manifest.json": {
+      "bytes": 319,
+      "sha256": "e150bee029d90a646a3e587313314abde4c94e7610c453039c77285a3cf9166f"
+    }
+  },
+  "nativeVerification": "Eight-frame Figma Desktop development export: exact dimensions and all 10 links match the prior native fixture; all 8 pages rendered and visually inspected. Large browser reproduction covers 77 pages as one PDF at Original/72/36 DPI and as 6 parts, with 385 external plus 154 internal links per successful run. See scoped evidence.",
+  "evidence": [
+    "../HEAVY-NATIVE-EXPORTS.md",
+    "../heavy-native-results.json",
+    "../heavy-native-live-results.json"
+  ]
+}

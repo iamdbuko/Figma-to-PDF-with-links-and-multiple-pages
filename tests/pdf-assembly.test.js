@@ -7,12 +7,13 @@ const { createPdfColorManagement } = require('../src/color-profiles.js');
 const { createPdfLoader } = require('../src/pdf-loader.js');
 const { createVectorCmykConverter } = require('../src/vector-cmyk.js');
 const { createPdfImageResampler } = require('../src/pdf-image-resolution.js');
+const { createPdfResourcePruner } = require('../src/pdf-resource-pruning.js');
 
 const root = path.resolve(__dirname, '..');
 const sourcePath = fs.existsSync(path.join(root, 'src/ui.html')) ? 'src/ui.html' : 'ui.html';
 const html = fs.readFileSync(path.join(root, sourcePath), 'utf8');
 const helpers = html.slice(html.indexOf('// PDF_ASSEMBLY_START'), html.indexOf('// PDF_ASSEMBLY_END'));
-const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfLoader', 'createPdfColorManagement', 'createVectorCmykConverter', 'createPdfImageResampler', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfLoader, createPdfColorManagement, createVectorCmykConverter, createPdfImageResampler);
+const context = new Function('PDFLib', 'yieldToBrowser', 'createPdfLoader', 'createPdfColorManagement', 'createVectorCmykConverter', 'createPdfImageResampler', 'createPdfResourcePruner', `${helpers}\nreturn { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds, appendLinkAnnotation, createOutputPlan, estimatePdfBytes, assertPdfBudget };`)(PDFLib, () => Promise.resolve(), createPdfLoader, createPdfColorManagement, createVectorCmykConverter, createPdfImageResampler, createPdfResourcePruner);
 const { appendExportPage, addExportLinks, nativeLinkRecords, normalizeUrl, calculateLinkBounds } = context;
 const fixture = fs.readFileSync(path.join(__dirname, 'fixtures/native-links.pdf'));
 const png = Uint8Array.from(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==', 'base64'));
@@ -36,6 +37,48 @@ test('native vector import preserves five exact Figma text rectangles without wh
   const reloaded = await PDFLib.PDFDocument.load(await output.save());
   assert.deepEqual(plainRecords(reloaded, reloaded.getPage(0)), expected);
   assert.ok(expected[0].rect[2] < expected[1].rect[0], 'neighboring URLs keep separate clickable regions');
+});
+
+test('failed native imports roll back copied objects without disturbing previous pages or subsequent raster fallback', async () => {
+  for (const failure of ['output profile', 'partial copy']) {
+    const output = await PDFLib.PDFDocument.create();
+    const { page: existingPage } = await appendExportPage(output, { frame, format: 'PDF', data: fixture });
+    const existingLinks = plainRecords(output, existingPage);
+    const snapshot = output.context.enumerateIndirectObjects().map(([ref, object]) => ({
+      ref, object, serialized: object.toString(),
+      bytes: object instanceof PDFLib.PDFRawStream ? object.contents.slice() : null,
+    }));
+    const originalCopy = output.copyPages;
+    let data = fixture;
+    if (failure === 'output profile') {
+      const rejected = await PDFLib.PDFDocument.load(fixture);
+      rejected.catalog.set(PDFLib.PDFName.of('OutputIntents'), rejected.context.obj([{ Type: 'OutputIntent' }]));
+      data = await rejected.save();
+    } else {
+      output.copyPages = async function (...args) {
+        await originalCopy.apply(this, args);
+        throw new Error('Injected failure after allocating copied objects');
+      };
+    }
+    await assert.rejects(appendExportPage(output, { frame, format: 'PDF', data }),
+      failure === 'output profile' ? /document-wide output color profile/ : /after allocating copied objects/);
+    output.copyPages = originalCopy;
+    assert.deepEqual(output.getPages(), [existingPage], failure);
+    assert.deepEqual(output.context.enumerateIndirectObjects().map(([ref]) => ref), snapshot.map(entry => entry.ref), failure);
+    for (const entry of snapshot) {
+      assert.equal(output.context.lookup(entry.ref), entry.object, `${failure}: existing object identity`);
+      assert.equal(entry.object.toString(), entry.serialized, `${failure}: existing object contents`);
+      if (entry.bytes) assert.deepEqual(entry.object.contents, entry.bytes, `${failure}: existing stream bytes`);
+    }
+    const { page: fallbackPage } = await appendExportPage(output, { frame, format: 'PNG', data: png });
+    assert.deepEqual(output.getPages(), [existingPage, fallbackPage]);
+    const saved = await PDFLib.PDFDocument.load(await output.save());
+    assert.equal(saved.getPageCount(), 2, failure);
+    assert.deepEqual(plainRecords(saved, saved.getPage(0)), existingLinks, failure);
+    assert.deepEqual(saved.getPage(1).getSize(), { width: frame.width, height: frame.height });
+    assert.ok(saved.getPage(1).node.Resources().lookup(PDFLib.PDFName.of('XObject'), PDFLib.PDFDict).keys().length > 0,
+      `${failure}: the fallback image remains available in the saved PDF`);
+  }
 });
 
 test('raster pages retain precise native text annotations without copying the native page contents', async () => {

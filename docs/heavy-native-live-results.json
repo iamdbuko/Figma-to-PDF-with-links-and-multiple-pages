@@ -1,0 +1,21 @@
+{
+  "recordedAt": "2026-11-13T14:05:34.094Z",
+  "scope": "Native Figma Desktop development plugin export from the existing synthetic Page1 regression frames; oversized guard excluded.",
+  "builtUiSha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938",
+  "settings": {
+    "type": "Vector",
+    "profile": "As file",
+    "dpi": 36,
+    "rasterFallback": "JPEG",
+    "lowerResolution": "Allow",
+    "output": "Single PDF"
+  },
+  "pages": 8,
+  "links": 10,
+  "allPageDimensionsAndExactLinksMatchPreviousNativeFixture": true,
+  "outputBytes": 213907,
+  "outputSha256": "5cc0cb7c84232e73506cb17adf2aba6caf036995d53a97b972a3418f81acdc41",
+  "renderedPages": 8,
+  "visualReview": "All 8 pages rendered and inspected: text, wrapped links, rotated text, shadow, blur, 200 effect layers and overflow visible. The expected Plus lighter page uses raster fallback. Poppler retains the earlier native Type3 glyph bounding-box warnings; no missing content observed.",
+  "limits": "This is a small native smoke test, not the unavailable reported file or a large-file Figma renderer benchmark. Cross-file PDF viewer navigation and printing not tested."
+}

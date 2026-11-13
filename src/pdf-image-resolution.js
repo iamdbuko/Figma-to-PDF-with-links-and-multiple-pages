@@ -117,21 +117,28 @@ function createPdfImageResampler(P, options = {}) {
         for (const child of value.asArray()) protectImageGraph(child, depth + 1);
       }
     };
-    const protectForm = (form, resources) => {
+    const protectForm = async (form, resources, depth) => {
       const before = protectedMasks.size;
-      protectImageGraph(form);
-      if (form instanceof Stream && !form.dict.has(n('Resources'))) protectImageGraph(resources);
+      if (++formUses > 2048 || activeForms.has(form)) unsupported('recursive or excessive mask or pattern Forms');
+      if (form.dict.has(n('Ref')) || form.dict.has(n('OPI'))) unsupported('external mask or pattern Forms');
+      activeForms.add(form);
+      try {
+        // Resource dictionaries can be shared with the page, including objects
+        // never painted by this mask. Follow drawing instructions instead of
+        // treating every reachable resource as a mask image. No protected image
+        // density is inferred; every image actually used here stays unchanged.
+        await walk([form], form.dict.get(n('Resources')) || resources, [1, 0, 0, 1, 0, 0], depth + 1, true);
+      } finally { activeForms.delete(form); }
       if (protectedMasks.size > before) warn('Images used by a transparency mask or pattern were kept at their original resolution.');
     };
-    const verifySoftGraphicsState = (state, resources) => {
+    const verifySoftGraphicsState = async (state, resources, depth) => {
       const mask = state.lookup(n('SMask'));
       if (!mask || mask.toString() === '/None') return;
       if (!(mask instanceof Dict) || !['/Alpha', '/Luminosity'].includes(mask.get(n('S'))?.toString())) unsupported('unknown transparency-group soft masks');
       const group = mask.lookup(n('G'));
       if (!(group instanceof Stream)) unsupported('invalid transparency-group soft masks');
-      // A soft mask is evaluated in a separate transparency context. Preserve
-      // its complete resource graph rather than infer its effective image DPI.
-      protectForm(group, resources);
+      // A soft mask is evaluated in a separate transparency context.
+      await protectForm(group, resources, depth);
     };
     const checkFont = (resources, name) => {
       const fonts = resources.lookup(n('Font'));
@@ -148,10 +155,10 @@ function createPdfImageResampler(P, options = {}) {
       if (!item) { item = { image, refs: new Map(), uses: [], scale: 0 }; images.set(image, item); }
       item.refs.set(ref.toString(), ref); item.uses.push({ resources, matrix: matrix.slice() });
       for (const key of ['SMask', 'Mask']) {
-        const mask = lookup(image.dict.get(n(key))); if (mask instanceof Stream) protectedMasks.add(mask);
+        const mask = lookup(image.dict.get(n(key))); if (mask instanceof Stream) protectImageGraph(mask);
       }
     };
-    async function walk(streams, resources, initialMatrix, depth = 0) {
+    async function walk(streams, resources, initialMatrix, depth = 0, protectImages = false) {
       if (depth > 32) unsupported('deeply nested Form XObjects');
       resources = dictionary(resources);
       let matrix = initialMatrix.slice(); const stack = [];
@@ -169,29 +176,33 @@ function createPdfImageResampler(P, options = {}) {
           const ref = objects instanceof Dict ? objects.get(args[0]) : null, object = lookup(ref);
           if (!(object instanceof Stream)) unsupported('missing drawing resources');
           const type = object.dict.get(n('Subtype'))?.toString();
-          if (type === '/Image') rememberImage(ref, object, resources, matrix);
+          if (type === '/Image') {
+            if (protectImages) protectImageGraph(object);
+            else rememberImage(ref, object, resources, matrix);
+          }
           else if (type === '/Form') {
             if (++formUses > 2048 || activeForms.has(object)) unsupported('recursive or excessive Form XObjects');
             if (object.dict.has(n('Ref')) || object.dict.has(n('OPI'))) unsupported('external Form XObjects');
             const formMatrix = object.dict.has(n('Matrix')) ? list(object.dict.get(n('Matrix'))) : [1, 0, 0, 1, 0, 0];
             if (formMatrix.length !== 6) unsupported('invalid Form transforms');
             activeForms.add(object);
-            await walk([object], object.dict.get(n('Resources')) || resources, matrixProduct(matrix, formMatrix), depth + 1);
-            activeForms.delete(object);
+            try {
+              await walk([object], object.dict.get(n('Resources')) || resources, matrixProduct(matrix, formMatrix), depth + 1, protectImages);
+            } finally { activeForms.delete(object); }
           } else unsupported('unsupported XObject types');
         } else if (op === 'gs') {
           if (args.length !== 1 || !(args[0] instanceof Name)) unsupported('invalid graphics state');
           const states = resources.lookup(n('ExtGState'));
           if (!(states instanceof Dict)) unsupported('missing graphics state');
-          verifySoftGraphicsState(dictionary(states.get(args[0])), resources);
+          await verifySoftGraphicsState(dictionary(states.get(args[0])), resources, depth);
         } else if (op === 'Tf' && args[0] instanceof Name) checkFont(resources, args[0]);
         else if (['scn', 'SCN'].includes(op) && args.at(-1) instanceof Name) {
           const patterns = resources.lookup(n('Pattern')), pattern = patterns instanceof Dict ? patterns.lookup(args.at(-1)) : null;
           if (pattern instanceof Stream && numeric(pattern.dict.lookup(n('PatternType'))) === 1) {
-            protectForm(pattern, resources);
+            await protectForm(pattern, resources, depth);
           } else {
             if (!(pattern instanceof Dict) || numeric(pattern.lookup(n('PatternType'))) !== 2) unsupported('unknown patterns');
-            if (pattern.has(n('ExtGState'))) verifySoftGraphicsState(dictionary(pattern.get(n('ExtGState'))), resources);
+            if (pattern.has(n('ExtGState'))) await verifySoftGraphicsState(dictionary(pattern.get(n('ExtGState'))), resources, depth);
           }
         }
         if (executed % 4096 === 0) { await yieldToBrowser(); active(); }
@@ -242,7 +253,7 @@ function createPdfImageResampler(P, options = {}) {
           stats.images.push({ width, height, targetWidth, targetHeight, resized: false }); continue;
         }
         if (targetWidth * targetHeight > MAX_OUTPUT_PIXELS) unsupported('resized images above 16 million pixels; choose a lower image resolution');
-        if (protectedMasks.has(image)) unsupported('an image also used as another image’s mask');
+        if (protectedMasks.has(image)) unsupported('an image used by a transparency mask, image mask or pattern');
         if (d.get(n('ImageMask'))?.toString() === 'true' || numeric(d.lookup(n('BitsPerComponent'))) !== 8) unsupported('stencil or non-8-bit images');
         for (const key of ['Mask', 'Matte', 'Alternates', 'SMaskInData']) if (d.has(n(key))) unsupported(`image ${key}`);
         const componentsFor = (value, resources, seen = new Set()) => {

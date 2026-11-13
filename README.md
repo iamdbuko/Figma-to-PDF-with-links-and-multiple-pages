@@ -6,7 +6,9 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Version 9
 
-This is **v9.0.0**. See the [release notes](docs/releases/v9.0.0.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
+This is **v9.0.1**. See the [release notes](docs/releases/v9.0.1.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
+
+This patch fixes heavy native exports: rejected native imports release their copied data, proven-unused image resources are excluded, and shared transparency-mask resources no longer block unrelated image resizing. See the [investigation, workaround and validation](docs/HEAVY-NATIVE-EXPORTS.md).
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 
@@ -33,7 +35,7 @@ npm run build
 4. Select frames in Figma. Drag rows to set page order; right-click a row to remove it. Every listed frame is included.
 5. Click **Export** to open settings, choose the format/profile/quality, then click **Export** again to create the PDF. **Cancel** returns to the list while idle; during export it cancels the job. Same as Figma file and 72 DPI are the defaults. Hover or focus a setting for help. See [the simplified interface](docs/INTERFACE.md).
 
-Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. PDF and color helpers are in `src/color-profiles.js`, `src/cmyk.js`, `src/vector-cmyk.js`, `src/pdf-functions.js`, `src/pdf-image-resolution.js` and `src/pdf-loader.js`. `src/cooperative-yield.js` schedules processing and cancellation; the pinned PDF library uses the same scheduler. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
+Edit `code.js` for the Figma-side logic and `src/ui.html` for the interface and PDF assembly. PDF and color helpers are in `src/color-profiles.js`, `src/cmyk.js`, `src/vector-cmyk.js`, `src/pdf-functions.js`, `src/pdf-resource-pruning.js`, `src/pdf-image-resolution.js` and `src/pdf-loader.js`. `src/cooperative-yield.js` schedules processing and cancellation; the pinned PDF library uses the same scheduler. `ui.html` is generated and committed so a checkout can also be imported immediately. Build after UI changes. `manifest.json` declares no network access; PDF and color-conversion libraries are bundled locally with their notices in `licenses/`.
 
 The [development and release process](docs/RELEASING.md) explains how to preserve checkpoints, validate changes and publish updates to the existing Community listing.
 
