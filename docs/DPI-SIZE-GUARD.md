@@ -1,6 +1,6 @@
 # RGB Vector JPEG size guard — v9.0.2 candidate
 
-**Status:** implementation and independent patch review are complete. Local tests, a clean install/build/test rerun, implementation-commit CI, a rendered local 148-page PDF-processing audit and independent checks of the actual built-UI replay all pass. The replay's coordinate tolerance is recorded below. Live Figma verification is pending uninterrupted desktop access and source-version confirmation. Publication remains requested and outstanding. Implementation candidate `ee498e20414a043af4eb635a120087163e448b1a` is pushed. This document records candidate behavior, not a completed Figma release.
+**Status:** implementation, independent review, automated tests, the clean build/test rerun, candidate CI and fresh paired live Figma validation all pass. The native 148-page comparison is separate from the earlier saved-PDF diagnostic and built-UI replay, whose counts and coordinate tolerance remain recorded below. Publication remains requested and outstanding. Implementation candidate `ee498e20414a043af4eb635a120087163e448b1a` is pushed. This document records candidate behavior, not a completed Figma release.
 
 ## Why a smaller image can make a larger PDF
 
@@ -46,7 +46,8 @@ Existing pixel, decoding, staging, transfer and retained/saved PDF limits are un
 | Rendered inspection of local diagnostic output | All 148 pages compared at 72 DPI; four changed pages reviewed at 150 DPI without visible defects |
 | Actual built-UI replay | Completed; independent structural, link and rendered checks passed with the coordinate tolerance below |
 | Implementation-commit CI | Succeeded for `ee498e2`: [run 43496175311](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43496175311) |
-| Live Figma high-DPI export | **Pending uninterrupted desktop access and source-version confirmation**; saved-PDF processing does not perform fresh Figma rendering |
+| Documentation-checkpoint CI | Succeeded for `244c34a`: [PR run 43497883930](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497883930), [push run 43497870895](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497870895) |
+| Fresh paired live Figma exports | **Passed**: same 148-frame selection at Original and 300 DPI; exact geometry, 304 annotations, non-image streams and ICC; independent render review passed |
 | GitHub/Figma publication | **Requested; outstanding** |
 
 `tests/pdf-image-resolution.test.js` uses valid encoded JPEGs to cover inflation, beneficial resizing, exact-size equality, mask savings/growth, exact ICC/image/mask preservation, warning deduplication, saved-output shared-mask behavior, nested direct references, bounded ownership analysis and cancellation before commit. Existing non-JPEG/default-false paths remain covered.
@@ -58,6 +59,28 @@ Run the focused suites from the repository root:
 ```sh
 node --test tests/pdf-image-resolution.test.js tests/pdf-assembly.test.js
 ```
+
+## Fresh paired live Figma validation
+
+The frozen build exported the same 148 main frames, in the same order, from an intact preceding source revision twice. Settings were Vector / As file / PNG / Lower resolution: Don't allow / Single PDF, changing only Original versus 300-DPI image resolution. Both files were freshly rendered and exported by Figma; this is separate from replaying the older saved source below.
+
+| Comparison | Verified result |
+| --- | --- |
+| Pages and geometry | All 148 pages retained; page geometry exact |
+| Links | All 304 annotations exactly match, including rectangles and targets: 193 external URI and 111 internal |
+| Non-image content and color | Decoded vector/text streams and ICC bytes exact |
+| Retained original images | 94 original JPEG/mask pairs byte-identical |
+| Successful image resizing | Seven images resized to independently checked 300-DPI dimensions |
+| Encoded image/mask cost | All 101 pairs nonincreasing |
+| Compressed stream integrity | All 1,264 checked Flate streams valid |
+| Fresh Original output | 119,503,661 bytes |
+| Fresh 300-DPI output | 117,104,328 bytes; 2,399,333 bytes smaller |
+| Warnings | Only the intended JPEG-retention warning at 300 DPI; none at Original |
+| Source check | Source section still contained its original 152 frames after both exports |
+| Render comparison | All 148 pages rendered at 72 DPI; 144 pixel-identical |
+| Detailed visual review | Changed pages 11, 61, 139 and 140 reviewed at 150 DPI; no new visible defect |
+
+This native pair does not have the replay harness's coordinate-roundoff exception. It also uses a different source revision from the earlier saved 148-page/301-link evidence: do not combine their image or link counts. The comparison verifies this selection, not every Figma design, PDF viewer or calibrated printing condition.
 
 ## Local 148-page processing evidence
 
@@ -97,6 +120,6 @@ The saved 148-page native PDF was replayed through the actual generated UI bundl
 
 The replay harness converts internal annotation rectangles through top-left coordinates. That round trip introduced differences in 27 internal rectangles, at most 5.684e-14 point. All rectangles matched within 1e-9 point and targets matched exactly. The replay therefore passes a precise tolerance check, not a claim of bit-exact annotation rectangles. Its rendered output is pixel-identical to the local diagnostic output whose changed pages were visually inspected at 150 DPI.
 
-The measured retained-data budget is not total process memory. Neither replay nor diagnostic establishes universal viewer compatibility or printer output. The earlier 77-page benchmark tests a different resource-retention defect and must not be presented as new 300-DPI evidence. Live Figma verification is pending uninterrupted desktop access and source-version confirmation because concurrent desktop activity and source changes prevented a reliable fresh-export comparison. Publication remains requested and outstanding; no fresh native completion or publication is claimed. Later documentation/publication commits require their own CI verification.
+The measured retained-data budget is not total process memory. Neither replay nor diagnostic establishes universal viewer compatibility or printer output. The earlier 77-page benchmark tests a different resource-retention defect and must not be presented as new 300-DPI evidence. Fresh native validation is recorded separately above. Publication remains requested and outstanding. Later documentation/publication commits require their own CI verification.
 
 For whole-plugin review context, see [AI-REVIEW-HANDOFF.md](AI-REVIEW-HANDOFF.md). For publication, follow [RELEASING.md](RELEASING.md); match the final commit and generated bundle to their recorded evidence.

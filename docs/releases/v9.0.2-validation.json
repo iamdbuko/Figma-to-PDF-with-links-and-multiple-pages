@@ -21,9 +21,47 @@
     }
   },
   "nativeVerification": {
-    "status": "pending-uninterrupted-session-and-source-version-confirmation",
-    "scope": "Actual report, 148 main frames, RGB Vector / As file / 300 DPI / PNG / no lower-resolution fallback / single PDF; compare against Original reference.",
-    "note": "Concurrent desktop activity and changed source layer structure prevent an equivalent fresh native comparison. No restore or undo attempted; saved report references remain intact."
+    "status": "passed",
+    "scope": "Fresh native Figma Desktop exports of the same 148 main frames from an intact preceding revision in the supplied report file. Original and 300 DPI paired directly; separate from the saved 148-page/301-link replay. The latest edited report page was not restored or modified.",
+    "settings": {
+      "type": "Vector",
+      "colorProfile": "As file",
+      "imageResolution": "300 DPI",
+      "compression": "PNG",
+      "lowerResolution": "Do not allow",
+      "output": "Single PDF",
+      "order": "Name A-Z"
+    },
+    "pages": 148,
+    "originalBytes": 119503661,
+    "outputBytes": 117104328,
+    "links": {
+      "total": 304,
+      "external": 193,
+      "internal": 111,
+      "exactRectanglesAndTargetsMatch": true
+    },
+    "pageGeometryUnchanged": true,
+    "nonImageDecodedStreamsUnchanged": true,
+    "iccBindingsUnchanged": true,
+    "originalJpegMaskPairsPreserved": 94,
+    "jpegPairsResizedToVerified300Dpi": 7,
+    "imagePairEncodedSizesNonIncreasing": 101,
+    "validFlateStreams": 1264,
+    "rasterFallbacks": 0,
+    "originalWarnings": [],
+    "candidateWarnings": [
+      "An embedded JPEG was kept at its original resolution because resizing it would increase the PDF size."
+    ],
+    "visual": {
+      "pagesRendered": 148,
+      "renderDpi": 72,
+      "pixelIdenticalToOriginal": 144,
+      "changedPages": 4,
+      "changedPagesDetailedReviewDpi": 150,
+      "newVisibleDefectsObserved": false
+    },
+    "sourceStructureUnchangedAfterTest": true
   },
   "evidence": [
     "../DPI-SIZE-GUARD.md",
@@ -108,9 +146,15 @@
     }
   },
   "publication": {
-    "status": "not-published",
+    "status": "prepared-and-native-verified-not-yet-published",
     "draftPullRequest": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/pull/3",
     "productionGitHubVersion": "v9.0.1",
     "productionCommunityVersion": 10
+  },
+  "finalCandidateCi": {
+    "commit": "244c34abefc9257b701bfa54dfa96a375ad045d7",
+    "conclusion": "success",
+    "url": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497883930",
+    "scope": "Candidate before this documentation-only native validation update; runtime unchanged."
   }
 }
