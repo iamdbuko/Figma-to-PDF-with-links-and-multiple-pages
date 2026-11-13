@@ -8,7 +8,7 @@ This is persistent project context for future work. Read this file, `README.md` 
 - Community: https://www.figma.com/community/plugin/1535371360850075397
 - Preserve plugin ID `1535371360850075397`, offline permissions and dependency/profile licenses.
 - Last verified published baseline at preparation: GitHub `v9.0.1`, Figma Community Version 10, source `bf065061b55e06d8e1041b3253264977af6c5419`.
-- Current work: prepare `v9.0.2` on `fix/vector-dpi-size-growth`; publication and final validation are pending until their evidence is recorded. GitHub semantic versions and Figma's sequential version numbers are different.
+- Current work: prepare `v9.0.2` on `fix/vector-dpi-size-growth`; implementation `ee498e2` is saved/pushed in draft PR #3. Publication and final validation are pending until their evidence is recorded. GitHub semantic versions and Figma's sequential version numbers are different.
 - Recovery checkpoints: `v8-recovered`, `v9.0.0`, `v9.0.1`. Do not move published tags or modify recovered source/provenance.
 
 ## Product decisions to retain
@@ -38,7 +38,7 @@ Retained originals may be above the requested DPI. Do not describe this as enfor
 - A download alone is insufficient. Compare saved PDFs and render pages; record the number and scope inspected. Physical print proof, Windows and arbitrary PDF viewers are separate from macOS/native/browser test evidence.
 - Customer PDFs, detailed results, screenshots and file identifiers stay local under ignored `test-results/`. Share only synthetic fixtures and anonymized aggregate evidence in GitHub/source archives.
 
-Latest candidate verification: 304/304 full automated tests and 55/55 focused image/assembly tests passed. Runtime UI SHA-256 is `4e5de515aee4330c0c87b3ced519ee87858f2cd305ca13b3edcaba5a1ee0ec5d`. Native report and publication remain pending until recorded.
+Latest candidate verification: 304/304 full automated tests and 55/55 focused image/assembly tests passed. Runtime UI SHA-256 is `4e5de515aee4330c0c87b3ced519ee87858f2cd305ca13b3edcaba5a1ee0ec5d`. A clean committed-candidate install/build and second 304-test run also passed, as did implementation CI. The actual built UI replayed 148 saved native report pages at 300 DPI: 116,682,827 output bytes; peak retained 118,479,434 bytes below the unchanged 128 MiB limit; no fallback/network/browser error. Independent checks preserve all 301 logical links (rectangle tolerance 1e-9 pt), page geometry, vector/text streams, ICC, 93 original JPEG/mask pairs and seven intended resizes. All 148 renders match the separately visually reviewed local audit. Fresh native rendering/backend scanning and publication remain pending because concurrent Figma activity changed the source structure. Confirm the intended source version and exclusive UI control before continuing; do not undo unrelated edits.
 
 ## Publishing and handoff
 

@@ -4,12 +4,13 @@
 
 Perform an independent **whole-plugin review of functionality, correctness and performance**, with particular attention to the proposed **v9.0.2** fix for oversized RGB Vector exports at high image resolution, including 300 DPI. Review the existing interface, rendering, links, colors, large-file behavior, cancellation and resource safeguards as well as the recent patch. Start read-only; identify reproducible problems and evidence gaps before proposing implementation changes.
 
-**v9.0.2 is a locally validated release candidate; native verification and publication remain pending.** The implementation and independent patch review are complete. The full local suite passed 304 tests, including 55 focused image-resolution and PDF-assembly tests. These results do not confirm final-commit CI, a GitHub release or a Figma Community update. The last released baseline is v9.0.1.
+**v9.0.2 is a validated implementation candidate; live Figma verification is pending uninterrupted desktop access and source-version confirmation; publication remains requested and outstanding.** The implementation and independent patch review are complete. The full local suite passed 304 tests, including 55 focused image-resolution and PDF-assembly tests, and passed again after a clean install/build. Implementation-commit CI succeeded. Local processing of an existing 148-page PDF and replay through the actual built UI both passed independent structural, link and rendered checks, with the replay's coordinate tolerance recorded below. Neither route performs fresh Figma rendering. The last released baseline is v9.0.1.
 
 - Repository: [iamdbuko/Figma-to-PDF-with-links-and-multiple-pages](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages).
 - Community plugin: [PDF Export with Links](https://www.figma.com/community/plugin/1535371360850075397).
 - Existing plugin ID: `1535371360850075397`. Preserve it when publishing an update.
 - Released baseline: tag `v9.0.1`, commit `bf065061b55e06d8e1041b3253264977af6c5419`. The candidate package version is `9.0.2`.
+- Implementation candidate: commit `ee498e20414a043af4eb635a120087163e448b1a`, pushed to `fix/vector-dpi-size-growth` with [draft PR #3](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/pull/3). A clean dependency install/build reproduced the committed bundle and the full suite passed again. [CI run 43496175311](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43496175311) succeeded for that implementation commit; later documentation/publication commits need their own checks.
 - Runtime is offline: `manifest.json` declares `allowedDomains: ["none"]`. Conversion does not upload designs or ICC profiles.
 
 No private design, customer identity, file key or personal filesystem path is needed to review this change. Committed fixtures are synthetic; locally generated PDFs and screenshots belong in ignored `test-results/`.
@@ -21,7 +22,7 @@ No private design, customer identity, file key or personal filesystem path is ne
 | `v8-recovered` — `eed873decc55939083887c95300d117419afd18a` | Recovered JavaScript/HTML from the actual February 2026 Community version. The supporting manifest came from the older repository. Preserve the tag, original bundle and checksums in `recovery/`; they are historical evidence, not current sources. |
 | `v9.0.0` — `1efa1217c0d4976fc7e57744a648f287711361b6` | Native whole-frame PDF pipeline, offline libraries, accurate link geometry, color options, bounded CMYK conversion, multipart exports and the simplified interface. Final packaging records 264 passing tests. |
 | `v9.0.1` — baseline above | Fixes rejected-import resource leaks, proven-unused native XObjects and shared-mask resources blocking unrelated image resizing. Records 294 passing tests, an eight-frame native smoke test and the 77-page resource benchmark. |
-| Candidate `v9.0.2` | Guards against JPEG-to-Flate size inflation during RGB Vector image downsizing. Independent patch review and 304 local tests passed, including 55 focused tests. Native verification, final-commit CI and publication remain pending. |
+| Candidate `v9.0.2` | Guards against JPEG-to-Flate size inflation during RGB Vector image downsizing. Independent patch review, 304 local tests, the clean rerun and implementation-commit CI passed. Local diagnostic and built-UI replay results are recorded below. Live Figma verification is pending uninterrupted desktop access and source-version confirmation; requested publication remains outstanding. |
 
 Read [v9.0.0 notes](releases/v9.0.0.md), [v9.0.1 notes](releases/v9.0.1.md), [v9.0.1 validation](releases/v9.0.1-validation.json) and the [heavy-export investigation](HEAVY-NATIVE-EXPORTS.md). Historical development documents retain their original dates and test counts; do not treat all of them as measurements of the current patch.
 
@@ -33,12 +34,22 @@ The v9.0.1 77-page synthetic benchmark reproduced the old limit failure on page 
 | --- | --- |
 | Focused resizing and assembly suites | 55/55 passed locally; included in the full-suite count below |
 | Full `npm test` | 304/304 passed locally; browser launch required the local environment's permission, with no code-test failure |
+| Clean full-suite rerun of implementation candidate `ee498e2` | 304/304 passed; canonical UI and license files reproduced exactly |
 | Tested generated `ui.html` SHA-256 | `4e5de515aee4330c0c87b3ced519ee87858f2cd305ca13b3edcaba5a1ee0ec5d` |
 | Independent patch review | Shared-mask accounting defect found and fixed; no remaining blocking finding in the reviewed scope |
-| Native high-DPI candidate export and rendered inspection | Pending; do not infer success from unit or browser tests |
-| Final commit, exact-head CI, GitHub release and Figma publication | Pending |
+| Local processing of an existing 148-page PDF at 300 DPI | Structural/link checks passed; output 116,689,727 bytes versus 119,490,186 bytes at Original |
+| Rendered inspection of that local diagnostic output | All 148 pages compared at 72 DPI: 144 pixel-identical; four changed pages reviewed at 150 DPI with no visible defects |
+| Actual built-UI replay of the saved 148-page native PDF | Completed in 54.2 seconds; saved 116,682,827 bytes; peak retained PDF data 118,479,434 bytes, below the unchanged 128 MiB limit; no fallback, network request or browser error; intended JPEG warning shown |
+| Independent comparison/rendering of the built-UI replay output | Passed: targets/types/multiplicities exact; internal rectangles within 1e-9 point; all 148 rendered pages pixel-identical to the visually reviewed local diagnostic output |
+| Implementation-commit CI | Succeeded for `ee498e2`: [run 43496175311](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43496175311) |
+| Live Figma high-DPI candidate export | Pending uninterrupted desktop access and source-version confirmation; saved-PDF replay does not perform fresh Figma rendering |
+| GitHub release and Figma publication | Requested; outstanding |
 
 See [DPI-SIZE-GUARD.md](DPI-SIZE-GUARD.md) for the mechanism, focused evidence and remaining limits. Match any later release to its recorded commit and bundle hash; this table describes the tested candidate, not a published asset.
+
+The local 148-page diagnostic preserved all 301 annotations exactly (193 external URI and 108 internal), all page boxes, decoded non-image streams and ICC profiles. It retained 93 original JPEG/mask pairs byte-for-byte and resized seven images to independently checked 300-DPI dimensions. The size guard avoided 72 attempted replacements whose encoded size would grow; all 653 output Flate streams validated. Its rendered review passed.
+
+Independent verification of the built-UI replay confirmed the same page, image and stream results. All 301 link targets, types and multiplicities matched. Its harness's coordinate round trip changed 27 internal rectangles by at most 5.684e-14 point; every rectangle was within 1e-9 point, so this is a tolerance comparison, not a bit-exact rectangle claim. All 148 replay renders at 72 DPI and the four changed-page renders at 150 DPI were pixel-identical to the visually reviewed local diagnostic output, with no new visible defect. Only aggregate results are committed. Live Figma verification is pending uninterrupted desktop access and source-version confirmation because concurrent desktop activity and source changes prevented a reliable fresh-export comparison. Publication remains requested and outstanding.
 
 ## Runtime map
 

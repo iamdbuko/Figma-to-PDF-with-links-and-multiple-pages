@@ -4,7 +4,7 @@
   "baselineCommit": "bf065061b55e06d8e1041b3253264977af6c5419",
   "automatedTests": 304,
   "testFailures": 0,
-  "testDurationMs": 53179.590583,
+  "testDurationMs": 53217.717667,
   "focusedTests": 55,
   "runtimeFiles": {
     "code.js": {
@@ -21,8 +21,9 @@
     }
   },
   "nativeVerification": {
-    "status": "pending",
-    "scope": "Actual report, 148 main frames, RGB Vector / As file / 300 DPI / PNG / no lower-resolution fallback / single PDF; compare against Original reference."
+    "status": "pending-uninterrupted-session-and-source-version-confirmation",
+    "scope": "Actual report, 148 main frames, RGB Vector / As file / 300 DPI / PNG / no lower-resolution fallback / single PDF; compare against Original reference.",
+    "note": "Concurrent desktop activity and changed source layer structure prevent an equivalent fresh native comparison. No restore or undo attempted; saved report references remain intact."
   },
   "evidence": [
     "../DPI-SIZE-GUARD.md",
@@ -32,5 +33,84 @@
     "No physical print proof or Windows verification.",
     "The size guard applies to supported JPEGs in RGB Vector mode; retained originals may exceed selected DPI.",
     "Existing 128 MiB retained-data allowance remains unchanged."
-  ]
+  ],
+  "implementationCheckpoint": "ee498e2",
+  "cleanCandidateVerification": "Clean dependency install and canonical build reproduced the committed UI and licenses; backend syntax, diff checks and 304 tests passed again on ee498e2.",
+  "localSavedReportVerification": {
+    "status": "structural-and-visual-checks-passed",
+    "scope": "Local processing of the existing native Original report; excludes new live Figma rendering and actual UI allowance enforcement.",
+    "pages": 148,
+    "links": {
+      "total": 301,
+      "external": 193,
+      "internal": 108,
+      "exactRectanglesAndTargetsMatch": true
+    },
+    "originalBytes": 119490186,
+    "outputBytes": 116689727,
+    "originalJpegMaskPairsPreserved": 93,
+    "jpegPairsResizedToVerified300Dpi": 7,
+    "growthAttemptsAvoided": 72,
+    "pageGeometryUnchanged": true,
+    "nonImageDecodedStreamsUnchanged": true,
+    "iccBindingsUnchanged": true,
+    "validFlateStreams": 653,
+    "visual": {
+      "pagesRendered": 148,
+      "renderDpi": 72,
+      "pixelIdenticalToOriginal": 144,
+      "changedPages": 4,
+      "changedPagesDetailedReviewDpi": 150,
+      "newVisibleDefectsObserved": false
+    }
+  },
+  "implementationCi": {
+    "commit": "ee498e20414a043af4eb635a120087163e448b1a",
+    "conclusion": "success",
+    "url": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43496175311"
+  },
+  "builtUiReplay": {
+    "status": "passed",
+    "scope": "Unmodified built UI in isolated Chromium, sequentially supplied one-page PDFs extracted from saved native Original. Existing internal destinations replayed as exact-target connection records; excludes fresh Figma rendering and backend link extraction.",
+    "pages": 148,
+    "outputBytes": 116682827,
+    "peakRetainedBytes": 118479434,
+    "retainedLimitBytes": 134217728,
+    "durationSeconds": 54.2,
+    "budgetChecks": 150,
+    "rasterFallbacks": 0,
+    "networkRequests": 0,
+    "browserErrors": 0,
+    "warning": "An embedded JPEG was kept at its original resolution because resizing it would increase the PDF size.",
+    "sourceJpegPairsPreserved": 93,
+    "jpegPairsResized": 7,
+    "growthAttemptsAvoided": 72,
+    "links": {
+      "total": 301,
+      "external": 193,
+      "internal": 108,
+      "targetsTypesAndMultiplicityMatch": true,
+      "rectangleTolerancePt": 1e-09,
+      "largestRectangleDifferencePt": 5.684341886080802e-14,
+      "roundoffRectangles": 27,
+      "roundoffScope": "Harness coordinate conversion for internal links; other rectangles exact."
+    },
+    "pageGeometryUnchanged": true,
+    "nonImageDecodedStreamsUnchanged": true,
+    "iccBindingsUnchanged": true,
+    "validFlateStreams": 653,
+    "visual": {
+      "pagesRendered": 148,
+      "renderDpi": 72,
+      "pixelIdenticalToReviewedLocalDiagnostic": 148,
+      "pixelIdenticalToOriginal": 144,
+      "newVisibleDefectsObserved": false
+    }
+  },
+  "publication": {
+    "status": "not-published",
+    "draftPullRequest": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/pull/3",
+    "productionGitHubVersion": "v9.0.1",
+    "productionCommunityVersion": 10
+  }
 }
