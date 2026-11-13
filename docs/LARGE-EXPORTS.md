@@ -1,6 +1,6 @@
 # Large-file exports in v9.0.0-dev.2
 
-This is a historical checkpoint. For the November 2026 investigation of heavy native pages, the current workaround and the unreleased fix, see [Heavy native PDF exports](HEAVY-NATIVE-EXPORTS.md).
+This is a historical checkpoint. For the November 2026 investigation of heavy native pages, the current workaround and the v9.0.1 fix, see [Heavy native PDF exports](HEAVY-NATIVE-EXPORTS.md).
 
 This development update offers two ways to handle large designs: reduce raster image costs inside one PDF, or save a long export as separate PDFs. It does not promise arbitrary-size output or constant process memory.
 

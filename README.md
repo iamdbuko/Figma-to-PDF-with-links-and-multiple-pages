@@ -6,9 +6,9 @@ Export selected Figma frames into one PDF with individual page sizes, internal n
 
 ## Version 9
 
-This is **v9.0.0**. See the [release notes](docs/releases/v9.0.0.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
+This is **v9.0.1**. See the [release notes](docs/releases/v9.0.1.md) for changes and [GitHub releases](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases) for saved packages. Importing or running a local copy does not publish an update.
 
-This development branch adds an **unreleased heavy-export fix**: rejected native imports release their copied data, proven-unused image resources are excluded, and shared transparency-mask resources no longer block unrelated image resizing. See the [investigation, workaround and validation](docs/HEAVY-NATIVE-EXPORTS.md).
+This patch fixes heavy native exports: rejected native imports release their copied data, proven-unused image resources are excluded, and shared transparency-mask resources no longer block unrelated image resizing. See the [investigation, workaround and validation](docs/HEAVY-NATIVE-EXPORTS.md).
 
 The v9 exporter uses Figma's native whole-frame PDF export, preserving native text-link rectangles. Raster pages recover the same text-link geometry from an auxiliary native PDF. Prototype hotspots are added using transformed, clipped bounds and stable frame IDs. Every page is acknowledged before the next is rendered. PNG buffers are released after embedding; optional JPEG pages keep their compressed image data.
 

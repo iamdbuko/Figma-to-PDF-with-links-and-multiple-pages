@@ -1,6 +1,6 @@
 # Heavy native PDF exports: November 2026 investigation
 
-Status: development fix based on v9.0.0; not published to Figma Community.
+Included in v9.0.1. Publication status is recorded in the GitHub release and Figma Community version history.
 
 ## Report and scope
 
@@ -47,7 +47,7 @@ Every successful run retained all **385 external and 154 internal links**. The s
 
 A [native Figma Desktop smoke test](heavy-native-live-results.json) also exported eight existing synthetic frames at Vector / As file / 36 DPI / JPEG fallback / Allow. All eight dimensions and ten exact links match the previous native fixture. The saved PDF is 213,907 bytes. All eight pages were rendered and visually inspected, covering wrapped links, rotated text, shadow, blur, effect layers, overflow and the expected Plus lighter fallback. Poppler still reports the earlier native Type3 glyph bounding-box warnings; no missing content was observed.
 
-Tested UI SHA-256: `d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938`. The canonical build exactly matches the temporary tested bundle; backend syntax validation passed. Package version and the published v9 tag remain unchanged.
+Tested UI SHA-256: `d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938`. The canonical build exactly matches the temporary tested bundle; backend syntax validation passed. The v9.0.1 runtime matches this tested build; the published v9.0.0 tag remains unchanged.
 
 GitHub's `ubuntu-latest` runner resolved to Ubuntu 26.04, which the pinned Playwright 1.56.1 cannot install on. CI is now pinned to supported Ubuntu 24.04; no plugin runtime dependency was changed.
 
