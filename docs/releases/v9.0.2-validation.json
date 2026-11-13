@@ -146,15 +146,53 @@
     }
   },
   "publication": {
-    "status": "prepared-and-native-verified-not-yet-published",
-    "draftPullRequest": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/pull/3",
-    "productionGitHubVersion": "v9.0.1",
-    "productionCommunityVersion": 10
+    "status": "published-and-installed-version-verified",
+    "githubRelease": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases/tag/v9.0.2",
+    "sourceCommit": "2fef2bc5ff82e7fffd3b208b32d1314f78cdf4ca",
+    "communityVersion": 11,
+    "communityUrl": "https://www.figma.com/community/plugin/1535371360850075397",
+    "publicationRecord": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases/download/v9.0.2/pdf-export-v9.0.2-publication.json",
+    "sourceArchiveSha256": "cdfde6a0ba68a33374c8ddb941fe28a938c5de006fa17f6617b10bcc83e76d69",
+    "installedVersionCheck": {
+      "status": "passed",
+      "mode": "RGB Vector / As file / 300 DPI / PNG / no lower-resolution fallback / Single PDF",
+      "pages": 148,
+      "links": 304,
+      "externalLinks": 193,
+      "internalLinks": 111,
+      "outputBytes": 117104328,
+      "exactMatchToValidatedDevelopmentExport": {
+        "pageGeometry": true,
+        "annotationRectanglesAndTargets": true,
+        "decodedNonImageStreams": true,
+        "iccBytes": true,
+        "allImageMaskPairs": 101
+      },
+      "validFlateStreams": 1264,
+      "onlyMetadataDifferences": [
+        "CreationDate",
+        "ModDate"
+      ],
+      "visualVerification": "The full native 148-page visual review applies because published page geometry, content and encoded image/mask data match exactly. No redundant full rerender was required.",
+      "warnings": [
+        "An embedded JPEG was kept at its original resolution because resizing it would increase the PDF size."
+      ],
+      "verificationLimit": "Installed-plugin behavior verification; not an independently downloaded Community runtime bundle hash."
+    },
+    "runtimeHashScope": "Runtime hashes identify the verified local/source archive files; the Community runtime bundle has not been independently downloaded and hashed."
   },
   "finalCandidateCi": {
-    "commit": "244c34abefc9257b701bfa54dfa96a375ad045d7",
+    "commit": "ad71a152bec8b83727a8947aa90cbdbb9ee715d3",
     "conclusion": "success",
-    "url": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497883930",
-    "scope": "Candidate before this documentation-only native validation update; runtime unchanged."
+    "urls": [
+      "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43500776388",
+      "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43500785221"
+    ],
+    "scope": "Native-verified release candidate; merged source tree identical."
+  },
+  "mergedReleaseCi": {
+    "commit": "2fef2bc5ff82e7fffd3b208b32d1314f78cdf4ca",
+    "conclusion": "success",
+    "url": "https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43501271774"
   }
 }

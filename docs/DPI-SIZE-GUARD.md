@@ -1,6 +1,8 @@
-# RGB Vector JPEG size guard — v9.0.2 candidate
+# RGB Vector JPEG size guard — v9.0.2
 
-**Status:** implementation, independent review, automated tests, the clean build/test rerun, candidate CI and fresh paired live Figma validation all pass. The native 148-page comparison is separate from the earlier saved-PDF diagnostic and built-UI replay, whose counts and coordinate tolerance remain recorded below. Publication remains requested and outstanding. Implementation candidate `ee498e20414a043af4eb635a120087163e448b1a` is pushed. This document records candidate behavior, not a completed Figma release.
+**Status:** [v9.0.2 is published on GitHub](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases/tag/v9.0.2) and as [Figma Community Version 11](https://www.figma.com/community/plugin/1535371360850075397), dated November 13, 2026. Implementation, independent review, automated tests, the clean build/test rerun, release CI, fresh paired live Figma validation and the installed Community plugin's 148-page export check all passed. The native comparison is separate from the earlier saved-PDF diagnostic and built-UI replay, whose counts and coordinate tolerance remain recorded below.
+
+The release tag points to `2fef2bc5ff82e7fffd3b208b32d1314f78cdf4ca`, with the same tree as final candidate `ad71a152bec8b83727a8947aa90cbdbb9ee715d3`. GitHub publication was verified at November 13, 2026, 20:25:41 UTC; Figma confirmed publication at approximately 20:26 UTC with matching high-DPI notes. The [verified publication record](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/releases/download/v9.0.2/pdf-export-v9.0.2-publication.json) is uploaded and verified, including the release identity and installed-Community export result. These documentation updates do not move the tag or replace the release archive.
 
 ## Why a smaller image can make a larger PDF
 
@@ -33,7 +35,7 @@ Rejected candidates are not registered in the PDF context. Changes stay staged u
 
 Existing pixel, decoding, staging, transfer and retained/saved PDF limits are unchanged. Creating the candidate still requires decoding/resizing work; this is not a peak-memory reduction or a guarantee that an entire file will fit. The comparison covers encoded image streams, not every byte of PDF serialization overhead. Large originals can still require smaller parts or a different export mode.
 
-## Verified candidate evidence
+## Verified release evidence
 
 | Check | Result |
 | --- | --- |
@@ -48,7 +50,10 @@ Existing pixel, decoding, staging, transfer and retained/saved PDF limits are un
 | Implementation-commit CI | Succeeded for `ee498e2`: [run 43496175311](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43496175311) |
 | Documentation-checkpoint CI | Succeeded for `244c34a`: [PR run 43497883930](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497883930), [push run 43497870895](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43497870895) |
 | Fresh paired live Figma exports | **Passed**: same 148-frame selection at Original and 300 DPI; exact geometry, 304 annotations, non-image streams and ICC; independent render review passed |
-| GitHub/Figma publication | **Requested; outstanding** |
+| Final candidate CI | Passed: [43500776388](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43500776388), [43500785221](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43500785221) |
+| Exact merge-commit CI | Passed: [43501271774](https://github.com/iamdbuko/Figma-to-PDF-with-links-and-multiple-pages/actions/runs/43501271774) |
+| GitHub/Figma publication | **Verified**: v9.0.2 / Community Version 11 |
+| Community-installed post-publication test | **Passed**: 148 pages and exact content/link/image comparison with the validated development output |
 
 `tests/pdf-image-resolution.test.js` uses valid encoded JPEGs to cover inflation, beneficial resizing, exact-size equality, mask savings/growth, exact ICC/image/mask preservation, warning deduplication, saved-output shared-mask behavior, nested direct references, bounded ownership analysis and cancellation before commit. Existing non-JPEG/default-false paths remain covered.
 
@@ -72,7 +77,7 @@ The frozen build exported the same 148 main frames, in the same order, from an i
 | Retained original images | 94 original JPEG/mask pairs byte-identical |
 | Successful image resizing | Seven images resized to independently checked 300-DPI dimensions |
 | Encoded image/mask cost | All 101 pairs nonincreasing |
-| Compressed stream integrity | All 1,264 checked Flate streams valid |
+| Compressed stream integrity | All 1,264 Flate streams in the fresh 300-DPI output valid |
 | Fresh Original output | 119,503,661 bytes |
 | Fresh 300-DPI output | 117,104,328 bytes; 2,399,333 bytes smaller |
 | Warnings | Only the intended JPEG-retention warning at 300 DPI; none at Original |
@@ -81,6 +86,16 @@ The frozen build exported the same 148 main frames, in the same order, from an i
 | Detailed visual review | Changed pages 11, 61, 139 and 140 reviewed at 150 DPI; no new visible defect |
 
 This native pair does not have the replay harness's coordinate-roundoff exception. It also uses a different source revision from the earlier saved 148-page/301-link evidence: do not combine their image or link counts. The comparison verifies this selection, not every Figma design, PDF viewer or calibrated printing condition.
+
+## Installed Community Version 11 verification
+
+The actual Community-installed plugin exported the same 148-page native selection at RGB Vector / As file / 300 DPI / PNG / Lower resolution: Don't allow / Single PDF after publication. Its output is 117,104,328 bytes. Comparison with the validated development 300-DPI export confirmed:
+
+- Exact page geometry, all 304 annotation rectangles/targets (193 URI, 111 internal), decoded non-image streams and ICC bytes.
+- All 101 image/mask pairs byte-identical; all 1,264 Flate streams valid.
+- Only creation/modification date metadata differs.
+
+The earlier full visual review applies to the identical page content; no repeat rendering of all pages is claimed. This verifies the installed plugin's behavior, not an independently downloaded runtime-bundle hash.
 
 ## Local 148-page processing evidence
 
@@ -120,6 +135,6 @@ The saved 148-page native PDF was replayed through the actual generated UI bundl
 
 The replay harness converts internal annotation rectangles through top-left coordinates. That round trip introduced differences in 27 internal rectangles, at most 5.684e-14 point. All rectangles matched within 1e-9 point and targets matched exactly. The replay therefore passes a precise tolerance check, not a claim of bit-exact annotation rectangles. Its rendered output is pixel-identical to the local diagnostic output whose changed pages were visually inspected at 150 DPI.
 
-The measured retained-data budget is not total process memory. Neither replay nor diagnostic establishes universal viewer compatibility or printer output. The earlier 77-page benchmark tests a different resource-retention defect and must not be presented as new 300-DPI evidence. Fresh native validation is recorded separately above. Publication remains requested and outstanding. Later documentation/publication commits require their own CI verification.
+The measured retained-data budget is not total process memory. Neither replay nor diagnostic establishes universal viewer compatibility or printer output. The earlier 77-page benchmark tests a different resource-retention defect and must not be presented as new 300-DPI evidence. Fresh native and installed-Community verification are recorded separately above. Later documentation commits require their own CI verification and must not retarget the published release.
 
 For whole-plugin review context, see [AI-REVIEW-HANDOFF.md](AI-REVIEW-HANDOFF.md). For publication, follow [RELEASING.md](RELEASING.md); match the final commit and generated bundle to their recorded evidence.
