@@ -1,0 +1,1936 @@
+{
+  "fixtureSchemaVersion": "native-resources-77-linked-pages-v1",
+  "recordedAt": "2026-11-13T14:01:58.358Z",
+  "scope": "Actual built UI, native-PDF import/resampling and production retained-data checker in isolated Chromium. A harness supplies 77 separate one-page exports, each using the same synthetic source PDF and scanner messages. It does not run Figma exportAsync or establish the contents of the reported user file. No production budget is changed.",
+  "fixture": {
+    "pages": 77,
+    "repeatedFrameNames": true,
+    "pageDimensions": {
+      "width": 600,
+      "height": 400
+    },
+    "nativeUriRectanglesPerPage": 5,
+    "internalLinksPerPage": 2,
+    "unusedImageBytesPerNativePage": 9437184,
+    "usedImagePixels": {
+      "width": 256,
+      "height": 192
+    },
+    "nativePageBytes": 9629935,
+    "nativePageSha256": "6ae9b23cc6eb154f2e2340106457d6a6553893f9b5c20669dd57fc28bc2e43c5"
+  },
+  "productionRetainedDataLimitBytes": 134217728,
+  "baselineSource": "v9.0.0:ui.html",
+  "measurementLimits": "Retained serialized PDF objects are measured, not peak browser/Figma/process memory. Relative destinations are validated structurally; actual PDF viewer navigation and printed output are outside this benchmark.",
+  "scenarios": [
+    {
+      "id": "baseline-36-split15",
+      "baseline": true,
+      "dpi": "36",
+      "pagesPerPart": 15,
+      "builtUiSha256": "fe3d735bc5f46ccfb53249f158aacdc78d0e07e17d333a911dcb198fd8584a97",
+      "status": "expected-retained-budget-stop",
+      "requestedPages": 77,
+      "rasterFormat": "JPG",
+      "fitOversized": true,
+      "exportType": "vector",
+      "pages": [
+        {
+          "index": 0,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 1,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 2,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 3,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 4,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 5,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 6,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 7,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 8,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 9,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 10,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 11,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 12,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 13,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 14,
+          "processingMs": 17,
+          "response": "export-failed"
+        }
+      ],
+      "parts": [],
+      "failurePage": 15,
+      "guardMessage": "This PDF exceeds the 128 MiB retained-data allowance. Lower image/page resolution or split the export into fewer pages per part.",
+      "peakMeasuredRetainedPdfBytes": 142284744,
+      "outputBytes": 0,
+      "validation": {
+        "exactLinkChecksAfterSaveReload": false,
+        "zeroFallbackRequests": true,
+        "browserErrors": [],
+        "networkRequests": []
+      },
+      "durationMs": 1600
+    },
+    {
+      "id": "fixed-original-single",
+      "dpi": "original",
+      "pagesPerPart": 77,
+      "builtUiSha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938",
+      "status": "passed",
+      "requestedPages": 77,
+      "rasterFormat": "JPG",
+      "fitOversized": true,
+      "exportType": "vector",
+      "pages": [
+        {
+          "index": 0,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 1,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 2,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 3,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 4,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 5,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 6,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 7,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 8,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 9,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 10,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 11,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 12,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 13,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 14,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 15,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 16,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 17,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 18,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 19,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 20,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 21,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 22,
+          "processingMs": 84,
+          "response": "page-ack"
+        },
+        {
+          "index": 23,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 24,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 25,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 26,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 27,
+          "processingMs": 19,
+          "response": "page-ack"
+        },
+        {
+          "index": 28,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 29,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 30,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 31,
+          "processingMs": 19,
+          "response": "page-ack"
+        },
+        {
+          "index": 32,
+          "processingMs": 14,
+          "response": "page-ack"
+        },
+        {
+          "index": 33,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 34,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 35,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 36,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 37,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 38,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 39,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 40,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 41,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 42,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 43,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 44,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 45,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 46,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 47,
+          "processingMs": 20,
+          "response": "page-ack"
+        },
+        {
+          "index": 48,
+          "processingMs": 13,
+          "response": "page-ack"
+        },
+        {
+          "index": 49,
+          "processingMs": 24,
+          "response": "page-ack"
+        },
+        {
+          "index": 50,
+          "processingMs": 26,
+          "response": "page-ack"
+        },
+        {
+          "index": 51,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 52,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 53,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 54,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 55,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 56,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 57,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 58,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 59,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 60,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 61,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 62,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 63,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 64,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 65,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 66,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 67,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 68,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 69,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 70,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 71,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 72,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 73,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 74,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 75,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 76,
+          "processingMs": 16,
+          "response": "page-ack"
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "pages": 77,
+          "outputBytes": 14161166,
+          "sha256": "b402912b9caffdaac65899c918a3c4c479ad2afa0b1dc9fb645e2afb361d9bd5",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1pt9l-50eafc78.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 385,
+            "localLinks": 154,
+            "crossPartLinks": 0
+          }
+        }
+      ],
+      "peakMeasuredRetainedPdfBytes": 14522649,
+      "outputBytes": 14161166,
+      "validation": {
+        "exactLinkChecksAfterSaveReload": true,
+        "zeroFallbackRequests": true,
+        "browserErrors": [],
+        "networkRequests": []
+      },
+      "durationMs": 2867
+    },
+    {
+      "id": "fixed-72-single",
+      "dpi": "72",
+      "pagesPerPart": 77,
+      "builtUiSha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938",
+      "status": "passed",
+      "requestedPages": 77,
+      "rasterFormat": "JPG",
+      "fitOversized": true,
+      "exportType": "vector",
+      "pages": [
+        {
+          "index": 0,
+          "processingMs": 49,
+          "response": "page-ack"
+        },
+        {
+          "index": 1,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 2,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 3,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 4,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 5,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 6,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 7,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 8,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 9,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 10,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 11,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 12,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 13,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 14,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 15,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 16,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 17,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 18,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 19,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 20,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 21,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 22,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 23,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 24,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 25,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 26,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 27,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 28,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 29,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 30,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 31,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 32,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 33,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 34,
+          "processingMs": 15,
+          "response": "page-ack"
+        },
+        {
+          "index": 35,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 36,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 37,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 38,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 39,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 40,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 41,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 42,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 43,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 44,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 45,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 46,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 47,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 48,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 49,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 50,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 51,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 52,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 53,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 54,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 55,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 56,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 57,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 58,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 59,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 60,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 61,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 62,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 63,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 64,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 65,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 66,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 67,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 68,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 69,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 70,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 71,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 72,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 73,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 74,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 75,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 76,
+          "processingMs": 34,
+          "response": "page-ack"
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "pages": 77,
+          "outputBytes": 5403524,
+          "sha256": "6f754bc3a0984f8930b784b550a20f3fc00a456dd3a92245ce2ceba204b356ed",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1pvge-0acffedb.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 385,
+            "localLinks": 154,
+            "crossPartLinks": 0
+          }
+        }
+      ],
+      "peakMeasuredRetainedPdfBytes": 5765131,
+      "outputBytes": 5403524,
+      "validation": {
+        "exactLinkChecksAfterSaveReload": true,
+        "zeroFallbackRequests": true,
+        "browserErrors": [],
+        "networkRequests": []
+      },
+      "durationMs": 3674
+    },
+    {
+      "id": "fixed-36-single",
+      "dpi": "36",
+      "pagesPerPart": 77,
+      "builtUiSha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938",
+      "status": "passed",
+      "requestedPages": 77,
+      "rasterFormat": "JPG",
+      "fitOversized": true,
+      "exportType": "vector",
+      "pages": [
+        {
+          "index": 0,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 1,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 2,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 3,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 4,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 5,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 6,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 7,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 8,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 9,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 10,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 11,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 12,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 13,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 14,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 15,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 16,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 17,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 18,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 19,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 20,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 21,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 22,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 23,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 24,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 25,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 26,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 27,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 28,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 29,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 30,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 31,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 32,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 33,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 34,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 35,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 36,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 37,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 38,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 39,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 40,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 41,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 42,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 43,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 44,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 45,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 46,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 47,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 48,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 49,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 50,
+          "processingMs": 31,
+          "response": "page-ack"
+        },
+        {
+          "index": 51,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 52,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 53,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 54,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 55,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 56,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 57,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 58,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 59,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 60,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 61,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 62,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 63,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 64,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 65,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 66,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 67,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 68,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 69,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 70,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 71,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 72,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 73,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 74,
+          "processingMs": 35,
+          "response": "page-ack"
+        },
+        {
+          "index": 75,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 76,
+          "processingMs": 34,
+          "response": "page-ack"
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "pages": 77,
+          "outputBytes": 3366335,
+          "sha256": "69c6238e51577bba431f5af2aac2958ccd49470ec3f1b242611f3272758cb7e6",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1py9o-7b75d1fe.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 385,
+            "localLinks": 154,
+            "crossPartLinks": 0
+          }
+        }
+      ],
+      "peakMeasuredRetainedPdfBytes": 3728019,
+      "outputBytes": 3366335,
+      "validation": {
+        "exactLinkChecksAfterSaveReload": true,
+        "zeroFallbackRequests": true,
+        "browserErrors": [],
+        "networkRequests": []
+      },
+      "durationMs": 3163
+    },
+    {
+      "id": "fixed-36-split15",
+      "dpi": "36",
+      "pagesPerPart": 15,
+      "builtUiSha256": "d88c565d0ee67c2c28280cb7c126f30168c7e5e2f8e52d1af841a1226981e938",
+      "status": "passed",
+      "requestedPages": 77,
+      "rasterFormat": "JPG",
+      "fitOversized": true,
+      "exportType": "vector",
+      "pages": [
+        {
+          "index": 0,
+          "processingMs": 37,
+          "response": "page-ack"
+        },
+        {
+          "index": 1,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 2,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 3,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 4,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 5,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 6,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 7,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 8,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 9,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 10,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 11,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 12,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 13,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 14,
+          "processingMs": 17,
+          "response": "part-ready"
+        },
+        {
+          "index": 15,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 16,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 17,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 18,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 19,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 20,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 21,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 22,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 23,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 24,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 25,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 26,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 27,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 28,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 29,
+          "processingMs": 19,
+          "response": "part-ready"
+        },
+        {
+          "index": 30,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 31,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 32,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 33,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 34,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 35,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 36,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 37,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 38,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 39,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 40,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 41,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 42,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 43,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 44,
+          "processingMs": 17,
+          "response": "part-ready"
+        },
+        {
+          "index": 45,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 46,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 47,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 48,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 49,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 50,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 51,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 52,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 53,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 54,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 55,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 56,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 57,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 58,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 59,
+          "processingMs": 22,
+          "response": "part-ready"
+        },
+        {
+          "index": 60,
+          "processingMs": 32,
+          "response": "page-ack"
+        },
+        {
+          "index": 61,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 62,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 63,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 64,
+          "processingMs": 34,
+          "response": "page-ack"
+        },
+        {
+          "index": 65,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 66,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 67,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 68,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 69,
+          "processingMs": 33,
+          "response": "page-ack"
+        },
+        {
+          "index": 70,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 71,
+          "processingMs": 16,
+          "response": "page-ack"
+        },
+        {
+          "index": 72,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 73,
+          "processingMs": 18,
+          "response": "page-ack"
+        },
+        {
+          "index": 74,
+          "processingMs": 17,
+          "response": "part-ready"
+        },
+        {
+          "index": 75,
+          "processingMs": 17,
+          "response": "page-ack"
+        },
+        {
+          "index": 76,
+          "processingMs": 34,
+          "response": "page-ack"
+        }
+      ],
+      "parts": [
+        {
+          "index": 0,
+          "pages": 15,
+          "outputBytes": 655905,
+          "sha256": "136de77301f6314fbb663057f08f7de620cbff6abbdba7fa497b9031ad8551ee",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-1-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 75,
+            "localLinks": 28,
+            "crossPartLinks": 2
+          }
+        },
+        {
+          "index": 1,
+          "pages": 15,
+          "outputBytes": 655902,
+          "sha256": "e93196d2637533d2e8c93b38dbebacef277b98ada2c309217d3973959836d432",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-2-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 75,
+            "localLinks": 28,
+            "crossPartLinks": 2
+          }
+        },
+        {
+          "index": 2,
+          "pages": 15,
+          "outputBytes": 655900,
+          "sha256": "975d0802e59802ec2f943c77d444763a62dee19277d0f8c8731897ae1d20aaa2",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-3-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 75,
+            "localLinks": 28,
+            "crossPartLinks": 2
+          }
+        },
+        {
+          "index": 3,
+          "pages": 15,
+          "outputBytes": 655902,
+          "sha256": "9a53f1271353d6b5737ddd49c33429250487e5a3fded63297d733546dca5677e",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-4-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 75,
+            "localLinks": 28,
+            "crossPartLinks": 2
+          }
+        },
+        {
+          "index": 4,
+          "pages": 15,
+          "outputBytes": 655902,
+          "sha256": "a63d1fc7a59c2ad9345451600df80f6e434ab0a4b936c214d9ab02e81f0d58ba",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-5-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 75,
+            "localLinks": 28,
+            "crossPartLinks": 2
+          }
+        },
+        {
+          "index": 5,
+          "pages": 2,
+          "outputBytes": 88262,
+          "sha256": "05fa3f6779b6559348b5d2199aa04fae5da6dfa476da2266e9bb20c749679517",
+          "artifact": "test-results/heavy-native/figma-export-2026-11-13-mwf1q0oo-5412cf78-part-6-of-6.pdf",
+          "validation": {
+            "exactPageDimensions": true,
+            "exactDecodedDrawingInstructions": true,
+            "exactUsedImageDimensions": true,
+            "noUnusedOrOrphanImages": true,
+            "exactUriRectanglesAndUrls": true,
+            "exactInternalTargetsAndRectangles": true,
+            "noDuplicateAnnotations": true,
+            "uriLinks": 10,
+            "localLinks": 2,
+            "crossPartLinks": 2
+          }
+        }
+      ],
+      "peakMeasuredRetainedPdfBytes": 728647,
+      "outputBytes": 3367773,
+      "validation": {
+        "exactLinkChecksAfterSaveReload": true,
+        "zeroFallbackRequests": true,
+        "browserErrors": [],
+        "networkRequests": []
+      },
+      "durationMs": 3129
+    }
+  ],
+  "browser": "141.0.7390.37"
+}

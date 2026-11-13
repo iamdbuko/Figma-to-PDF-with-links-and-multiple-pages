@@ -59,6 +59,7 @@ async function harness(t) {
       await frame.locator('#pages-per-part').fill(String(options.pagesPerPart));
     }
     if (options.rasterFormat) await frame.locator('#raster-format').selectOption(options.rasterFormat, { force: true });
+    if (options.imageDpi) await frame.locator('#vector-image-dpi').selectOption(String(options.imageDpi), { force: true });
     if (options.fitOversized) await frame.locator('#fit-oversized').evaluate(input => { input.checked = true; input.dispatchEvent(new Event('change', { bubbles: true })); });
     if (options.exportType) await frame.locator(`label[for="export-${options.exportType}"]`).click();
     if (options.colorProfile) await frame.locator('#color-profile').selectOption(options.colorProfile, { force: true });
@@ -278,6 +279,147 @@ test('JPEG fallback preserves compressed pixels and annotations and sends opt-in
   assert.deepEqual(h.errors, []);
 });
 
+async function nativePdfWithRejectedOutputIntent() {
+  const document = await PDFLib.PDFDocument.load(Uint8Array.from(nativePdf));
+  const page = document.getPage(0), name = PDFLib.PDFName.of;
+  // A real, used image makes the rejected import expensive. It is generated
+  // locally; no private design or large binary fixture is committed.
+  const pixels = new Uint8Array(1024 * 1024);
+  let seed = 1234567;
+  for (let index = 0; index < pixels.length; index++) {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    pixels[index] = seed & 255;
+  }
+  const image = document.context.register(document.context.flateStream(pixels, {
+    Type: 'XObject', Subtype: 'Image', Width: 1024, Height: 1024,
+    BitsPerComponent: 8, ColorSpace: 'DeviceGray'
+  }));
+  const resources = page.node.Resources();
+  if (!resources.has(name('XObject'))) resources.set(name('XObject'), document.context.obj({}));
+  resources.lookup(name('XObject'), PDFLib.PDFDict).set(name('RejectedImage'), image);
+  page.pushOperators(PDFLib.pushGraphicsState(), PDFLib.concatTransformationMatrix(1024, 0, 0, 1024, 0, 0), PDFLib.drawObject('RejectedImage'), PDFLib.popGraphicsState());
+  document.catalog.set(name('OutputIntents'), document.context.obj([{
+    Type: 'OutputIntent', S: 'GTS_PDFA1', OutputConditionIdentifier: PDFLib.PDFString.of('Synthetic output condition')
+  }]));
+  return [...await document.save()];
+}
+
+for (const [format, dpi] of [['PNG', 72], ['JPG', 36]]) test(`late native profile rejection rolls back data before ${format} fallback and linked split parts`, { timeout: 30000 }, async t => {
+  const h = await harness(t);
+  const rejected = await nativePdfWithRejectedOutputIntent();
+  const frames = ['a', 'b', 'c'].map(id => ({ ...first, id, name: 'Repeated screenshot name' }));
+  const links = frames.map((item, index) => ({ fromFrameId: item.id, toFrameId: frames[(index + 1) % frames.length].id,
+    source: 'prototype', type: 'internal', elementBounds: { x: 10, y: 20, width: 30, height: 40 } }));
+  const request = await h.start(frames, { pagesPerPart: 2, rasterFormat: format, imageDpi: dpi, fitOversized: true, links });
+  assert.equal(request.rasterFormat, format);
+  assert.equal(request.qualityScale, dpi / 72);
+  assert.equal(request.fitOversized, true);
+  // The same production budget estimator with a smaller test threshold makes
+  // an orphaned image fail deterministically without allocating 128 MiB.
+  await h.frame.evaluate(() => { const check = assertPdfBudget; assertPdfBudget = document => check(document, 128 * 1024); });
+  const filenames = await h.frame.evaluate(() => activeJob.parts.map(part => part.filename));
+  const raster = format === 'PNG' ? png : await h.frame.evaluate(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 8; canvas.height = 6;
+    const context = canvas.getContext('2d'); context.fillStyle = '#3498a3'; context.fillRect(0, 0, 8, 6);
+    return Array.from(atob(canvas.toDataURL('image/jpeg', .9).split(',')[1]), character => character.charCodeAt(0));
+  });
+  await h.post(h.pageMessage(request.jobId, 0, frames[0], 'PDF', nativePdf));
+  await h.waitMessage('page-ack', { jobId: request.jobId, index: 0 });
+  for (const index of [1, 2]) {
+    const before = await h.frame.evaluate(() => ({ bytes: estimatePdfBytes(activeJob.pdf), pages: activeJob.pdf.getPageCount() }));
+    await h.post(h.pageMessage(request.jobId, index, frames[index], 'PDF', rejected));
+    await h.waitMessage('page-ack', { jobId: request.jobId, index, fallback: true });
+    const after = await h.frame.evaluate(() => ({ bytes: estimatePdfBytes(activeJob.pdf), pages: activeJob.pdf.getPageCount() }));
+    assert.equal(after.pages, before.pages, 'the rejected page must not displace completed pages');
+    assert.ok(after.bytes <= before.bytes + 1024, `rejected native resources must be released: before ${before.bytes}, after ${after.bytes}`);
+    const download = index === 1 ? h.page.waitForEvent('download') : null;
+    await h.post({ ...h.pageMessage(request.jobId, index, frames[index], format, raster), annotationPdfData: rejected });
+    if (index === 1) {
+      await h.waitMessage('part-ready', { jobId: request.jobId, index });
+      await download;
+      await h.frame.waitForFunction(() => activeJob?.awaitingContinue);
+      assert.equal((await h.messages('page-ack')).filter(message => message.index === index && !message.fallback).length, 0);
+      assert.equal(await h.frame.evaluate(() => activeJob.pdf), null);
+      await h.frame.locator('#continue-btn').click();
+    }
+    await h.waitMessage('page-ack', { jobId: request.jobId, index, fallback: undefined });
+  }
+  const finalDownload = h.page.waitForEvent('download');
+  await h.post({ type: 'export-complete', jobId: request.jobId });
+  await h.waitMessage('export-finished', { jobId: request.jobId });
+  await finalDownload;
+  assert.equal((await h.messages('export-failed')).length, 0);
+  assert.equal((await h.messages('page-ack')).filter(message => message.fallback).length, 2);
+  assert.equal(h.downloads.length, 2);
+  const documents = await Promise.all(h.downloads.map(async download => PDFLib.PDFDocument.load(fs.readFileSync(await download.path()))));
+  const expectedUris = await h.frame.evaluate(bytes => pdfLoader.load(Uint8Array.from(bytes)).then(doc => nativeLinkRecords(doc, doc.getPage(0)).map(({ target, rect }) => ({ target, rect }))), nativePdf);
+  const n = PDFLib.PDFName.of;
+  for (const [partIndex, document] of documents.entries()) {
+    assert.equal(h.downloads[partIndex].suggestedFilename(), filenames[partIndex]);
+    assert.equal(document.getPageCount(), partIndex === 0 ? 2 : 1);
+    const images = document.context.enumerateIndirectObjects().map(([, object]) => object).filter(object => object instanceof PDFLib.PDFRawStream && object.dict.get(n('Subtype'))?.toString() === '/Image');
+    assert.ok(images.every(image => image.dict.lookup(n('Width')).asNumber() < 1024), 'no rejected image survives in the saved context');
+    for (const [localIndex, page] of document.getPages().entries()) {
+      assert.deepEqual(page.getSize(), { width: 600, height: 400 });
+      const annotations = page.node.lookup(n('Annots'), PDFLib.PDFArray).asArray().map(ref => document.context.lookup(ref));
+      assert.equal(annotations.length, expectedUris.length + 1, 'native external links plus one internal link, without duplicates');
+      const uris = annotations.filter(annotation => annotation.lookupMaybe(n('A'), PDFLib.PDFDict)?.get(n('S'))?.toString() === '/URI').map(annotation => ({ target: annotation.lookup(n('A'), PDFLib.PDFDict).lookup(n('URI')).decodeText(), rect: annotation.lookup(n('Rect'), PDFLib.PDFArray).asArray().map(value => value.asNumber()) }));
+      assert.deepEqual(uris, expectedUris);
+      const internal = annotations.find(annotation => !annotation.lookupMaybe(n('A'), PDFLib.PDFDict) || annotation.lookup(n('A'), PDFLib.PDFDict).get(n('S'))?.toString() !== '/URI');
+      assert.deepEqual(internal.lookup(n('Rect'), PDFLib.PDFArray).asArray().map(value => value.asNumber()), [10, 340, 40, 380]);
+      if (partIndex === 0 && localIndex === 0) {
+        assert.equal(internal.lookup(n('Dest'), PDFLib.PDFArray).get(0).toString(), document.getPage(1).ref.toString());
+      } else {
+        const action = internal.lookup(n('A'), PDFLib.PDFDict);
+        assert.equal(action.get(n('S')).toString(), '/GoToR');
+        assert.equal(action.lookup(n('F')).decodeText(), filenames[partIndex === 0 ? 1 : 0]);
+        assert.equal(action.lookup(n('D'), PDFLib.PDFArray).lookup(0).asNumber(), 0);
+      }
+    }
+  }
+  assert.deepEqual(h.errors, []);
+});
+
+test('cancellation while native profile validation is pending preserves completed parts without a fallback or later download', { timeout: 20000 }, async t => {
+  const h = await harness(t);
+  const rejected = await nativePdfWithRejectedOutputIntent();
+  const frames = [first, { ...first, id: 'second' }];
+  const { jobId } = await h.start(frames, { pagesPerPart: 1, rasterFormat: 'JPG' });
+  const firstDownload = h.page.waitForEvent('download');
+  await h.post(h.pageMessage(jobId, 0, first, 'PDF', nativePdf));
+  await h.waitMessage('part-ready', { jobId, index: 0 });
+  await firstDownload;
+  await h.frame.waitForFunction(() => activeJob?.awaitingContinue);
+  await h.frame.locator('#continue-btn').click();
+  await h.waitMessage('page-ack', { jobId, index: 0 });
+  // Delay the real validation, rather than replacing it with an artificial
+  // import error. Cancellation must still wait for its in-flight work to end.
+  await h.frame.evaluate(() => {
+    const preserve = pdfColorManagement.preserveNativeColorProfile;
+    pdfColorManagement.preserveNativeColorProfile = async (...args) => {
+      await new Promise(resolve => { window.finishNativeProfileCheck = resolve; });
+      return preserve(...args);
+    };
+  });
+  await h.post(h.pageMessage(jobId, 1, frames[1], 'PDF', rejected));
+  await h.frame.waitForFunction(() => typeof window.finishNativeProfileCheck === 'function');
+  await h.frame.locator('#cancel-btn').click();
+  await h.waitMessage('export-cancel', { jobId });
+  await h.post({ type: 'export-cancelled', jobId });
+  assert.equal(await h.frame.locator('#export-btn').isDisabled(), true, 'validation still owns pending work');
+  await h.frame.evaluate(() => window.finishNativeProfileCheck());
+  await h.frame.waitForFunction(() => activeJob === null);
+  assert.equal((await h.messages('page-ack')).filter(message => message.index === 1).length, 0);
+  assert.equal((await h.messages('export-finished')).length, 0);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 1);
+  assert.equal(h.downloads.length, 1);
+  assert.equal(await h.frame.evaluate(() => window.createdUrls.every(url => window.revokedUrls.includes(url))), true);
+  assert.match(await h.frame.locator('#status-title').textContent(), /Download started for 1 part/);
+  assert.match(await h.frame.locator('#status-title').textContent(), /Links to unfinished parts will not work/);
+  assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
+  assert.deepEqual(h.errors, []);
+});
+
 test('multipart export pauses without ACK, releases each PDF, and preserves cross-file destinations', { timeout: 20000 }, async t => {
   const h = await harness(t);
   const frames = ['a', 'b', 'c'].map(id => ({ ...first, id, name: 'Same name' }));
@@ -374,6 +516,37 @@ test('retained-budget failure on an imported native page never requests raster f
   await h.post({ type: 'export-error', jobId, error: failure.message });
   await h.frame.waitForFunction(() => activeJob === null);
   assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  assert.deepEqual(h.errors, []);
+});
+
+test('an unchanged-image resolution warning stays visible after retained-budget failure and backend cleanup', { timeout: 20000 }, async t => {
+  const h = await harness(t);
+  const source = await PDFLib.PDFDocument.load(Uint8Array.from(nativePdf));
+  const page = source.getPage(0), n = PDFLib.PDFName.of;
+  // Valid, highly compressible 20.005MP data crosses the resampler's supported
+  // source limit without a large encoded fixture or a large browser allocation.
+  const image = source.context.register(source.context.flateStream(new Uint8Array(4001 * 5000).fill(92), {
+    Type: 'XObject', Subtype: 'Image', Width: 4001, Height: 5000, BitsPerComponent: 8, ColorSpace: 'DeviceGray'
+  }));
+  const resources = page.node.Resources();
+  if (!resources.has(n('XObject'))) resources.set(n('XObject'), source.context.obj({}));
+  resources.lookup(n('XObject'), PDFLib.PDFDict).set(n('LargeSource'), image);
+  page.pushOperators(PDFLib.pushGraphicsState(), PDFLib.concatTransformationMatrix(80, 0, 0, 100, 0, 0), PDFLib.drawObject('LargeSource'), PDFLib.popGraphicsState());
+  const bytes = [...await source.save()];
+  const { jobId } = await h.start([first], { imageDpi: 36 });
+  await h.frame.evaluate(() => { const check = assertPdfBudget; assertPdfBudget = document => check(document, 1000); });
+  await h.post(h.pageMessage(jobId, 0, first, 'PDF', bytes));
+  const failure = await h.waitMessage('export-failed', { jobId });
+  assert.match(failure.message, /retained-data allowance/);
+  assert.equal((await h.messages('page-ack')).length, 0, 'a genuine retained-data refusal must not become raster fallback');
+  assert.match(await h.frame.locator('#status-log').textContent(), /kept at its original resolution.*source images above 20 million pixels/);
+  await h.post({ type: 'export-error', jobId, error: failure.message });
+  await h.frame.waitForFunction(() => activeJob === null);
+  assert.match(await h.frame.locator('#status-title').textContent(), /retained-data allowance/);
+  assert.match(await h.frame.locator('#status-log').textContent(), /kept at its original resolution.*source images above 20 million pixels/);
+  assert.equal(await h.frame.locator('#export-btn').isEnabled(), true);
+  assert.equal(await h.frame.evaluate(() => window.downloadClicks), 0);
+  assert.equal(h.downloads.length, 0);
   assert.deepEqual(h.errors, []);
 });
 
